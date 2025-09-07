@@ -540,7 +540,6 @@ export default function Brokers() {
                   value={newBroker.name}
                   onChange={(e: any) => setNewBroker({...newBroker, name: e.target.value})}
                   placeholder="اسم السمسار"
-                  required
                 />
                 
                 <ModernInput

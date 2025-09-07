@@ -596,7 +596,6 @@ export default function Treasury() {
                   value={newSafe.name}
                   onChange={(e: any) => setNewSafe({...newSafe, name: e.target.value})}
                   placeholder="اسم الخزنة"
-                  required
                 />
                 
                 <ModernInput
@@ -660,7 +659,6 @@ export default function Treasury() {
                   label="من الخزنة *"
                   value={newTransfer.fromSafeId}
                   onChange={(e: any) => setNewTransfer({...newTransfer, fromSafeId: e.target.value})}
-                  required
                 >
                   <option value="">اختر الخزنة المصدر...</option>
                   {safes.map((safe) => (
@@ -674,7 +672,6 @@ export default function Treasury() {
                   label="إلى الخزنة *"
                   value={newTransfer.toSafeId}
                   onChange={(e: any) => setNewTransfer({...newTransfer, toSafeId: e.target.value})}
-                  required
                 >
                   <option value="">اختر الخزنة الهدف...</option>
                   {safes.map((safe) => (
@@ -690,7 +687,6 @@ export default function Treasury() {
                   value={newTransfer.amount}
                   onChange={(e: any) => setNewTransfer({...newTransfer, amount: e.target.value})}
                   placeholder="المبلغ المراد تحويله"
-                  required
                 />
                 
                 <div className="space-y-2">

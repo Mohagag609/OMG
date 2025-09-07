@@ -680,7 +680,6 @@ export default function Contracts() {
                     type="date"
                     value={newContract.start}
                     onChange={(e: any) => setNewContract({...newContract, start: e.target.value})}
-                    required
                   />
                 </div>
 

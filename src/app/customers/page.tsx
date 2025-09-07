@@ -633,7 +633,6 @@ export default function Customers() {
                   value={newCustomer.name}
                   onChange={(e: any) => setNewCustomer({...newCustomer, name: e.target.value})}
                   placeholder="اسم العميل"
-                  required
                 />
                 
                 <ModernInput

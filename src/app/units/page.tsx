@@ -665,7 +665,6 @@ export default function Units() {
                   value={newUnit.code}
                   onChange={(e: any) => setNewUnit({...newUnit, code: e.target.value})}
                   placeholder="كود الوحدة"
-                  required
                 />
                 
                 <ModernInput
@@ -680,7 +679,6 @@ export default function Units() {
                   label="نوع الوحدة *"
                   value={newUnit.unitType}
                   onChange={(e: any) => setNewUnit({...newUnit, unitType: e.target.value})}
-                  required
                 >
                   <option value="">اختر نوع الوحدة...</option>
                   <option value="شقة">شقة</option>
@@ -720,7 +718,6 @@ export default function Units() {
                   value={newUnit.totalPrice}
                   onChange={(e: any) => setNewUnit({...newUnit, totalPrice: e.target.value})}
                   placeholder="السعر الإجمالي"
-                  required
                 />
                 
                 <ModernSelect

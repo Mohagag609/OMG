@@ -50,7 +50,6 @@ export default function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
-            required
           />
           <input
             type="password"
@@ -58,7 +57,6 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
-            required
           />
           <button
             type="submit"
