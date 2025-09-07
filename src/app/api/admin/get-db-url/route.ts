@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
   try {
     console.log('📋 جاري قراءة URL قاعدة البيانات الحالي...')
 
-    // التحقق من وجود CONTROL_DB_URL
-    if (!process.env.CONTROL_DB_URL) {
+    // التحقق من وجود CONTROL_DB_URL أو DATABASE_URL
+    if (!process.env.CONTROL_DB_URL && !process.env.DATABASE_URL) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'CONTROL_DB_URL غير محدد في متغيرات البيئة' 
+          error: 'CONTROL_DB_URL و DATABASE_URL غير محددين في متغيرات البيئة' 
         },
         { status: 500 }
       )

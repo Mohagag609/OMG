@@ -22,10 +22,16 @@ export async function getCurrentDbUrl(): Promise<string> {
   try {
     console.log('🔍 جاري قراءة URL قاعدة البيانات من قاعدة التحكم...')
     
+    // استخدام CONTROL_DB_URL أو DATABASE_URL كبديل
+    const controlDbUrl = process.env.CONTROL_DB_URL || process.env.DATABASE_URL
+    if (!controlDbUrl) {
+      throw new Error('CONTROL_DB_URL و DATABASE_URL غير محددين في متغيرات البيئة')
+    }
+    
     // الاتصال بقاعدة التحكم
     const controlClient = new Client({
-      connectionString: process.env.CONTROL_DB_URL,
-      ssl: process.env.CONTROL_DB_URL?.includes('sslmode=require') ? { rejectUnauthorized: false } : false
+      connectionString: controlDbUrl,
+      ssl: controlDbUrl.includes('sslmode=require') ? { rejectUnauthorized: false } : false
     })
 
     await controlClient.connect()
@@ -40,7 +46,18 @@ export async function getCurrentDbUrl(): Promise<string> {
     await controlClient.end()
 
     if (result.rows.length === 0) {
-      throw new Error('لم يتم العثور على current_db_url في قاعدة التحكم')
+      // إذا لم يتم العثور على current_db_url، استخدم DATABASE_URL كبديل
+      console.log('⚠️ لم يتم العثور على current_db_url في قاعدة التحكم - استخدام DATABASE_URL')
+      const fallbackUrl = process.env.DATABASE_URL || controlDbUrl
+      console.log('📋 استخدام URL احتياطي:', fallbackUrl.substring(0, 50) + '...')
+      
+      // تحديث الكاش
+      cache = {
+        url: fallbackUrl,
+        timestamp: Date.now()
+      }
+      
+      return fallbackUrl
     }
 
     const url = result.rows[0].value
@@ -55,6 +72,46 @@ export async function getCurrentDbUrl(): Promise<string> {
     return url
   } catch (error: any) {
     console.error('❌ خطأ في قراءة URL قاعدة البيانات:', error?.message || error)
+    
+    // إذا كان الخطأ بسبب عدم وجود جدول app_config، أنشئه
+    if (error?.message?.includes('relation "app_config" does not exist')) {
+      console.log('🔧 جدول app_config غير موجود - إنشاؤه...')
+      try {
+        const controlDbUrl = process.env.CONTROL_DB_URL || process.env.DATABASE_URL
+        if (controlDbUrl) {
+          const controlClient = new Client({
+            connectionString: controlDbUrl,
+            ssl: controlDbUrl.includes('sslmode=require') ? { rejectUnauthorized: false } : false
+          })
+          
+          await controlClient.connect()
+          
+          // إنشاء جدول app_config
+          await controlClient.query(`
+            CREATE TABLE IF NOT EXISTS app_config (
+              key text PRIMARY KEY,
+              value text NOT NULL,
+              updated_at timestamptz DEFAULT now()
+            )
+          `)
+          
+          // إدراج URL افتراضي
+          await controlClient.query(`
+            INSERT INTO app_config (key, value)
+            VALUES ('current_db_url', $1)
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+          `, [controlDbUrl])
+          
+          await controlClient.end()
+          console.log('✅ تم إنشاء جدول app_config بنجاح')
+          
+          // إعادة المحاولة
+          return getCurrentDbUrl()
+        }
+      } catch (createError: any) {
+        console.error('❌ خطأ في إنشاء جدول app_config:', createError?.message || createError)
+      }
+    }
     
     // استخدام URL افتراضي في حالة الخطأ
     const fallbackUrl = process.env.DATABASE_URL || 'postgresql://localhost:5432/estate_management'
@@ -80,10 +137,16 @@ export async function setCurrentDbUrl(newUrl: string): Promise<boolean> {
       throw new Error('URL قاعدة البيانات غير صحيح')
     }
 
+    // استخدام CONTROL_DB_URL أو DATABASE_URL كبديل
+    const controlDbUrl = process.env.CONTROL_DB_URL || process.env.DATABASE_URL
+    if (!controlDbUrl) {
+      throw new Error('CONTROL_DB_URL و DATABASE_URL غير محددين في متغيرات البيئة')
+    }
+    
     // الاتصال بقاعدة التحكم
     const controlClient = new Client({
-      connectionString: process.env.CONTROL_DB_URL,
-      ssl: process.env.CONTROL_DB_URL?.includes('sslmode=require') ? { rejectUnauthorized: false } : false
+      connectionString: controlDbUrl,
+      ssl: controlDbUrl.includes('sslmode=require') ? { rejectUnauthorized: false } : false
     })
 
     await controlClient.connect()
@@ -168,9 +231,16 @@ function getDbTypeFromUrl(url: string): string {
 // الحصول على نوع قاعدة البيانات الحالي
 export async function getCurrentDbType(): Promise<string> {
   try {
+    // استخدام CONTROL_DB_URL أو DATABASE_URL كبديل
+    const controlDbUrl = process.env.CONTROL_DB_URL || process.env.DATABASE_URL
+    if (!controlDbUrl) {
+      console.warn('CONTROL_DB_URL و DATABASE_URL غير محددين - استخدام افتراضي')
+      return 'postgresql'
+    }
+    
     const controlClient = new Client({
-      connectionString: process.env.CONTROL_DB_URL,
-      ssl: process.env.CONTROL_DB_URL?.includes('sslmode=require') ? { rejectUnauthorized: false } : false
+      connectionString: controlDbUrl,
+      ssl: controlDbUrl.includes('sslmode=require') ? { rejectUnauthorized: false } : false
     })
 
     await controlClient.connect()
