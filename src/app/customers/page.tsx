@@ -459,13 +459,13 @@ export default function Customers() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">الاسم</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">رقم الهاتف</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">الرقم القومي</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">العنوان</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الإضافة</th>
-                <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">رقم الهاتف</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الرقم القومي</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">العنوان</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">تاريخ الإضافة</th>
+                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
@@ -486,28 +486,28 @@ export default function Customers() {
                   `}
                 >
                   <td className="py-4 px-6">
-                    <div className="font-medium text-gray-900">{customer.name}</div>
+                    <div className="text-gray-900 font-bold text-base">{customer.name}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-600">{customer.phone}</div>
+                    <div className="text-gray-800 font-semibold">{customer.phone}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-600">{customer.nationalId || '-'}</div>
+                    <div className="text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-600 max-w-xs truncate">{customer.address || '-'}</div>
+                    <div className="text-gray-800 font-semibold max-w-xs truncate">{customer.address || '-'}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       customer.status === 'نشط' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-100 text-green-900' 
+                        : 'bg-red-100 text-red-900'
                     }`}>
                       {customer.status}
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-600">{formatDate(customer.createdAt || new Date())}</div>
+                    <div className="text-gray-800 font-semibold">{formatDate(customer.createdAt || new Date())}</div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-2 space-x-reverse">
@@ -603,7 +603,7 @@ export default function Customers() {
                 
                 <div className="md:col-span-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">ملاحظات</label>
+                    <label className="text-sm font-bold text-gray-900">ملاحظات</label>
                     <textarea
                       value={newCustomer.notes}
                       onChange={(e: any) => setNewCustomer({...newCustomer, notes: e.target.value})}

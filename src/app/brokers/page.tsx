@@ -57,6 +57,7 @@ export default function Brokers() {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingBroker, setEditingBroker] = useState<Broker | null>(null)
+  const [deletingBrokers, setDeletingBrokers] = useState<Set<string>>(new Set())
   const [newBroker, setNewBroker] = useState({
     name: '',
     phone: '',
@@ -135,6 +136,27 @@ export default function Brokers() {
       return
     }
 
+    // إغلاق النافذة فوراً وإظهار النجاح
+    setShowAddModal(false)
+    setSuccess('تم إضافة السمسار بنجاح!')
+    setError(null)
+    
+    // إضافة السمسار للقائمة فوراً مع ID مؤقت
+    const tempBroker = {
+      ...newBroker,
+      id: `temp-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    setBrokers(prev => [tempBroker, ...prev])
+
+    // إعادة تعيين النموذج
+    setNewBroker({
+      name: '',
+      phone: '',
+      notes: ''
+    })
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/brokers', {
@@ -148,21 +170,19 @@ export default function Brokers() {
 
       const data = await response.json()
       if (data.success) {
-        setShowAddModal(false)
-        setSuccess('تم إضافة السمسار بنجاح!')
-        setError(null)
-        setNewBroker({
-          name: '',
-          phone: '',
-          notes: ''
-        })
-        fetchBrokers()
+        // استبدال السمسار المؤقت بالسمسار الحقيقي
+        setBrokers(prev => prev.map(broker => 
+          broker.id === tempBroker.id ? data.data : broker
+        ))
         addNotification({
           type: 'success',
           title: 'تم الحفظ بنجاح',
           message: 'تم إضافة السمسار بنجاح'
         })
       } else {
+        // في حالة فشل الحفظ، نزيل السمسار المؤقت ونعيد النافذة
+        setBrokers(prev => prev.filter(broker => broker.id !== tempBroker.id))
+        setShowAddModal(true)
         setError(data.error || 'خطأ في إضافة السمسار')
         setSuccess(null)
         addNotification({
@@ -173,6 +193,9 @@ export default function Brokers() {
       }
     } catch (err) {
       console.error('Add broker error:', err)
+      // في حالة فشل الحفظ، نزيل السمسار المؤقت ونعيد النافذة
+      setBrokers(prev => prev.filter(broker => broker.id !== tempBroker.id))
+      setShowAddModal(true)
       setError('خطأ في إضافة السمسار')
       setSuccess(null)
       addNotification({
@@ -240,6 +263,16 @@ export default function Brokers() {
   const handleDeleteBroker = async (brokerId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السمسار؟')) return
 
+    // إضافة السمسار لقائمة الحذف وإظهار الحركة فوراً
+    setDeletingBrokers(prev => {
+      const newSet = new Set(prev)
+      newSet.add(brokerId)
+      return newSet
+    })
+    
+    // إزالة السمسار من القائمة فوراً مع الحركة
+    setBrokers(prev => prev.filter(broker => broker.id !== brokerId))
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/brokers/${brokerId}`, {
@@ -251,13 +284,14 @@ export default function Brokers() {
       if (data.success) {
         setSuccess('تم حذف السمسار بنجاح!')
         setError(null)
-        fetchBrokers()
         addNotification({
           type: 'success',
           title: 'تم الحذف بنجاح',
           message: 'تم حذف السمسار بنجاح'
         })
       } else {
+        // في حالة فشل الحذف، نعيد السمسار للقائمة
+        fetchBrokers()
         setError(data.error || 'خطأ في حذف السمسار')
         setSuccess(null)
         addNotification({
@@ -268,12 +302,21 @@ export default function Brokers() {
       }
     } catch (err) {
       console.error('Delete broker error:', err)
+      // في حالة فشل الحذف، نعيد السمسار للقائمة
+      fetchBrokers()
       setError('خطأ في حذف السمسار')
       setSuccess(null)
       addNotification({
         type: 'error',
         title: 'خطأ في الحذف',
         message: 'فشل في حذف السمسار'
+      })
+    } finally {
+      // إزالة السمسار من قائمة الحذف
+      setDeletingBrokers(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(brokerId)
+        return newSet
       })
     }
   }
@@ -389,11 +432,11 @@ export default function Brokers() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الاسم</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">رقم الهاتف</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الملاحظات</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الإضافة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">رقم الهاتف</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الملاحظات</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">تاريخ الإضافة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -402,18 +445,27 @@ export default function Brokers() {
                   broker.name.toLowerCase().includes(search.toLowerCase()) ||
                   (broker.phone && broker.phone.toLowerCase().includes(search.toLowerCase()))
                 ).map((broker) => (
-                  <tr key={broker.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                  <tr 
+                    key={broker.id} 
+                    className={`
+                      border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
+                      ${deletingBrokers.has(broker.id) 
+                        ? 'transform translate-x-full opacity-0 scale-95' 
+                        : 'transform translate-x-0 opacity-100 scale-100'
+                      }
+                    `}
+                  >
                     <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{broker.name}</div>
+                      <div className="text-gray-900 font-bold text-base">{broker.name}</div>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="text-gray-600">{broker.phone || '-'}</div>
+                      <div className="text-gray-800 font-semibold">{broker.phone || '-'}</div>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="text-gray-600 max-w-xs truncate">{broker.notes || '-'}</div>
+                      <div className="text-gray-800 font-semibold max-w-xs truncate">{broker.notes || '-'}</div>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="text-gray-600">{formatDate(broker.createdAt || new Date())}</div>
+                      <div className="text-gray-800 font-semibold">{formatDate(broker.createdAt || new Date())}</div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-2 space-x-reverse">

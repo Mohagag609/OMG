@@ -70,6 +70,7 @@ export default function Units() {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
+  const [deletingUnits, setDeletingUnits] = useState<Set<string>>(new Set())
   const [newUnit, setNewUnit] = useState({
     code: '',
     name: '',
@@ -164,6 +165,34 @@ export default function Units() {
       return
     }
 
+    // إغلاق النافذة فوراً وإظهار النجاح
+    setShowAddModal(false)
+    setSuccess('تم إضافة الوحدة بنجاح!')
+    setError(null)
+    
+    // إضافة الوحدة للقائمة فوراً مع ID مؤقت
+    const tempUnit = {
+      ...newUnit,
+      id: `temp-${Date.now()}`,
+      totalPrice: parseFloat(newUnit.totalPrice),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    setUnits(prev => [tempUnit, ...prev])
+
+    // إعادة تعيين النموذج
+    setNewUnit({
+      code: '',
+      name: '',
+      unitType: '',
+      area: '',
+      floor: '',
+      building: '',
+      totalPrice: '',
+      status: 'متاحة',
+      notes: ''
+    })
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/units', {
@@ -180,27 +209,19 @@ export default function Units() {
 
       const data = await response.json()
       if (data.success) {
-        setShowAddModal(false)
-        setSuccess('تم إضافة الوحدة بنجاح!')
-        setError(null)
-        setNewUnit({
-          code: '',
-          name: '',
-          unitType: '',
-          area: '',
-          floor: '',
-          building: '',
-          totalPrice: '',
-          status: 'متاحة',
-          notes: ''
-        })
-        fetchData()
+        // استبدال الوحدة المؤقتة بالوحدة الحقيقية
+        setUnits(prev => prev.map(unit => 
+          unit.id === tempUnit.id ? data.data : unit
+        ))
         addNotification({
           type: 'success',
           title: 'تم الحفظ بنجاح',
           message: 'تم إضافة الوحدة بنجاح'
         })
       } else {
+        // في حالة فشل الحفظ، نزيل الوحدة المؤقتة ونعيد النافذة
+        setUnits(prev => prev.filter(unit => unit.id !== tempUnit.id))
+        setShowAddModal(true)
         setError(data.error || 'خطأ في إضافة الوحدة')
         setSuccess(null)
         addNotification({
@@ -211,6 +232,9 @@ export default function Units() {
       }
     } catch (err) {
       console.error('Add unit error:', err)
+      // في حالة فشل الحفظ، نزيل الوحدة المؤقتة ونعيد النافذة
+      setUnits(prev => prev.filter(unit => unit.id !== tempUnit.id))
+      setShowAddModal(true)
       setError('خطأ في إضافة الوحدة')
       setSuccess(null)
       addNotification({
@@ -225,6 +249,36 @@ export default function Units() {
     e.preventDefault()
     
     if (!editingUnit) return
+
+    // إغلاق النافذة فوراً وإظهار النجاح
+    setShowAddModal(false)
+    setEditingUnit(null)
+    setSuccess('تم تحديث الوحدة بنجاح!')
+    setError(null)
+
+    // تحديث الوحدة في القائمة فوراً
+    const updatedUnit = {
+      ...editingUnit,
+      ...newUnit,
+      totalPrice: parseFloat(newUnit.totalPrice),
+      updatedAt: new Date().toISOString()
+    }
+    setUnits(prev => prev.map(unit => 
+      unit.id === editingUnit.id ? updatedUnit : unit
+    ))
+
+    // إعادة تعيين النموذج
+    setNewUnit({
+      code: '',
+      name: '',
+      unitType: '',
+      area: '',
+      floor: '',
+      building: '',
+      totalPrice: '',
+      status: 'متاحة',
+      notes: ''
+    })
 
     try {
       const token = localStorage.getItem('authToken')
@@ -242,28 +296,18 @@ export default function Units() {
 
       const data = await response.json()
       if (data.success) {
-        setShowAddModal(false)
-        setEditingUnit(null)
-        setSuccess('تم تحديث الوحدة بنجاح!')
-        setError(null)
-        setNewUnit({
-          code: '',
-          name: '',
-          unitType: '',
-          area: '',
-          floor: '',
-          building: '',
-          totalPrice: '',
-          status: 'متاحة',
-          notes: ''
-        })
-        fetchData()
+        // استبدال الوحدة المحدثة بالبيانات الحقيقية من الخادم
+        setUnits(prev => prev.map(unit => 
+          unit.id === editingUnit.id ? data.data : unit
+        ))
         addNotification({
           type: 'success',
           title: 'تم التحديث بنجاح',
           message: 'تم تحديث الوحدة بنجاح'
         })
       } else {
+        // في حالة فشل التحديث، نعيد البيانات الأصلية
+        fetchData()
         setError(data.error || 'خطأ في تحديث الوحدة')
         setSuccess(null)
         addNotification({
@@ -274,6 +318,8 @@ export default function Units() {
       }
     } catch (err) {
       console.error('Update unit error:', err)
+      // في حالة فشل التحديث، نعيد البيانات الأصلية
+      fetchData()
       setError('خطأ في تحديث الوحدة')
       setSuccess(null)
       addNotification({
@@ -287,6 +333,16 @@ export default function Units() {
   const handleDeleteUnit = async (unitId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الوحدة؟')) return
 
+    // إضافة الوحدة لقائمة الحذف وإظهار الحركة فوراً
+    setDeletingUnits(prev => {
+      const newSet = new Set(prev)
+      newSet.add(unitId)
+      return newSet
+    })
+    
+    // إزالة الوحدة من القائمة فوراً مع الحركة
+    setUnits(prev => prev.filter(unit => unit.id !== unitId))
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${unitId}`, {
@@ -298,13 +354,14 @@ export default function Units() {
       if (data.success) {
         setSuccess('تم حذف الوحدة بنجاح!')
         setError(null)
-        fetchData()
         addNotification({
           type: 'success',
           title: 'تم الحذف بنجاح',
           message: 'تم حذف الوحدة بنجاح'
         })
       } else {
+        // في حالة فشل الحذف، نعيد الوحدة للقائمة
+        fetchData()
         setError(data.error || 'خطأ في حذف الوحدة')
         setSuccess(null)
         addNotification({
@@ -315,12 +372,21 @@ export default function Units() {
       }
     } catch (err) {
       console.error('Delete unit error:', err)
+      // في حالة فشل الحذف، نعيد الوحدة للقائمة
+      fetchData()
       setError('خطأ في حذف الوحدة')
       setSuccess(null)
       addNotification({
         type: 'error',
         title: 'خطأ في الحذف',
         message: 'فشل في حذف الوحدة'
+      })
+    } finally {
+      // إزالة الوحدة من قائمة الحذف
+      setDeletingUnits(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(unitId)
+        return newSet
       })
     }
   }
@@ -451,16 +517,16 @@ export default function Units() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">كود الوحدة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الاسم</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">النوع</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المساحة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الطابق</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المبنى</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">السعر</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الشركاء</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">كود الوحدة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">النوع</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المساحة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الطابق</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المبنى</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">السعر</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الشركاء</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -472,27 +538,36 @@ export default function Units() {
                 ).map((unit) => {
                   const partners = getUnitPartners(unit.id)
                   return (
-                    <tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                    <tr 
+                      key={unit.id} 
+                      className={`
+                        border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
+                        ${deletingUnits.has(unit.id) 
+                          ? 'transform translate-x-full opacity-0 scale-95' 
+                          : 'transform translate-x-0 opacity-100 scale-100'
+                        }
+                      `}
+                    >
                       <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900">{unit.code}</div>
+                        <div className="text-gray-900 font-bold text-base">{unit.code}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-gray-600">{unit.name || '-'}</div>
+                        <div className="text-gray-800 font-semibold">{unit.name || '-'}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-gray-600">{unit.unitType}</div>
+                        <div className="text-gray-800 font-semibold">{unit.unitType}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-gray-600">{unit.area || '-'}</div>
+                        <div className="text-gray-800 font-semibold">{unit.area || '-'}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-gray-600">{unit.floor || '-'}</div>
+                        <div className="text-gray-800 font-semibold">{unit.floor || '-'}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-gray-600">{unit.building || '-'}</div>
+                        <div className="text-gray-800 font-semibold">{unit.building || '-'}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="font-semibold text-green-600">{formatCurrency(unit.totalPrice)}</div>
+                        <div className="font-bold text-green-800">{formatCurrency(unit.totalPrice)}</div>
                       </td>
                       <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
