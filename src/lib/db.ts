@@ -115,6 +115,10 @@ export async function getDb(): Promise<DatabaseInterface> {
       db.pragma('foreign_keys = ON')
       
       console.log('✅ تم الاتصال بـ SQLite بنجاح')
+      
+      // إنشاء الجداول إذا لم تكن موجودة
+      await createTablesIfNotExist(db, 'sqlite')
+      
       return new UnifiedDatabase(db, 'sqlite')
       
     } else {
@@ -126,6 +130,10 @@ export async function getDb(): Promise<DatabaseInterface> {
 
       await client.connect()
       console.log('✅ تم الاتصال بـ PostgreSQL بنجاح')
+      
+      // إنشاء الجداول إذا لم تكن موجودة
+      await createTablesIfNotExist(client, 'postgresql')
+      
       return new UnifiedDatabase(client, 'postgresql')
     }
   } catch (error: any) {
@@ -169,6 +177,208 @@ export async function testConnection(): Promise<{ success: boolean; message: str
       await db.close()
     }
   }
+}
+
+// إنشاء الجداول إذا لم تكن موجودة
+async function createTablesIfNotExist(db: any, dbType: string): Promise<void> {
+  try {
+    console.log('🔧 فحص وإنشاء الجداول...')
+    
+    if (dbType === 'postgresql') {
+      // PostgreSQL
+      const client = db as Client
+      
+      // فحص وجود الجداول
+      const tablesCheck = await client.query(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name IN ('users', 'customers', 'brokers', 'contracts', 'units')
+      `)
+      
+      if (tablesCheck.rows.length === 0) {
+        console.log('📋 إنشاء جداول PostgreSQL...')
+        await createPostgreSQLTables(client)
+      } else {
+        console.log('✅ الجداول موجودة بالفعل')
+      }
+      
+    } else if (dbType === 'sqlite') {
+      // SQLite
+      const sqliteDb = db as any
+      
+      // فحص وجود الجداول
+      const tablesCheck = sqliteDb.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' 
+        AND name IN ('users', 'customers', 'brokers', 'contracts', 'units')
+      `).all()
+      
+      if (tablesCheck.length === 0) {
+        console.log('📋 إنشاء جداول SQLite...')
+        await createSQLiteTables(sqliteDb)
+      } else {
+        console.log('✅ الجداول موجودة بالفعل')
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ خطأ في إنشاء الجداول:', error?.message || error)
+    // لا نرمي الخطأ هنا لأن الاتصال قد يكون ناجحاً
+  }
+}
+
+// إنشاء جداول PostgreSQL
+async function createPostgreSQLTables(client: Client): Promise<void> {
+  const tables = [
+    // جدول المستخدمين
+    `CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(50) DEFAULT 'user',
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+    
+    // جدول العملاء
+    `CREATE TABLE IF NOT EXISTS customers (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      phone VARCHAR(20),
+      email VARCHAR(255),
+      address TEXT,
+      national_id VARCHAR(20),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+    
+    // جدول الوسطاء
+    `CREATE TABLE IF NOT EXISTS brokers (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      phone VARCHAR(20),
+      email VARCHAR(255),
+      commission_rate DECIMAL(5,2) DEFAULT 0,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+    
+    // جدول العقود
+    `CREATE TABLE IF NOT EXISTS contracts (
+      id SERIAL PRIMARY KEY,
+      customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+      broker_id INTEGER REFERENCES brokers(id) ON DELETE SET NULL,
+      unit_id INTEGER,
+      contract_type VARCHAR(50),
+      total_amount DECIMAL(15,2),
+      down_payment DECIMAL(15,2),
+      monthly_payment DECIMAL(15,2),
+      contract_date DATE,
+      status VARCHAR(50) DEFAULT 'active',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+    
+    // جدول الوحدات
+    `CREATE TABLE IF NOT EXISTS units (
+      id SERIAL PRIMARY KEY,
+      unit_number VARCHAR(50) UNIQUE NOT NULL,
+      building_name VARCHAR(255),
+      floor_number INTEGER,
+      area DECIMAL(10,2),
+      price DECIMAL(15,2),
+      status VARCHAR(50) DEFAULT 'available',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`
+  ]
+  
+  for (const table of tables) {
+    await client.query(table)
+  }
+  
+  console.log('✅ تم إنشاء جداول PostgreSQL بنجاح')
+}
+
+// إنشاء جداول SQLite
+async function createSQLiteTables(db: any): Promise<void> {
+  const tables = [
+    // جدول المستخدمين
+    `CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'user',
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    
+    // جدول العملاء
+    `CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      national_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    
+    // جدول الوسطاء
+    `CREATE TABLE IF NOT EXISTS brokers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      commission_rate REAL DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    
+    // جدول العقود
+    `CREATE TABLE IF NOT EXISTS contracts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER,
+      broker_id INTEGER,
+      unit_id INTEGER,
+      contract_type TEXT,
+      total_amount REAL,
+      down_payment REAL,
+      monthly_payment REAL,
+      contract_date DATE,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+      FOREIGN KEY (broker_id) REFERENCES brokers(id) ON DELETE SET NULL
+    )`,
+    
+    // جدول الوحدات
+    `CREATE TABLE IF NOT EXISTS units (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      unit_number TEXT UNIQUE NOT NULL,
+      building_name TEXT,
+      floor_number INTEGER,
+      area REAL,
+      price REAL,
+      status TEXT DEFAULT 'available',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ]
+  
+  for (const table of tables) {
+    db.exec(table)
+  }
+  
+  console.log('✅ تم إنشاء جداول SQLite بنجاح')
 }
 
 // إنشاء جداول SQLite (للتطوير المحلي)

@@ -18,6 +18,7 @@ export default function DbSettingsPage() {
   const [newUrl, setNewUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [creatingTables, setCreatingTables] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
 
   // تحميل معلومات قاعدة البيانات الحالية
@@ -37,6 +38,28 @@ export default function DbSettingsPage() {
       setMessage({ type: 'error', text: `خطأ في تحميل المعلومات: ${error.message}` })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // إنشاء الجداول في قاعدة البيانات الحالية
+  const createTables = async () => {
+    try {
+      setCreatingTables(true)
+      const response = await fetch('/api/admin/create-tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({ type: 'success', text: `تم إنشاء الجداول بنجاح في ${data.dbType}` })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'فشل في إنشاء الجداول' })
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `خطأ في إنشاء الجداول: ${error.message}` })
+    } finally {
+      setCreatingTables(false)
     }
   }
 
@@ -216,6 +239,24 @@ export default function DbSettingsPage() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Create Tables Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            إدارة الجداول
+          </h2>
+          <p className="text-gray-600 mb-4">
+            إنشاء الجداول المطلوبة في قاعدة البيانات الحالية
+          </p>
+          
+          <button
+            onClick={createTables}
+            disabled={creatingTables}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+          >
+            {creatingTables ? 'جاري إنشاء الجداول...' : 'إنشاء الجداول'}
+          </button>
         </div>
 
         {/* Message */}
