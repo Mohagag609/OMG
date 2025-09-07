@@ -144,11 +144,27 @@ export default function DatabaseSettings() {
           isConnected: true,
           lastTested: new Date().toLocaleString('ar-SA')
         }))
+        
+        const tablesInfo = data.data.tablesCreated 
+          ? ' وتم إنشاء الجداول تلقائياً' 
+          : ''
+        
         addNotification({
           type: 'success',
           title: 'تم ربط القاعدة بنجاح!',
-          message: `تم الاتصال بقاعدة البيانات ${settings.type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح`
+          message: `تم الاتصال بقاعدة البيانات ${settings.type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح${tablesInfo}`
         })
+        
+        // إظهار تفاصيل إضافية إذا تم إنشاء الجداول
+        if (data.data.tablesCreated) {
+          setTimeout(() => {
+            addNotification({
+              type: 'info',
+              title: 'تم إنشاء الجداول',
+              message: data.data.tablesMessage || 'تم إنشاء جميع الجداول المطلوبة'
+            })
+          }, 1000)
+        }
       } else {
         setSettings(prev => ({
           ...prev,
@@ -456,6 +472,12 @@ export default function DatabaseSettings() {
             </div>
             <div>
               <strong>PostgreSQL:</strong> قاعدة بيانات قوية ومتقدمة، مناسبة للإنتاج والتطبيقات الكبيرة
+            </div>
+            <div className="text-green-600 font-medium">
+              ✅ عند اختبار الاتصال، سيتم إنشاء الجداول تلقائياً إذا لم تكن موجودة
+            </div>
+            <div className="text-blue-600 font-medium">
+              🔧 النظام يفحص وجود الجداول وينشئها عند الحاجة
             </div>
             <div className="text-yellow-600 font-medium">
               ⚠️ تأكد من صحة رابط الاتصال قبل الحفظ

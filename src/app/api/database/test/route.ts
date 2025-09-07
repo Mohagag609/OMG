@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (testResult.success) {
+      // إذا نجح الاتصال، ننشئ الجداول تلقائياً
+      const createTablesResult = await createTablesIfNeeded(type, connectionString)
+      
       const response: ApiResponse<any> = {
         success: true,
         data: {
@@ -60,9 +63,11 @@ export async function POST(request: NextRequest) {
           connectionString: connectionString.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'), // Hide credentials
           isConnected: true,
           lastTested: new Date().toISOString(),
-          details: testResult.details
+          details: testResult.details,
+          tablesCreated: createTablesResult.tablesCreated,
+          tablesMessage: createTablesResult.message
         },
-        message: `تم الاتصال بقاعدة البيانات ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح`
+        message: `تم الاتصال بقاعدة البيانات ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح${createTablesResult.tablesCreated ? ' وتم إنشاء الجداول' : ''}`
       }
       return NextResponse.json(response)
     } else {
@@ -178,5 +183,84 @@ async function testPostgreSQLConnection(connectionString: string): Promise<{ suc
     }
 
     return { success: false, error: errorMessage }
+  }
+}
+
+// Create tables if needed
+async function createTablesIfNeeded(type: string, connectionString: string): Promise<{ tablesCreated: boolean; message: string }> {
+  try {
+    console.log('🔧 محاولة إنشاء الجداول...')
+    
+    // Create temporary Prisma client with new connection
+    const { PrismaClient } = await import('@prisma/client')
+    const tempClient = new PrismaClient({
+      datasources: {
+        db: {
+          url: connectionString
+        }
+      }
+    })
+
+    // Test if tables exist by trying to query a simple table
+    try {
+      await tempClient.user.findFirst()
+      await tempClient.$disconnect()
+      
+      return {
+        tablesCreated: false,
+        message: 'الجداول موجودة بالفعل'
+      }
+    } catch (error: any) {
+      // If tables don't exist, create them
+      if (error.code === 'P2021' || error.message.includes('does not exist')) {
+        console.log('📋 الجداول غير موجودة، سيتم إنشاؤها...')
+        
+        // Use Prisma to push schema to new database
+        const { execSync } = await import('child_process')
+        
+        // Temporarily set DATABASE_URL for Prisma
+        const originalUrl = process.env.DATABASE_URL
+        process.env.DATABASE_URL = connectionString
+        
+        try {
+          // Push schema to create tables
+          execSync('npx prisma db push --accept-data-loss', {
+            stdio: 'pipe',
+            cwd: process.cwd()
+          })
+          
+          console.log('✅ تم إنشاء الجداول بنجاح')
+          
+          // Restore original DATABASE_URL
+          process.env.DATABASE_URL = originalUrl
+          
+          return {
+            tablesCreated: true,
+            message: 'تم إنشاء جميع الجداول بنجاح'
+          }
+        } catch (pushError: any) {
+          // Restore original DATABASE_URL
+          process.env.DATABASE_URL = originalUrl
+          
+          console.error('❌ فشل في إنشاء الجداول:', pushError.message)
+          return {
+            tablesCreated: false,
+            message: `فشل في إنشاء الجداول: ${pushError.message}`
+          }
+        }
+      } else {
+        await tempClient.$disconnect()
+        return {
+          tablesCreated: false,
+          message: `خطأ في فحص الجداول: ${error.message}`
+        }
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ خطأ في إنشاء الجداول:', error.message)
+    return {
+      tablesCreated: false,
+      message: `خطأ في إنشاء الجداول: ${error.message}`
+    }
   }
 }
