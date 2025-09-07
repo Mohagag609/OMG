@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import Layout from '@/components/Layout'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -314,163 +315,143 @@ export default function Customers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">👤</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة العملاء</h1>
-                <p className="text-gray-600">نظام متطور لإدارة العملاء</p>
-              </div>
+    <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+      <div className="flex items-center justify-between mb-8">
+        <ModernButton onClick={() => setShowAddModal(true)}>
+          <span className="mr-2">➕</span>
+          إضافة عميل جديد
+          <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
+        </ModernButton>
+      </div>
+
+      {/* Search and Filters */}
+      <ModernCard className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <div className="relative">
+              <input
+                id="search-input"
+                type="text"
+                placeholder="🔍 ابحث في العملاء... (Ctrl+F)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              />
             </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton onClick={() => setShowAddModal(true)}>
-                <span className="mr-2">➕</span>
-                إضافة عميل جديد
-                <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-              </ModernButton>
-              <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                العودة للرئيسية
-              </ModernButton>
-            </div>
+            <ModernButton variant="secondary" size="sm">
+              📊 تصدير CSV
+            </ModernButton>
+            <ModernButton variant="secondary" size="sm">
+              🖨️ طباعة PDF
+            </ModernButton>
+          </div>
+          <div className="text-sm text-gray-500">
+            {customers.length} عميل
           </div>
         </div>
-      </div>
+      </ModernCard>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search and Filters */}
-        <ModernCard className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="relative">
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="🔍 ابحث في العملاء... (Ctrl+F)"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                />
-              </div>
-              <ModernButton variant="secondary" size="sm">
-                📊 تصدير CSV
-              </ModernButton>
-              <ModernButton variant="secondary" size="sm">
-                🖨️ طباعة PDF
-              </ModernButton>
-            </div>
-            <div className="text-sm text-gray-500">
-              {customers.length} عميل
+      {/* Customers List */}
+      <ModernCard>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">قائمة العملاء</h2>
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <span className="text-sm text-gray-500">آخر تحديث:</span>
+            <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center">
+              <span className="text-red-500 mr-2">⚠️</span>
+              <span className="text-red-700">{error}</span>
             </div>
           </div>
-        </ModernCard>
+        )}
 
-        {/* Customers List */}
-        <ModernCard>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">قائمة العملاء</h2>
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <span className="text-sm text-gray-500">آخر تحديث:</span>
-              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center">
+              <span className="text-green-500 mr-2">✅</span>
+              <span className="text-green-700">{success}</span>
             </div>
           </div>
+        )}
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-center">
-                <span className="text-red-500 mr-2">⚠️</span>
-                <span className="text-red-700">{error}</span>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <div className="flex items-center">
-                <span className="text-green-500 mr-2">✅</span>
-                <span className="text-green-700">{success}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الاسم</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">رقم الهاتف</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الرقم القومي</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">العنوان</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الإضافة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">الاسم</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">رقم الهاتف</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">الرقم القومي</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">العنوان</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الإضافة</th>
+                <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.filter(customer => 
+                search === '' || 
+                customer.name.toLowerCase().includes(search.toLowerCase()) ||
+                customer.phone.toLowerCase().includes(search.toLowerCase()) ||
+                (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
+              ).map((customer) => (
+                <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                  <td className="py-4 px-6">
+                    <div className="font-medium text-gray-900">{customer.name}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-gray-600">{customer.phone}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-gray-600">{customer.nationalId || '-'}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-gray-600 max-w-xs truncate">{customer.address || '-'}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      customer.status === 'نشط' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {customer.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-gray-600">{formatDate(customer.createdAt || new Date())}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
+                        ✏️ تعديل
+                      </ModernButton>
+                      <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
+                        🗑️ حذف
+                      </ModernButton>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {customers.filter(customer => 
-                  search === '' || 
-                  customer.name.toLowerCase().includes(search.toLowerCase()) ||
-                  customer.phone.toLowerCase().includes(search.toLowerCase()) ||
-                  (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
-                ).map((customer) => (
-                  <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{customer.name}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{customer.phone}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{customer.nationalId || '-'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600 max-w-xs truncate">{customer.address || '-'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        customer.status === 'نشط' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {customer.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{formatDate(customer.createdAt || new Date())}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
-                          ✏️ تعديل
-                        </ModernButton>
-                        <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
-                          🗑️ حذف
-                        </ModernButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </ModernCard>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       {/* Add/Edit Customer Modal */}
       {showAddModal && (
@@ -592,6 +573,6 @@ export default function Customers() {
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-    </div>
+    </Layout>
   )
 }
