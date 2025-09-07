@@ -500,7 +500,7 @@ export default function DatabaseSettings() {
     
     setInitialized(true)
     loadSettings()
-  }, [initialized, loading]) // Depend on both initialized and loading states
+  }, [initialized, loading, loadSettings, router]) // Include all dependencies
 
   if (loading) {
     return (
