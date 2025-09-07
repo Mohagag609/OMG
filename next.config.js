@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: true,
+  trailingSlash: false, // إصلاح مشكلة API routes
   images: {
     unoptimized: true
   },
