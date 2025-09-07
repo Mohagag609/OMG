@@ -118,7 +118,7 @@ export default function Customers() {
     }
     
     fetchCustomers()
-  }, [])
+  }, [router])
 
   const fetchCustomers = async () => {
     try {

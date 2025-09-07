@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
@@ -81,17 +81,7 @@ export default function DatabaseSettings() {
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    loadDatabaseSettings()
-  }, [])
-
-  const loadDatabaseSettings = async () => {
+  const loadDatabaseSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/database/settings')
       
@@ -116,7 +106,17 @@ export default function DatabaseSettings() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [addNotification])
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    loadDatabaseSettings()
+  }, [router, loadDatabaseSettings])
 
   const testConnection = async () => {
     setTesting(true)

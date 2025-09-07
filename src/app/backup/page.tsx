@@ -64,7 +64,7 @@ export default function Backup() {
     }
     
     fetchBackups()
-  }, [])
+  }, [router])
 
   const fetchBackups = async () => {
     try {

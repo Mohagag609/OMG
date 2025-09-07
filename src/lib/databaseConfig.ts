@@ -9,6 +9,7 @@ export interface DatabaseConfig {
   connectionString: string
   isConnected: boolean
   lastTested: string
+  details?: any
 }
 
 // Default configuration

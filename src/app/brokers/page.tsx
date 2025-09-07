@@ -102,7 +102,7 @@ export default function Brokers() {
     }
     
     fetchBrokers()
-  }, [])
+  }, [router])
 
   const fetchBrokers = async () => {
     try {

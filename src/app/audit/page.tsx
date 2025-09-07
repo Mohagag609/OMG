@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDate } from '@/utils/formatting'
 
@@ -17,18 +17,7 @@ export default function Audit() {
   const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
   const router = useRouter()
 
-  useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchAuditLogs()
-  }, [pagination.page])
-
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       const params = new URLSearchParams({
@@ -64,7 +53,18 @@ export default function Audit() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.limit])
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchAuditLogs()
+  }, [pagination.page, router, fetchAuditLogs])
 
   if (loading) {
     return (

@@ -188,7 +188,7 @@ export default function Contracts() {
     }
     
     fetchData()
-  }, [])
+  }, [router])
 
   const fetchData = async () => {
     try {
