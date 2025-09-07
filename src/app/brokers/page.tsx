@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Broker } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -132,6 +133,26 @@ export default function Brokers() {
         type: 'error',
         title: 'خطأ في البيانات',
         message: 'الرجاء إدخال اسم السمسار'
+      })
+      return
+    }
+
+    // فحص تكرار الاسم
+    if (checkDuplicateName(newBroker.name, brokers)) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'اسم السمسار موجود بالفعل'
+      })
+      return
+    }
+
+    // فحص تكرار رقم الهاتف (إذا تم إدخاله)
+    if (newBroker.phone && checkDuplicatePhone(newBroker.phone, brokers)) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'رقم الهاتف موجود بالفعل'
       })
       return
     }

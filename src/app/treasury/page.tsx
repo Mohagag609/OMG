@@ -70,6 +70,7 @@ export default function Treasury() {
   const [showAddSafeModal, setShowAddSafeModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
+  const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
   const [newSafe, setNewSafe] = useState({
     name: '',
     balance: ''

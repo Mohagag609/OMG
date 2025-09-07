@@ -13,6 +13,7 @@ export default function PartnerDebts() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [deletingDebts, setDeletingDebts] = useState<Set<string>>(new Set())
   const [newDebt, setNewDebt] = useState({
     partnerId: '',
     amount: '',

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Unit, UnitPartner } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { checkDuplicateCode } from '@/utils/duplicateCheck'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -156,11 +157,21 @@ export default function Units() {
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newUnit.code || !newUnit.unitType || !newUnit.totalPrice) {
+    if (!newUnit.code) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال كود الوحدة ونوعها والسعر'
+        message: 'الرجاء إدخال كود الوحدة'
+      })
+      return
+    }
+
+    // فحص تكرار كود الوحدة
+    if (checkDuplicateCode(newUnit.code, units)) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'كود الوحدة موجود بالفعل'
       })
       return
     }

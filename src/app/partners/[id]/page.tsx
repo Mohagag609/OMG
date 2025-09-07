@@ -13,6 +13,7 @@ export default function PartnerDetails() {
   const [partnerDebts, setPartnerDebts] = useState<PartnerDebt[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set())
   const router = useRouter()
   const params = useParams()
   const { notifications, addNotification, removeNotification } = useNotifications()

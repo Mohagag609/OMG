@@ -131,6 +131,7 @@ export default function Contracts() {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [deletingContracts, setDeletingContracts] = useState<Set<string>>(new Set())
   const [newContract, setNewContract] = useState({
     unitId: '',
     customerId: '',

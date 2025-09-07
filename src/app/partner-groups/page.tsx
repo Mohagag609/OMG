@@ -30,6 +30,7 @@ export default function PartnerGroups() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', notes: '' })
   const [selectedGroup, setSelectedGroup] = useState<PartnerGroup | null>(null)
+  const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 

@@ -46,6 +46,7 @@ export default function Vouchers() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()

@@ -51,6 +51,7 @@ export default function Backup() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [deletingBackups, setDeletingBackups] = useState<Set<string>>(new Set())
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()

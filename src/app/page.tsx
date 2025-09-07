@@ -79,6 +79,7 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set())
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 

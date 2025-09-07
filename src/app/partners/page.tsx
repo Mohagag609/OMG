@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
+import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
 
 export default function Partners() {
   const [partners, setPartners] = useState<Partner[]>([])
@@ -12,6 +13,7 @@ export default function Partners() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [deletingPartners, setDeletingPartners] = useState<Set<string>>(new Set())
   const [newPartner, setNewPartner] = useState({
     name: '',
     phone: '',
@@ -64,6 +66,24 @@ export default function Partners() {
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!newPartner.name) {
+      setError('الرجاء إدخال اسم الشريك')
+      return
+    }
+
+    // فحص تكرار الاسم
+    if (checkDuplicateName(newPartner.name, partners)) {
+      setError('اسم الشريك موجود بالفعل')
+      return
+    }
+
+    // فحص تكرار رقم الهاتف (إذا تم إدخاله)
+    if (newPartner.phone && checkDuplicatePhone(newPartner.phone, partners)) {
+      setError('رقم الهاتف موجود بالفعل')
+      return
+    }
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/partners', {

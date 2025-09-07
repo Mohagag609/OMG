@@ -14,6 +14,7 @@ export default function Audit() {
     total: 0,
     totalPages: 0
   })
+  const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
   const router = useRouter()
 
   useEffect(() => {
