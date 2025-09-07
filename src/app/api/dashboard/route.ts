@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ensureEnvironmentVariables } from '@/lib/env'
 import { calculateDashboardKPIs } from '@/utils/calculations'
 import { ApiResponse, DashboardKPIs } from '@/types'
+import { createPrismaClient } from '@/lib/prismaClient'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -14,15 +15,8 @@ export async function GET(request: NextRequest) {
     ensureEnvironmentVariables()
     console.log('📊 جاري تحميل بيانات لوحة التحكم...')
 
-    // Create Prisma client with environment variables
-    const { PrismaClient } = await import('@prisma/client')
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    })
+    // Create Prisma client with current database URL
+    prisma = await createPrismaClient()
 
     // Get all data for calculations
     const [

@@ -3,6 +3,7 @@ import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 import { ensureEnvironmentVariables } from '@/lib/env'
 import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
+import { createPrismaClient } from '@/lib/prismaClient'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -14,15 +15,8 @@ export async function GET(request: NextRequest) {
     ensureEnvironmentVariables()
     console.log('📋 جاري تحميل العملاء...')
 
-    // Create Prisma client with environment variables
-    const { PrismaClient } = await import('@prisma/client')
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    })
+    // Create Prisma client with current database URL
+    prisma = await createPrismaClient()
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -84,15 +78,8 @@ export async function POST(request: NextRequest) {
     ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء عميل جديد...')
 
-    // Create Prisma client with environment variables
-    const { PrismaClient } = await import('@prisma/client')
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    })
+    // Create Prisma client with current database URL
+    prisma = await createPrismaClient()
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body
