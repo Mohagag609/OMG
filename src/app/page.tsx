@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardKPIs } from '@/types'
 import { formatCurrency, formatPercentage } from '@/utils/formatting'
+import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 
 export default function Home() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
     // Check if user is logged in
@@ -44,8 +46,18 @@ export default function Home() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
+        addNotification({
+          type: 'success',
+          title: 'تم التحميل بنجاح',
+          message: 'تم تحميل بيانات لوحة التحكم بنجاح'
+        })
       } else {
         setError(data.error || 'خطأ في تحميل البيانات')
+        addNotification({
+          type: 'error',
+          title: 'خطأ في التحميل',
+          message: data.error || 'فشل في تحميل البيانات'
+        })
       }
     } catch (err) {
       console.error('Dashboard error:', err)
