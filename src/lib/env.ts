@@ -23,7 +23,7 @@ export function ensureEnvironmentVariables() {
   
   // Only set default values if not already set
   if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    process.env.DATABASE_URL = "file:./prisma/dev.db"
     console.log('🔧 تم تعيين DATABASE_URL الافتراضي')
   }
   

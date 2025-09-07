@@ -14,10 +14,10 @@ export interface DatabaseConfig {
   version?: string
 }
 
-// Default configuration - Always PostgreSQL
+// Default configuration - Always SQLite
 const DEFAULT_CONFIG: DatabaseConfig = {
-  type: 'postgresql',
-  connectionString: 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+  type: 'sqlite',
+  connectionString: 'file:./prisma/dev.db',
   isConnected: false,
   lastTested: new Date().toISOString(),
   savedAt: new Date().toISOString(),
@@ -83,7 +83,7 @@ export function loadDatabaseConfig(): DatabaseConfig {
     console.error('📁 مسار الملف:', CONFIG_FILE)
   }
   
-  console.log('📋 استخدام الإعدادات الافتراضية - PostgreSQL')
+  console.log('📋 استخدام الإعدادات الافتراضية - SQLite')
   // Update environment variable with default
   process.env.DATABASE_URL = DEFAULT_CONFIG.connectionString
   return DEFAULT_CONFIG

@@ -66,7 +66,7 @@ interface DatabaseSettings {
 
 export default function DatabaseSettings() {
   const [settings, setSettings] = useState<DatabaseSettings>({
-    type: 'postgresql',
+    type: 'sqlite',
     connectionString: '',
     isConnected: false
   })
@@ -90,10 +90,10 @@ export default function DatabaseSettings() {
         setTempConnectionString(data.data.connectionString)
         console.log('✅ تم تحميل الإعدادات:', data.data.type)
       } else {
-        // إعدادات افتراضية - PostgreSQL
-        const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+        // إعدادات افتراضية - SQLite
+        const defaultConnectionString = 'file:./prisma/dev.db'
         setSettings({
-          type: 'postgresql',
+          type: 'sqlite',
           connectionString: defaultConnectionString,
           isConnected: false
         })
@@ -103,9 +103,9 @@ export default function DatabaseSettings() {
     } catch (err) {
       console.error('❌ خطأ في تحميل الإعدادات:', err)
       // إعدادات افتراضية في حالة الخطأ
-      const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+      const defaultConnectionString = 'file:./prisma/dev.db'
       setSettings({
-        type: 'postgresql',
+        type: 'sqlite',
         connectionString: defaultConnectionString,
         isConnected: false
       })
