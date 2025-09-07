@@ -70,6 +70,7 @@ export default function Customers() {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [deletingCustomers, setDeletingCustomers] = useState<Set<string>>(new Set())
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -142,14 +143,38 @@ export default function Customers() {
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newCustomer.name || !newCustomer.phone) {
+    if (!newCustomer.name) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال الاسم ورقم الهاتف'
+        message: 'الرجاء إدخال اسم العميل'
       })
       return
     }
+
+    // إغلاق النافذة فوراً وإظهار النجاح
+    setShowAddModal(false)
+    setSuccess('تم إضافة العميل بنجاح!')
+    setError(null)
+    
+    // إضافة العميل للقائمة فوراً مع ID مؤقت
+    const tempCustomer = {
+      ...newCustomer,
+      id: `temp-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    setCustomers(prev => [tempCustomer, ...prev])
+
+    // إعادة تعيين النموذج
+    setNewCustomer({
+      name: '',
+      phone: '',
+      nationalId: '',
+      address: '',
+      status: 'نشط',
+      notes: ''
+    })
 
     try {
       const token = localStorage.getItem('authToken')
@@ -164,24 +189,19 @@ export default function Customers() {
 
       const data = await response.json()
       if (data.success) {
-        setShowAddModal(false)
-        setSuccess('تم إضافة العميل بنجاح!')
-        setError(null)
-        setNewCustomer({
-          name: '',
-          phone: '',
-          nationalId: '',
-          address: '',
-          status: 'نشط',
-          notes: ''
-        })
-        fetchCustomers()
+        // استبدال العميل المؤقت بالعميل الحقيقي
+        setCustomers(prev => prev.map(customer => 
+          customer.id === tempCustomer.id ? data.data : customer
+        ))
         addNotification({
           type: 'success',
           title: 'تم الحفظ بنجاح',
           message: 'تم إضافة العميل بنجاح'
         })
       } else {
+        // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
+        setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
+        setShowAddModal(true)
         setError(data.error || 'خطأ في إضافة العميل')
         setSuccess(null)
         addNotification({
@@ -192,6 +212,9 @@ export default function Customers() {
       }
     } catch (err) {
       console.error('Add customer error:', err)
+      // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
+      setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
+      setShowAddModal(true)
       setError('خطأ في إضافة العميل')
       setSuccess(null)
       addNotification({
@@ -207,6 +230,32 @@ export default function Customers() {
     
     if (!editingCustomer) return
 
+    // إغلاق النافذة فوراً وإظهار النجاح
+    setShowAddModal(false)
+    setEditingCustomer(null)
+    setSuccess('تم تحديث العميل بنجاح!')
+    setError(null)
+
+    // تحديث العميل في القائمة فوراً
+    const updatedCustomer = {
+      ...editingCustomer,
+      ...newCustomer,
+      updatedAt: new Date().toISOString()
+    }
+    setCustomers(prev => prev.map(customer => 
+      customer.id === editingCustomer.id ? updatedCustomer : customer
+    ))
+
+    // إعادة تعيين النموذج
+    setNewCustomer({
+      name: '',
+      phone: '',
+      nationalId: '',
+      address: '',
+      status: 'نشط',
+      notes: ''
+    })
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/customers/${editingCustomer.id}`, {
@@ -220,25 +269,18 @@ export default function Customers() {
 
       const data = await response.json()
       if (data.success) {
-        setShowAddModal(false)
-        setEditingCustomer(null)
-        setSuccess('تم تحديث العميل بنجاح!')
-        setError(null)
-        setNewCustomer({
-          name: '',
-          phone: '',
-          nationalId: '',
-          address: '',
-          status: 'نشط',
-          notes: ''
-        })
-        fetchCustomers()
+        // استبدال العميل المحدث بالبيانات الحقيقية من الخادم
+        setCustomers(prev => prev.map(customer => 
+          customer.id === editingCustomer.id ? data.data : customer
+        ))
         addNotification({
           type: 'success',
           title: 'تم التحديث بنجاح',
           message: 'تم تحديث العميل بنجاح'
         })
       } else {
+        // في حالة فشل التحديث، نعيد البيانات الأصلية
+        fetchCustomers()
         setError(data.error || 'خطأ في تحديث العميل')
         setSuccess(null)
         addNotification({
@@ -249,6 +291,8 @@ export default function Customers() {
       }
     } catch (err) {
       console.error('Update customer error:', err)
+      // في حالة فشل التحديث، نعيد البيانات الأصلية
+      fetchCustomers()
       setError('خطأ في تحديث العميل')
       setSuccess(null)
       addNotification({
@@ -262,6 +306,16 @@ export default function Customers() {
   const handleDeleteCustomer = async (customerId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return
 
+    // إضافة العميل لقائمة الحذف وإظهار الحركة فوراً
+    setDeletingCustomers(prev => {
+      const newSet = new Set(prev)
+      newSet.add(customerId)
+      return newSet
+    })
+    
+    // إزالة العميل من القائمة فوراً مع الحركة
+    setCustomers(prev => prev.filter(customer => customer.id !== customerId))
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/customers/${customerId}`, {
@@ -273,13 +327,14 @@ export default function Customers() {
       if (data.success) {
         setSuccess('تم حذف العميل بنجاح!')
         setError(null)
-        fetchCustomers()
         addNotification({
           type: 'success',
           title: 'تم الحذف بنجاح',
           message: 'تم حذف العميل بنجاح'
         })
       } else {
+        // في حالة فشل الحذف، نعيد العميل للقائمة
+        fetchCustomers()
         setError(data.error || 'خطأ في حذف العميل')
         setSuccess(null)
         addNotification({
@@ -290,12 +345,21 @@ export default function Customers() {
       }
     } catch (err) {
       console.error('Delete customer error:', err)
+      // في حالة فشل الحذف، نعيد العميل للقائمة
+      fetchCustomers()
       setError('خطأ في حذف العميل')
       setSuccess(null)
       addNotification({
         type: 'error',
         title: 'خطأ في الحذف',
         message: 'فشل في حذف العميل'
+      })
+    } finally {
+      // إزالة العميل من قائمة الحذف
+      setDeletingCustomers(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(customerId)
+        return newSet
       })
     }
   }
@@ -411,7 +475,16 @@ export default function Customers() {
                 customer.phone.toLowerCase().includes(search.toLowerCase()) ||
                 (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
               ).map((customer) => (
-                <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                <tr 
+                  key={customer.id} 
+                  className={`
+                    border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
+                    ${deletingCustomers.has(customer.id) 
+                      ? 'transform translate-x-full opacity-0 scale-95' 
+                      : 'transform translate-x-0 opacity-100 scale-100'
+                    }
+                  `}
+                >
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{customer.name}</div>
                   </td>
@@ -494,12 +567,11 @@ export default function Customers() {
                 />
                 
                 <ModernInput
-                  label="رقم الهاتف *"
+                  label="رقم الهاتف"
                   type="tel"
                   value={newCustomer.phone}
                   onChange={(e: any) => setNewCustomer({...newCustomer, phone: e.target.value})}
-                  placeholder="رقم الهاتف"
-                  required
+                  placeholder="رقم الهاتف (اختياري)"
                 />
                 
                 <ModernInput
