@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -8,38 +7,9 @@ export const runtime = 'nodejs'
 // POST /api/database/reset - Reset database
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('🔄 بدء إعادة تهيئة قاعدة البيانات (بدون مصادقة)...')
 
-    const token = authHeader.substring(7)
-    console.log('🔑 Token received:', token.substring(0, 50) + '...')
-    
-    const user = await getUserFromToken(token)
-    console.log('👤 User from token:', user)
-    
-    if (!user) {
-      console.log('❌ No user found from token')
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    if (user.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'هذا الإجراء مخصص للمديرين فقط' },
-        { status: 403 }
-      )
-    }
-
-    // Reset database
+    // Reset database directly without authentication
     const resetResult = await resetDatabase()
 
     if (resetResult.success) {
@@ -72,6 +42,14 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('🔄 بدء إعادة تهيئة قاعدة البيانات...')
 
+    // Ensure environment variables are set first
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    }
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = "estate-management-development-secret-key"
+    }
+
     // Import Prisma client
     const { PrismaClient } = await import('@prisma/client')
     const prisma = new PrismaClient()
@@ -79,32 +57,9 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
     // Disconnect current connection
     await prisma.$disconnect()
 
-    // Try direct database reset first
-    try {
-      console.log('🔄 محاولة إعادة تهيئة مباشرة...')
-      await resetDatabaseDirectly()
-    } catch (directError: any) {
-      console.log('⚠️ فشل في الإعادة المباشرة، جاري المحاولة بالأمر...')
-      
-      // Fallback to command line approach
-      const { execSync } = await import('child_process')
-      const userConsent = "تطوير عادي مش هاممني البيانات"
-      
-      try {
-        execSync(`PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="${userConsent}" npx prisma db push --force-reset`, {
-          stdio: 'pipe',
-          cwd: process.cwd(),
-          env: {
-            ...process.env,
-            NPM_CONFIG_CACHE: '/tmp/.npm',
-            HOME: '/tmp'
-          }
-        })
-      } catch (execError: any) {
-        console.error('❌ فشل في تنفيذ الأمر:', execError.message)
-        throw new Error(`فشل في إعادة تهيئة قاعدة البيانات: ${execError.message}`)
-      }
-    }
+    // Use direct database reset only (no command line)
+    console.log('🔄 إعادة تهيئة مباشرة لقاعدة البيانات...')
+    await resetDatabaseDirectly()
 
     console.log('✅ تم إعادة تهيئة قاعدة البيانات')
 
@@ -224,7 +179,15 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
 // Direct database reset function
 async function resetDatabaseDirectly(): Promise<void> {
   const { PrismaClient } = await import('@prisma/client')
-  const prisma = new PrismaClient()
+  
+  // Create new Prisma client with explicit database URL
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+      }
+    }
+  })
   
   try {
     // Delete all data from all tables

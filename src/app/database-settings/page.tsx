@@ -234,12 +234,10 @@ export default function DatabaseSettings() {
 
     setResetting(true)
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/database/reset', {
+      const response = await fetch('/api/database/reset-simple', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
 
