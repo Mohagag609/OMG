@@ -3,20 +3,20 @@ import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 import { ensureEnvironmentVariables } from '@/lib/env'
 import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
-import { createPrismaClient } from '@/lib/prismaClient'
+import { getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {
-  let prisma: any = null
+  let db: any = null
   try {
     ensureEnvironmentVariables()
     console.log('📋 جاري تحميل العملاء...')
 
-    // Create Prisma client with current database URL
-    prisma = await createPrismaClient()
+    // Get database connection
+    db = await getDb()
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -34,15 +34,36 @@ export async function GET(request: NextRequest) {
     }
 
     const skip = (page - 1) * limit
-    const [customers, total] = await Promise.all([
-      prisma.customer.findMany({
-        where: whereClause,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.customer.count({ where: whereClause })
+    
+    // Build SQL query based on database type
+    let customersQuery = 'SELECT * FROM customers WHERE deletedAt IS NULL'
+    let countQuery = 'SELECT COUNT(*) as total FROM customers WHERE deletedAt IS NULL'
+    const params: any[] = []
+    
+    if (search) {
+      const searchConditions = createAdvancedArabicSearch(search, ['name', 'phone', 'nationalId', 'address'])
+      if (searchConditions.OR) {
+        const searchClause = searchConditions.OR.map((condition: any) => {
+          const field = Object.keys(condition)[0]
+          const value = condition[field]
+          params.push(`%${value}%`)
+          return `${field} LIKE ?`
+        }).join(' OR ')
+        
+        customersQuery += ` AND (${searchClause})`
+        countQuery += ` AND (${searchClause})`
+      }
+    }
+    
+    customersQuery += ' ORDER BY createdAt DESC'
+    customersQuery += ` LIMIT ${limit} OFFSET ${skip}`
+    
+    const [customers, countResult] = await Promise.all([
+      db.query(customersQuery, params),
+      db.query(countQuery, params)
     ])
+    
+    const total = countResult[0]?.total || 0
 
     const totalPages = Math.ceil(total / limit)
 
@@ -65,21 +86,21 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    if (prisma) {
-      await prisma.$disconnect()
+    if (db) {
+      await db.close()
     }
   }
 }
 
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
-  let prisma: any = null
+  let db: any = null
   try {
     ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء عميل جديد...')
 
-    // Create Prisma client with current database URL
-    prisma = await createPrismaClient()
+    // Get database connection
+    db = await getDb()
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body
@@ -94,35 +115,37 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if name already exists
-    const existingCustomer = await prisma.customer.findFirst({
-      where: { 
-        name: name,
-        deletedAt: null
-      }
-    })
+    const existingCustomer = await db.query(
+      'SELECT id FROM customers WHERE name = ? AND deletedAt IS NULL',
+      [name]
+    )
 
-    if (existingCustomer) {
+    if (existingCustomer.length > 0) {
       return NextResponse.json(
         { success: false, error: 'اسم العميل مستخدم بالفعل' },
         { status: 400 }
       )
     }
 
+    // Generate ID
+    const id = `customer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
     // Create customer
-    const customer = await prisma.customer.create({
-      data: {
-        name,
-        phone,
-        nationalId,
-        address,
-        status: status || 'نشط',
-        notes
-      }
-    })
+    const customer = await db.query(
+      `INSERT INTO customers (id, name, phone, nationalId, address, status, notes, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      [id, name, phone || null, nationalId || null, address || null, status || 'نشط', notes || null]
+    )
+
+    // Get created customer
+    const createdCustomer = await db.query(
+      'SELECT * FROM customers WHERE id = ?',
+      [id]
+    )
 
     const response: ApiResponse<Customer> = {
       success: true,
-      data: customer,
+      data: createdCustomer[0],
       message: 'تم إضافة العميل بنجاح'
     }
 
@@ -134,8 +157,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    if (prisma) {
-      await prisma.$disconnect()
+    if (db) {
+      await db.close()
     }
   }
 }
