@@ -4,7 +4,7 @@ import Database from 'better-sqlite3'
 import { getCurrentDbUrl, getCurrentDbType, DatabaseInterface } from './config'
 
 // تصدير prisma للتوافق مع الكود الموجود
-export { getDb as prisma }
+export { prisma } from './prisma-compat'
 
 // واجهة موحدة لقاعدة البيانات
 class UnifiedDatabase implements DatabaseInterface {

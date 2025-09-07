@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       notes: group.notes,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
-      partners: group.partners.map(p => ({
+      partners: group.partners.map((p: any) => ({
         partnerId: p.partnerId,
         percent: p.percentage
       }))

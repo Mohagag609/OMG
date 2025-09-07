@@ -135,7 +135,7 @@ export async function getAuditStats(): Promise<{
       logsByEntityType,
       recentActivity
     ] = await Promise.all([
-      prisma.auditLog.count(),
+      prisma.auditLog.count({}),
       prisma.auditLog.groupBy({
         by: ['action'],
         _count: { action: true },

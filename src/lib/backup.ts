@@ -62,8 +62,8 @@ export async function createBackup(): Promise<BackupData> {
       prisma.broker.findMany({ where: { deletedAt: null } }),
       prisma.brokerDue.findMany({ where: { deletedAt: null } }),
       prisma.partnerGroup.findMany({ where: { deletedAt: null } }),
-      prisma.settings.findMany(),
-      prisma.keyVal.findMany()
+      prisma.settings.findMany({}),
+      prisma.keyVal.findMany({})
     ])
     
     const totalRecords = customers.length + units.length + partners.length + 
@@ -305,8 +305,8 @@ export async function getBackupStatistics(): Promise<{
       prisma.broker.count({ where: { deletedAt: null } }),
       prisma.brokerDue.count({ where: { deletedAt: null } }),
       prisma.partnerGroup.count({ where: { deletedAt: null } }),
-      prisma.settings.count(),
-      prisma.keyVal.count()
+      prisma.settings.count({}),
+      prisma.keyVal.count({})
     ])
     
     const totalRecords = customerCount + unitCount + partnerCount + unitPartnerCount +
