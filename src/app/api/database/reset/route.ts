@@ -75,17 +75,32 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
     // Disconnect current connection
     await prisma.$disconnect()
 
-    // Reset database using Prisma
-    const { execSync } = await import('child_process')
-    
-    // Set environment variable for user consent
-    const userConsent = "تطوير عادي مش هاممني البيانات"
-    
-    // Reset database
-    execSync(`PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="${userConsent}" npx prisma db push --force-reset`, {
-      stdio: 'pipe',
-      cwd: process.cwd()
-    })
+    // Try direct database reset first
+    try {
+      console.log('🔄 محاولة إعادة تهيئة مباشرة...')
+      await resetDatabaseDirectly()
+    } catch (directError: any) {
+      console.log('⚠️ فشل في الإعادة المباشرة، جاري المحاولة بالأمر...')
+      
+      // Fallback to command line approach
+      const { execSync } = await import('child_process')
+      const userConsent = "تطوير عادي مش هاممني البيانات"
+      
+      try {
+        execSync(`PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="${userConsent}" npx prisma db push --force-reset`, {
+          stdio: 'pipe',
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            NPM_CONFIG_CACHE: '/tmp/.npm',
+            HOME: '/tmp'
+          }
+        })
+      } catch (execError: any) {
+        console.error('❌ فشل في تنفيذ الأمر:', execError.message)
+        throw new Error(`فشل في إعادة تهيئة قاعدة البيانات: ${execError.message}`)
+      }
+    }
 
     console.log('✅ تم إعادة تهيئة قاعدة البيانات')
 
@@ -199,5 +214,31 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
       success: false, 
       error: error.message || 'فشل في إعادة تهيئة قاعدة البيانات' 
     }
+  }
+}
+
+// Direct database reset function
+async function resetDatabaseDirectly(): Promise<void> {
+  const { PrismaClient } = await import('@prisma/client')
+  const prisma = new PrismaClient()
+  
+  try {
+    // Delete all data from all tables
+    await prisma.$transaction([
+      prisma.contract.deleteMany(),
+      prisma.customer.deleteMany(),
+      prisma.unit.deleteMany(),
+      prisma.partner.deleteMany(),
+      prisma.broker.deleteMany(),
+      prisma.safe.deleteMany(),
+      prisma.user.deleteMany(),
+    ])
+    
+    console.log('✅ تم حذف جميع البيانات بنجاح')
+  } catch (error: any) {
+    console.error('❌ خطأ في الحذف المباشر:', error.message)
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
