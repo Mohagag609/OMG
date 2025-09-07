@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
 import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 
@@ -10,24 +9,7 @@ export const runtime = 'nodejs'
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('📋 جاري تحميل العملاء...')
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -81,24 +63,7 @@ export async function GET(request: NextRequest) {
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('➕ جاري إنشاء عميل جديد...')
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body

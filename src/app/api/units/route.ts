@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
 import { validateUnit } from '@/utils/validation'
 import { ApiResponse, Unit, PaginatedResponse } from '@/types'
 
@@ -10,24 +9,7 @@ export const runtime = 'nodejs'
 // GET /api/units - Get units with pagination
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('🏠 جاري تحميل الوحدات...')
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -81,24 +63,7 @@ export async function GET(request: NextRequest) {
 // POST /api/units - Create new unit
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('➕ جاري إنشاء وحدة جديدة...')
 
     const body = await request.json()
     const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, Partner, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -90,24 +89,7 @@ export async function GET(request: NextRequest) {
 // POST /api/partners - Create new partner
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('➕ جاري إنشاء شريك جديد...')
 
     const body = await request.json()
     const { name, phone, notes } = body
