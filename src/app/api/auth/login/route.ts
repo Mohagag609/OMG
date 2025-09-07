@@ -21,25 +21,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For now, we'll use a simple hardcoded admin user
-    // In production, this should be stored in the database
-    const adminUser = {
-      id: 'admin-1',
-      username: 'admin',
-      password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/9yQK.2O', // 'admin123'
-      role: 'admin' as const
-    }
+    // البحث عن المستخدم في قاعدة البيانات
+    const user = await prisma.user.findUnique({
+      where: { username }
+    })
 
-    // Check if user exists
-    if (username !== adminUser.username) {
+    if (!user) {
       return NextResponse.json(
         { success: false, error: 'بيانات الدخول غير صحيحة' },
         { status: 401 }
       )
     }
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, adminUser.password)
+    // التحقق من كلمة المرور
+    const isValidPassword = await verifyPassword(password, user.password)
     if (!isValidPassword) {
       return NextResponse.json(
         { success: false, error: 'بيانات الدخول غير صحيحة' },
@@ -47,11 +42,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate token
+    // إنشاء التوكن
     const token = generateToken({
-      id: adminUser.id,
-      username: adminUser.username,
-      role: adminUser.role
+      id: user.id.toString(),
+      username: user.username,
+      role: user.role as 'admin' | 'user'
     })
 
     const response: ApiResponse<{ token: string; user: { id: string; username: string; role: string } }> = {
