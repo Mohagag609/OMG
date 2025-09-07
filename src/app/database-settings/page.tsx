@@ -167,12 +167,31 @@ export default function DatabaseSettings() {
       
       if (data.success && data.data) {
         const loadedSettings = data.data
+        console.log('📋 تم تحميل الإعدادات بنجاح:', loadedSettings.type)
+        console.log('🔌 حالة الاتصال:', loadedSettings.isConnected ? 'متصل' : 'غير متصل')
+        
         setSettings({
           ...loadedSettings,
           status: loadedSettings.isConnected ? 'connected' : 'disconnected'
         })
         setConnectionString(loadedSettings.connectionString)
+        
+        // If database is connected, show success message
+        if (loadedSettings.isConnected) {
+          addNotification({
+            type: 'success',
+            title: 'تم تحميل الإعدادات',
+            message: `قاعدة البيانات ${loadedSettings.type} متصلة بنجاح`
+          })
+        } else {
+          addNotification({
+            type: 'warning',
+            title: 'تحذير',
+            message: 'قاعدة البيانات غير متصلة، يرجى اختبار الاتصال'
+          })
+        }
       } else {
+        console.log('⚠️ فشل في تحميل الإعدادات من الخادم')
         // Default to SQLite
         const defaultSettings = {
           type: 'sqlite' as DatabaseType,
@@ -182,6 +201,12 @@ export default function DatabaseSettings() {
         }
         setSettings(defaultSettings)
         setConnectionString(defaultSettings.connectionString)
+        
+        addNotification({
+          type: 'error',
+          title: 'خطأ في تحميل الإعدادات',
+          message: 'فشل في تحميل إعدادات قاعدة البيانات'
+        })
       }
     } catch (error) {
       console.error('خطأ في تحميل الإعدادات:', error)
@@ -246,13 +271,30 @@ export default function DatabaseSettings() {
       const data = await response.json()
       
       if (data.success) {
-        setSettings(prev => ({ 
-          ...prev, 
+        const updatedSettings = { 
+          ...settings, 
           isConnected: true, 
           status: 'connected',
           lastTested: new Date().toISOString(),
           connectionString: connectionString // Update connection string
-        }))
+        }
+        
+        setSettings(updatedSettings)
+        
+        // Save the updated settings to the server
+        try {
+          await fetch('/api/database/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: settings.type,
+              connectionString: connectionString
+            })
+          })
+          console.log('💾 تم حفظ الإعدادات المحدثة بعد الاختبار الناجح')
+        } catch (saveError) {
+          console.error('⚠️ فشل في حفظ الإعدادات المحدثة:', saveError)
+        }
         
         addNotification({
           type: 'success',

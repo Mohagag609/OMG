@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     await testBasicOperations(prisma)
     console.log('✅ تم اختبار العمليات بنجاح')
 
-    // Update connection status
+    // Update connection status and save to config file
     updateConnectionStatus(true, {
       type: type || 'postgresql',
       connectionString: connectionString,
@@ -59,6 +59,22 @@ export async function POST(request: NextRequest) {
       tablesCreated: true,
       lastTested: new Date().toISOString()
     })
+    
+    // Also update the config file with connection status
+    try {
+      const { saveDatabaseConfig } = await import('@/lib/databaseConfig')
+      const config = {
+        type: type || 'postgresql',
+        connectionString: connectionString,
+        isConnected: true,
+        lastTested: new Date().toISOString(),
+        persistent: true
+      }
+      saveDatabaseConfig(config)
+      console.log('💾 تم تحديث ملف الإعدادات مع حالة الاتصال الجديدة')
+    } catch (configError) {
+      console.error('⚠️ فشل في تحديث ملف الإعدادات:', configError)
+    }
 
     const response: ApiResponse<any> = {
       success: true,

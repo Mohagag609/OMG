@@ -1,8 +1,10 @@
 {
   "type": "postgresql",
-  "connectionString": "postgresql://neondb_owner:npg_PK2Vt9EuAkyU@ep-divi...",
-  "isConnected": false,
-  "savedAt": "2025-09-07T15:50:09.319Z",
+  "connectionString": "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  "isConnected": true,
+  "lastTested": "2025-09-07T16:17:09.670Z",
+  "persistent": true,
+  "savedAt": "2025-09-07T16:17:09.670Z",
   "version": "2.0",
-  "persistent": true
+  "lastModified": "2025-09-07T16:17:09.670Z"
 }
