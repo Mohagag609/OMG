@@ -142,8 +142,24 @@ export default function Customers() {
   if (loading) {
     return (
       <div className="container">
-        <div className="panel">
+        <div className="panel loading">
           <h2>جاري التحميل...</h2>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            marginTop: '20px',
+            fontSize: '24px'
+          }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid rgba(59, 130, 246, 0.3)',
+              borderTop: '4px solid rgb(59, 130, 246)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+          </div>
         </div>
       </div>
     )

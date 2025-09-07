@@ -65,8 +65,9 @@ model Partner {
   deletedAt DateTime?
   
   // Relations
-  unitPartners UnitPartner[]
-  partnerDebts PartnerDebt[]
+  unitPartners         UnitPartner[]
+  partnerDebts         PartnerDebt[]
+  partnerGroupPartners PartnerGroupPartner[]
   
   @@map("partners")
 }
@@ -247,7 +248,28 @@ model PartnerGroup {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   
+  // Relations
+  partners PartnerGroupPartner[]
+  
   @@map("partner_groups")
+}
+
+// PartnerGroupPartner - ربط الشركاء بالمجموعات
+model PartnerGroupPartner {
+  id              String   @id @default(cuid())
+  partnerGroupId String
+  partnerId       String
+  percentage      Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  // Relations
+  partnerGroup PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
+  partner      Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  @@unique([partnerGroupId, partnerId])
+  @@map("partner_group_partners")
 }
 
 // AuditLog - مطابق لـ golden-dataset.json

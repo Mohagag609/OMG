@@ -9,7 +9,14 @@ export default function Partners() {
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newPartner, setNewPartner] = useState({
+    name: '',
+    phone: '',
+    notes: ''
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -43,7 +50,7 @@ export default function Partners() {
 
       const data = await response.json()
       if (data.success) {
-        setPartners(data.data)
+        setPartners(data.data || [])
       } else {
         setError(data.error || 'خطأ في تحميل الشركاء')
       }
@@ -52,6 +59,45 @@ export default function Partners() {
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAddPartner = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/partners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newPartner)
+      })
+
+      if (!response.ok) {
+        throw new Error('فشل في إضافة الشريك')
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        setShowAddForm(false)
+        setSuccess('تم إضافة الشريك بنجاح!')
+        setError(null)
+        setNewPartner({
+          name: '',
+          phone: '',
+          notes: ''
+        })
+        fetchPartners()
+      } else {
+        setError(data.error || 'خطأ في إضافة الشريك')
+        setSuccess(null)
+      }
+    } catch (err) {
+      console.error('Add partner error:', err)
+      setError('خطأ في إضافة الشريك')
+      setSuccess(null)
     }
   }
 
@@ -73,7 +119,7 @@ export default function Partners() {
           <h1>إدارة الشركاء</h1>
         </div>
         <div className="tools">
-          <button className="btn primary">
+          <button className="btn primary" onClick={() => setShowAddForm(true)}>
             إضافة شريك جديد
           </button>
           <button className="btn secondary" onClick={() => router.push('/')}>
@@ -98,6 +144,56 @@ export default function Partners() {
         </div>
 
         <div className="content">
+          {showAddForm && (
+            <div className="panel" style={{ marginBottom: '20px' }}>
+              <h2>إضافة شريك جديد</h2>
+            {success && <div className="success-message">{success}</div>}
+            {error && <div className="error-message">{error}</div>}
+              <form onSubmit={handleAddPartner}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div className="form-group">
+                    <label className="form-label">اسم الشريك</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={newPartner.name}
+                      onChange={(e) => setNewPartner({...newPartner, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">رقم الهاتف</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      value={newPartner.phone}
+                      onChange={(e) => setNewPartner({...newPartner, phone: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">ملاحظات</label>
+                    <textarea
+                      className="form-textarea"
+                      value={newPartner.notes}
+                      onChange={(e) => setNewPartner({...newPartner, notes: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                  <button type="submit" className="btn primary">
+                    إضافة الشريك
+                  </button>
+                  <button type="button" className="btn secondary" onClick={() => setShowAddForm(false)}>
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+          
           <div className="panel">
             <h2>قائمة الشركاء</h2>
             

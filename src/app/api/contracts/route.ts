@@ -105,7 +105,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount } = body
+    const { 
+      unitId, 
+      customerId, 
+      start, 
+      totalPrice, 
+      discountAmount, 
+      brokerName, 
+      commissionSafeId, 
+      brokerAmount,
+      // Installment options
+      paymentType,
+      installmentType,
+      installmentCount,
+      downPayment,
+      extraAnnual,
+      annualPaymentValue,
+      maintenanceDeposit
+    } = body
 
     // Validate contract data
     const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount })
@@ -159,34 +176,128 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create contract
-    const contract = await prisma.contract.create({
-      data: {
-        unitId,
-        customerId,
-        start: new Date(start),
-        totalPrice: totalPrice || 0,
-        discountAmount: discountAmount || 0,
-        brokerName,
-        commissionSafeId,
-        brokerAmount: brokerAmount || 0
-      },
-      include: {
-        unit: true,
-        customer: true
-      }
-    })
+    // Create contract and generate installments in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create contract
+      const contract = await tx.contract.create({
+        data: {
+          unitId,
+          customerId,
+          start: new Date(start),
+          totalPrice: totalPrice || 0,
+          discountAmount: discountAmount || 0,
+          brokerName,
+          commissionSafeId,
+          brokerAmount: brokerAmount || 0
+        },
+        include: {
+          unit: true,
+          customer: true
+        }
+      })
 
-    // Update unit status to sold
-    await prisma.unit.update({
-      where: { id: unitId },
-      data: { status: 'مباعة' }
+      // Update unit status to sold
+      await tx.unit.update({
+        where: { id: unitId },
+        data: { status: 'مباعة' }
+      })
+
+      // Generate installments if payment type is installment
+      if (paymentType === 'installment') {
+        const installmentBase = totalPrice - (maintenanceDeposit || 0)
+        const totalAfterDown = installmentBase - (discountAmount || 0) - (downPayment || 0)
+        const totalAnnualPayments = (extraAnnual || 0) * (annualPaymentValue || 0)
+
+        if (totalAfterDown < 0) {
+          throw new Error('المقدم والخصم أكبر من قيمة العقد الخاضعة للتقسيط')
+        }
+        if (totalAnnualPayments > totalAfterDown) {
+          throw new Error('مجموع الدفعات السنوية أكبر من المبلغ المتبقي للتقسيط')
+        }
+
+        const amountForRegularInstallments = totalAfterDown - totalAnnualPayments
+        const installmentTypeMap: { [key: string]: number } = { 
+          'شهري': 1, 
+          'ربع سنوي': 3, 
+          'نصف سنوي': 6, 
+          'سنوي': 12 
+        }
+        const months = installmentTypeMap[installmentType] || 1
+        const count = parseInt(installmentCount || '0')
+
+        // Generate regular installments
+        if (count > 0) {
+          const baseAmount = Math.floor((amountForRegularInstallments / count) * 100) / 100
+          let accumulatedAmount = 0
+          
+          for (let i = 0; i < count; i++) {
+            const dueDate = new Date(start)
+            dueDate.setMonth(dueDate.getMonth() + months * (i + 1))
+            
+            const amount = (i === count - 1) 
+              ? Math.round((amountForRegularInstallments - accumulatedAmount) * 100) / 100 
+              : baseAmount
+            
+            accumulatedAmount += amount
+            
+            await tx.installment.create({
+              data: {
+                unitId,
+                amount,
+                dueDate,
+                status: 'غير مدفوع',
+                notes: `${installmentType} - قسط ${i + 1}`
+              }
+            })
+          }
+        }
+
+        // Generate annual payments
+        for (let j = 0; j < (extraAnnual || 0); j++) {
+          const dueDate = new Date(start)
+          dueDate.setMonth(dueDate.getMonth() + 12 * (j + 1))
+          
+          await tx.installment.create({
+            data: {
+              unitId,
+              amount: annualPaymentValue || 0,
+              dueDate,
+              status: 'غير مدفوع',
+              notes: 'دفعة سنوية إضافية'
+            }
+          })
+        }
+
+        // Generate maintenance deposit installment
+        if (maintenanceDeposit > 0) {
+          const allInstallments = await tx.installment.findMany({
+            where: { unitId },
+            orderBy: { dueDate: 'desc' }
+          })
+          
+          const lastInstallment = allInstallments[0]
+          const lastDate = lastInstallment ? new Date(lastInstallment.dueDate) : new Date(start)
+          lastDate.setMonth(lastDate.getMonth() + months)
+          
+          await tx.installment.create({
+            data: {
+              unitId,
+              amount: maintenanceDeposit,
+              dueDate: lastDate,
+              status: 'غير مدفوع',
+              notes: 'وديعة الصيانة'
+            }
+          })
+        }
+      }
+
+      return contract
     })
 
     const response: ApiResponse<Contract> = {
       success: true,
-      data: contract,
-      message: 'تم إضافة العقد بنجاح'
+      data: result,
+      message: paymentType === 'installment' ? 'تم إضافة العقد وتوليد الأقساط بنجاح' : 'تم إضافة العقد بنجاح'
     }
 
     return NextResponse.json(response)

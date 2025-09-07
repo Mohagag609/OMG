@@ -4,13 +4,36 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Unit } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
+import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+
+interface PartnerGroup {
+  id: string
+  name: string
+  partners: Array<{
+    partnerId: string
+    percent: number
+  }>
+}
 
 export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
+  const [partnerGroups, setPartnerGroups] = useState<PartnerGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newUnit, setNewUnit] = useState({
+    name: '',
+    floor: '',
+    building: '',
+    unitType: 'سكني',
+    area: '',
+    totalPrice: '',
+    partnerGroupId: '',
+    notes: ''
+  })
   const router = useRouter()
+  const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
     // Check if user is logged in
@@ -20,38 +43,98 @@ export default function Units() {
       return
     }
     
-    fetchUnits()
+    fetchData()
   }, [])
 
-  const fetchUnits = async () => {
+  const fetchData = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/units', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      
+      // Fetch units
+      const unitsResponse = await fetch('/api/units', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('authToken')
-          router.push('/login')
-          return
-        }
-        throw new Error('فشل في تحميل الوحدات')
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        setUnits(data.data)
+      const unitsData = await unitsResponse.json()
+      if (unitsData.success) {
+        setUnits(unitsData.data)
       } else {
-        setError(data.error || 'خطأ في تحميل الوحدات')
+        setError(unitsData.error || 'خطأ في تحميل الوحدات')
       }
+
+      // Fetch partner groups
+      const groupsResponse = await fetch('/api/partner-groups', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const groupsData = await groupsResponse.json()
+      if (groupsData.success) {
+        setPartnerGroups(groupsData.data)
+      }
+
     } catch (err) {
-      console.error('Units error:', err)
+      console.error('Error fetching data:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAddUnit = async () => {
+    if (!newUnit.name || !newUnit.floor || !newUnit.building || !newUnit.totalPrice || !newUnit.partnerGroupId) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء ملء جميع الحقول المطلوبة'
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/units', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...newUnit,
+          totalPrice: parseFloat(newUnit.totalPrice)
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setUnits([...units, data.data])
+        setNewUnit({
+          name: '',
+          floor: '',
+          building: '',
+          unitType: 'سكني',
+          area: '',
+          totalPrice: '',
+          partnerGroupId: '',
+          notes: ''
+        })
+        setShowAddForm(false)
+        addNotification({
+          type: 'success',
+          title: 'تم الحفظ بنجاح',
+          message: 'تم إضافة الوحدة بنجاح'
+        })
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الحفظ',
+          message: data.error || 'فشل في إضافة الوحدة'
+        })
+      }
+    } catch (err) {
+      console.error('Error adding unit:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الحفظ',
+        message: 'فشل في إضافة الوحدة'
+      })
     }
   }
 
@@ -73,8 +156,11 @@ export default function Units() {
           <h1>إدارة الوحدات</h1>
         </div>
         <div className="tools">
-          <button className="btn primary">
-            إضافة وحدة جديدة
+          <button className="btn primary" onClick={() => setShowAddForm(!showAddForm)}>
+            {showAddForm ? 'إخفاء النموذج' : 'إضافة وحدة جديدة'}
+          </button>
+          <button className="btn secondary" onClick={() => router.push('/partner-groups')}>
+            مجموعات الشركاء
           </button>
           <button className="btn secondary" onClick={() => router.push('/')}>
             العودة للرئيسية
@@ -98,6 +184,110 @@ export default function Units() {
         </div>
 
         <div className="content">
+          {/* Add Unit Form */}
+          {showAddForm && (
+            <div className="panel">
+              <h2>إضافة وحدة جديدة</h2>
+              <div className="grid-2" style={{ gap: '16px' }}>
+                <div>
+                  <label className="form-label">اسم الوحدة *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="مثال: شقة 101"
+                    value={newUnit.name}
+                    onChange={(e) => setNewUnit({...newUnit, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">رقم الطابق *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="مثال: الأول"
+                    value={newUnit.floor}
+                    onChange={(e) => setNewUnit({...newUnit, floor: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">المبنى/البرج *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="مثال: برج أ"
+                    value={newUnit.building}
+                    onChange={(e) => setNewUnit({...newUnit, building: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">نوع الوحدة</label>
+                  <select
+                    className="form-select"
+                    value={newUnit.unitType}
+                    onChange={(e) => setNewUnit({...newUnit, unitType: e.target.value})}
+                  >
+                    <option value="سكني">سكني</option>
+                    <option value="تجاري">تجاري</option>
+                    <option value="إداري">إداري</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">المساحة (م²)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="مثال: 120"
+                    value={newUnit.area}
+                    onChange={(e) => setNewUnit({...newUnit, area: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">السعر الإجمالي *</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="مثال: 500000"
+                    value={newUnit.totalPrice}
+                    onChange={(e) => setNewUnit({...newUnit, totalPrice: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">مجموعة الشركاء *</label>
+                  <select
+                    className="form-select"
+                    value={newUnit.partnerGroupId}
+                    onChange={(e) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
+                  >
+                    <option value="">اختر مجموعة شركاء...</option>
+                    {partnerGroups.map(group => (
+                      <option key={group.id} value={group.id}>
+                        {group.name} ({group.partners.reduce((sum, p) => sum + p.percent, 0)}%)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">ملاحظات</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="ملاحظات اختيارية"
+                    value={newUnit.notes}
+                    onChange={(e) => setNewUnit({...newUnit, notes: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="tools">
+                <button className="btn" onClick={handleAddUnit}>
+                  إضافة الوحدة
+                </button>
+                <button className="btn secondary" onClick={() => setShowAddForm(false)}>
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="panel">
             <h2>قائمة الوحدات</h2>
             
@@ -162,6 +352,11 @@ export default function Units() {
           </div>
         </div>
       </div>
+      
+      <NotificationSystem 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   )
 }
