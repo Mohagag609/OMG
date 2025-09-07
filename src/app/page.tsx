@@ -91,7 +91,7 @@ export default function Dashboard() {
     }
     
     fetchKPIs()
-  }, [])
+  }, [router])
 
   const fetchKPIs = async () => {
     try {

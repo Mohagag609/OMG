@@ -6,7 +6,7 @@ import { ERROR_MESSAGES } from '@/constants/errors'
 // التحقق من صحة رقم الهاتف
 export function validatePhone(phone: string): { isValid: boolean; error?: string } {
   if (!phone) {
-    return { isValid: false, error: ERROR_MESSAGES.validation.required }
+    return { isValid: true } // رقم الهاتف اختياري
   }
   
   const regex = new RegExp(BUSINESS_RULES.validation_rules.phone_format)
@@ -112,9 +112,12 @@ export function validateCustomer(customer: any): { isValid: boolean; errors: str
     errors.push(ERROR_MESSAGES.validation.required)
   }
   
-  const phoneValidation = validatePhone(customer.phone)
-  if (!phoneValidation.isValid) {
-    errors.push(phoneValidation.error!)
+  // التحقق من رقم الهاتف فقط إذا تم إدخاله
+  if (customer.phone) {
+    const phoneValidation = validatePhone(customer.phone)
+    if (!phoneValidation.isValid) {
+      errors.push(phoneValidation.error!)
+    }
   }
   
   if (customer.nationalId) {

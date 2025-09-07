@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Partner, UnitPartner, Voucher, PartnerDebt } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -20,17 +20,7 @@ export default function PartnerDetails() {
 
   const partnerId = params.id as string
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchPartnerDetails()
-  }, [partnerId])
-
-  const fetchPartnerDetails = async () => {
+  const fetchPartnerDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       
@@ -78,7 +68,17 @@ export default function PartnerDetails() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [partnerId])
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchPartnerDetails()
+  }, [partnerId, router, fetchPartnerDetails])
 
   const calculatePartnerLedger = () => {
     let totalIncome = 0

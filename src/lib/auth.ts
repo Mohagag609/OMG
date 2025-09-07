@@ -50,8 +50,14 @@ export async function getUserFromToken(token: string): Promise<any> {
   }
   
   try {
+    const userId = parseInt(decoded.id)
+    if (isNaN(userId)) {
+      console.error('Invalid user ID in token:', decoded.id)
+      return null
+    }
+    
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(decoded.id) },
+      where: { id: userId },
       select: {
         id: true,
         username: true,

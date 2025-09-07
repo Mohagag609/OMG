@@ -81,7 +81,7 @@ export default function Vouchers() {
     }
     
     fetchVouchers()
-  }, [])
+  }, [router])
 
   const fetchVouchers = async () => {
     try {

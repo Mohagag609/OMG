@@ -1,47 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
 import { validateUnit } from '@/utils/validation'
 import { ApiResponse, Unit, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
+import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // GET /api/units - Get units with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('🏠 جاري تحميل الوحدات...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (search) {
-      whereClause.OR = [
-        { code: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
-        { unitType: { contains: search, mode: 'insensitive' } }
-      ]
+      // استخدام البحث المتقدم للعربية
+      const searchConditions = createAdvancedArabicSearch(search, ['code', 'name', 'unitType', 'building', 'floor'])
+      if (searchConditions.OR) {
+        whereClause.OR = searchConditions.OR
+      }
     }
 
     const skip = (page - 1) * limit
@@ -75,30 +70,29 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/units - Create new unit
 export async function POST(request: NextRequest) {
+  let prisma: any = null
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('➕ جاري إنشاء وحدة جديدة...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body
@@ -139,7 +133,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const totalPercent = partnerGroup.partners.reduce((sum, p) => sum + p.percentage, 0)
+    const totalPercent = partnerGroup.partners.reduce((sum: number, p: any) => sum + p.percentage, 0)
     if (totalPercent !== 100) {
       return NextResponse.json(
         { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
@@ -148,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create unit and link partners in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create unit
       const unit = await tx.unit.create({
         data: {
@@ -191,5 +185,9 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

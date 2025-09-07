@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 
@@ -34,17 +34,7 @@ export default function PartnerGroups() {
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       
@@ -72,7 +62,17 @@ export default function PartnerGroups() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [addNotification])
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchData()
+  }, [router, fetchData])
 
   const handleAddGroup = async () => {
     if (!newGroup.name.trim()) {

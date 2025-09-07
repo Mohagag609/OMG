@@ -1,47 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
 import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
+import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📋 جاري تحميل العملاء...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { nationalId: { contains: search, mode: 'insensitive' } }
-      ]
+      // استخدام البحث المتقدم للعربية
+      const searchConditions = createAdvancedArabicSearch(search, ['name', 'phone', 'nationalId', 'address'])
+      if (searchConditions.OR) {
+        whereClause.OR = searchConditions.OR
+      }
     }
 
     const skip = (page - 1) * limit
@@ -75,30 +70,29 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
+  let prisma: any = null
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('➕ جاري إنشاء عميل جديد...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body
@@ -112,14 +106,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if phone already exists
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { phone }
+    // Check if name already exists
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { 
+        name: name,
+        deletedAt: null
+      }
     })
 
     if (existingCustomer) {
       return NextResponse.json(
-        { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+        { success: false, error: 'اسم العميل مستخدم بالفعل' },
         { status: 400 }
       )
     }
@@ -149,5 +146,9 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

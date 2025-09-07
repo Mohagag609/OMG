@@ -1,12 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "npx prisma generate && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
   DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  JWT_SECRET = "estate-management-super-secret-key-2024"
+  JWT_SECRET = "estate-management-development-secret-key"
 
 [dev]
   command = "npm run dev"
@@ -19,6 +19,7 @@
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@prisma/client", "prisma"]
+  included_files = ["prisma/schema.prisma"]
 
 [[headers]]
   for = "/*"

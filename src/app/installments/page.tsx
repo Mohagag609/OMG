@@ -81,7 +81,7 @@ export default function Installments() {
     }
     
     fetchInstallments()
-  }, [])
+  }, [router])
 
   const fetchInstallments = async () => {
     try {

@@ -121,7 +121,7 @@ export default function Units() {
     }
     
     fetchData()
-  }, [])
+  }, [router])
 
   const fetchData = async () => {
     try {

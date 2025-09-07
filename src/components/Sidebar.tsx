@@ -84,6 +84,12 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       icon: '💾',
       path: '/backup',
       description: 'إدارة النسخ الاحتياطية'
+    },
+    {
+      title: 'إعدادات قاعدة البيانات',
+      icon: '🗄️',
+      path: '/database-settings',
+      description: 'إدارة اتصال قاعدة البيانات'
     }
   ]
 

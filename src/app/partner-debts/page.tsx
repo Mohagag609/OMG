@@ -31,7 +31,7 @@ export default function PartnerDebts() {
     }
     
     fetchData()
-  }, [])
+  }, [router])
 
   const fetchData = async () => {
     try {

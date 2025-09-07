@@ -28,25 +28,37 @@ export function formatDecimal(value: number): string {
   }).format(value)
 }
 
-// تنسيق التاريخ للعرض
+// تنسيق التاريخ للعرض (ميلادي)
 export function formatDate(date: string | Date): string {
+  if (!date) return ''
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  return dateObj.toLocaleDateString('ar-EG', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+  
+  if (isNaN(dateObj.getTime())) return ''
+  
+  return dateObj.toLocaleDateString('ar-SA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    calendar: 'gregory'
   })
 }
 
-// تنسيق التاريخ والوقت
+// تنسيق التاريخ والوقت (ميلادي)
 export function formatDateTime(date: string | Date): string {
+  if (!date) return ''
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  return dateObj.toLocaleString('ar-EG', {
-    day: '2-digit',
-    month: '2-digit',
+  
+  if (isNaN(dateObj.getTime())) return ''
+  
+  return dateObj.toLocaleString('ar-SA', {
     year: 'numeric',
+    month: 'long',
+    day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    calendar: 'gregory'
   })
 }
 

@@ -116,15 +116,19 @@ export async function PUT(
       )
     }
 
-    // Check if phone already exists for another customer
-    if (phone !== existingCustomer.phone) {
-      const phoneExists = await prisma.customer.findUnique({
-        where: { phone }
+    // Check if name already exists for another customer
+    if (name !== existingCustomer.name) {
+      const nameExists = await prisma.customer.findFirst({
+        where: { 
+          name: name,
+          deletedAt: null,
+          id: { not: params.id }
+        }
       })
 
-      if (phoneExists) {
+      if (nameExists) {
         return NextResponse.json(
-          { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+          { success: false, error: 'اسم العميل مستخدم بالفعل' },
           { status: 400 }
         )
       }

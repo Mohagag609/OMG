@@ -120,7 +120,7 @@ export default function Treasury() {
     }
     
     fetchData()
-  }, [])
+  }, [router])
 
   const fetchData = async () => {
     try {

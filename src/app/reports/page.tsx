@@ -74,7 +74,7 @@ export default function Reports() {
     }
     
     fetchKPIs()
-  }, [])
+  }, [router])
 
   const fetchKPIs = async () => {
     try {

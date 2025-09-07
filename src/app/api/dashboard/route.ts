@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
+import { ensureEnvironmentVariables } from '@/lib/env'
 import { calculateDashboardKPIs } from '@/utils/calculations'
 import { ApiResponse, DashboardKPIs } from '@/types'
 
@@ -9,25 +8,21 @@ export const runtime = 'nodejs'
 
 // GET /api/dashboard - Get dashboard KPIs
 export async function GET(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📊 جاري تحميل بيانات لوحة التحكم...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     // Get all data for calculations
     const [
@@ -53,12 +48,17 @@ export async function GET(request: NextRequest) {
       message: 'تم تحميل بيانات لوحة التحكم بنجاح'
     }
 
+    console.log('✅ تم تحميل بيانات لوحة التحكم بنجاح')
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting dashboard data:', error)
+    console.error('❌ خطأ في تحميل بيانات لوحة التحكم:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

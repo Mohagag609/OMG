@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
@@ -21,18 +21,7 @@ export default function Partners() {
   })
   const router = useRouter()
 
-  useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchPartners()
-  }, [])
-
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/partners', {
@@ -62,7 +51,18 @@ export default function Partners() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchPartners()
+  }, [router, fetchPartners])
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
