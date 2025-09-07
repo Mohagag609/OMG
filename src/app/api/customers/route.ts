@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 import { ensureEnvironmentVariables } from '@/lib/env'
+import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -14,7 +15,13 @@ export async function GET(request: NextRequest) {
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -24,11 +31,11 @@ export async function GET(request: NextRequest) {
     let whereClause: any = { deletedAt: null }
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { nationalId: { contains: search, mode: 'insensitive' } }
-      ]
+      // استخدام البحث المتقدم للعربية
+      const searchConditions = createAdvancedArabicSearch(search, ['name', 'phone', 'nationalId', 'address'])
+      if (searchConditions.OR) {
+        whereClause.OR = searchConditions.OR
+      }
     }
 
     const skip = (page - 1) * limit
@@ -75,7 +82,13 @@ export async function POST(request: NextRequest) {
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body

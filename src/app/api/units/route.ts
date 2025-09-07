@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 import { validateUnit } from '@/utils/validation'
 import { ApiResponse, Unit, PaginatedResponse } from '@/types'
 import { ensureEnvironmentVariables } from '@/lib/env'
+import { createAdvancedArabicSearch } from '@/utils/arabicSearch'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -13,6 +13,16 @@ export async function GET(request: NextRequest) {
     ensureEnvironmentVariables()
     console.log('🏠 جاري تحميل الوحدات...')
 
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -21,11 +31,11 @@ export async function GET(request: NextRequest) {
     let whereClause: any = { deletedAt: null }
 
     if (search) {
-      whereClause.OR = [
-        { code: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
-        { unitType: { contains: search, mode: 'insensitive' } }
-      ]
+      // استخدام البحث المتقدم للعربية
+      const searchConditions = createAdvancedArabicSearch(search, ['code', 'name', 'unitType', 'building', 'floor'])
+      if (searchConditions.OR) {
+        whereClause.OR = searchConditions.OR
+      }
     }
 
     const skip = (page - 1) * limit
@@ -59,6 +69,8 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
@@ -67,6 +79,16 @@ export async function POST(request: NextRequest) {
   try {
     ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء وحدة جديدة...')
+
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body
@@ -159,5 +181,7 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
