@@ -11,6 +11,13 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
     fetchDashboardData()
   }, [])
 
@@ -24,6 +31,12 @@ export default function Home() {
       })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          localStorage.removeItem('authToken')
+          router.push('/login')
+          return
+        }
         throw new Error('فشل في تحميل البيانات')
       }
 
@@ -34,6 +47,7 @@ export default function Home() {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
     } catch (err) {
+      console.error('Dashboard error:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)

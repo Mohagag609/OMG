@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getUserFromRequest } from '@/lib/auth'
 
 export function middleware(request: NextRequest) {
   // Skip auth for public routes
@@ -9,22 +8,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check authentication for protected routes
-  const user = getUserFromRequest(request)
-  
-  if (!user) {
-    // Redirect to login for pages
-    if (request.nextUrl.pathname.startsWith('/')) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    
-    // Return 401 for API routes
-    return NextResponse.json(
-      { success: false, error: 'غير مخول للوصول' },
-      { status: 401 }
-    )
-  }
-
+  // For client-side routes, let the client handle auth
+  // The client will check localStorage and redirect if needed
   return NextResponse.next()
 }
 
