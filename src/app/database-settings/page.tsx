@@ -428,7 +428,7 @@ export default function DatabaseSettings() {
               </div>
               {!isEditingConnectionString && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  اضغط على زر "تعديل" لتغيير رابط قاعدة البيانات
+                  اضغط على زر &quot;تعديل&quot; لتغيير رابط قاعدة البيانات
                 </p>
               )}
             </div>

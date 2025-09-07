@@ -51,7 +51,7 @@ export default function Partners() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     // Check if user is logged in

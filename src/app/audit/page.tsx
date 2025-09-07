@@ -53,7 +53,7 @@ export default function Audit() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.page, pagination.limit])
+  }, [pagination.page, pagination.limit, router])
 
   useEffect(() => {
     // Check if user is logged in
