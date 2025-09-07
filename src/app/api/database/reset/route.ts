@@ -163,15 +163,19 @@ async function resetDatabase(): Promise<{ success: boolean; error?: string }> {
     })
 
     // Create sample partner
-    await newPrisma.partner.upsert({
-      where: { name: 'محمد أحمد' },
-      update: {},
-      create: {
-        name: 'محمد أحمد',
-        phone: '01087654321',
-        notes: 'شريك تجريبي'
-      }
+    const existingPartner = await newPrisma.partner.findFirst({
+      where: { name: 'محمد أحمد' }
     })
+    
+    if (!existingPartner) {
+      await newPrisma.partner.create({
+        data: {
+          name: 'محمد أحمد',
+          phone: '01087654321',
+          notes: 'شريك تجريبي'
+        }
+      })
+    }
 
     // Create sample broker
     await newPrisma.broker.upsert({
