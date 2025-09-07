@@ -1,14 +1,11 @@
 // Database connection and utilities
 
-import { PrismaClient } from '@prisma/client'
+import { createPrismaClient, testDatabaseConnection } from './database'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+// Test database connection on startup
+testDatabaseConnection()
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+export const prisma = createPrismaClient()
 
 // Helper function to handle database errors
 export function handleDatabaseError(error: any): string {
