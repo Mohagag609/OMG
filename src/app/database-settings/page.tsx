@@ -144,6 +144,24 @@ export default function DatabaseSettings() {
     try {
       setSettings(prev => ({ ...prev, status: 'loading' }))
       
+      // Try to load from localStorage first
+      const backupConfig = localStorage.getItem('database-config-backup')
+      if (backupConfig) {
+        try {
+          const config = JSON.parse(backupConfig)
+          setSettings({
+            ...config,
+            status: config.isConnected ? 'connected' : 'disconnected'
+          })
+          setConnectionString(config.connectionString)
+          console.log('📋 تم تحميل الإعدادات من النسخة الاحتياطية')
+          setLoading(false)
+          return
+        } catch (parseError) {
+          console.error('❌ خطأ في تحليل النسخة الاحتياطية:', parseError)
+        }
+      }
+      
       const response = await fetch('/api/database/settings')
       const data = await response.json()
       
@@ -167,6 +185,24 @@ export default function DatabaseSettings() {
       }
     } catch (error) {
       console.error('خطأ في تحميل الإعدادات:', error)
+      
+      // Try to load from localStorage as fallback
+      const backupConfig = localStorage.getItem('database-config-backup')
+      if (backupConfig) {
+        try {
+          const config = JSON.parse(backupConfig)
+          setSettings({
+            ...config,
+            status: config.isConnected ? 'connected' : 'disconnected'
+          })
+          setConnectionString(config.connectionString)
+          console.log('📋 تم تحميل الإعدادات من النسخة الاحتياطية بعد الخطأ')
+          setLoading(false)
+          return
+        } catch (parseError) {
+          console.error('❌ خطأ في تحليل النسخة الاحتياطية:', parseError)
+        }
+      }
       
       const defaultSettings = {
         type: 'sqlite' as DatabaseType,
@@ -301,19 +337,81 @@ export default function DatabaseSettings() {
         })
       } else {
         console.error('❌ فشل في الحفظ:', data.error)
-        addNotification({
-          type: 'error',
-          title: 'خطأ في الحفظ',
-          message: data.error || 'فشل في حفظ الإعدادات. يرجى المحاولة مرة أخرى.'
-        })
+        
+        // Try direct save as fallback
+        console.log('🔄 محاولة الحفظ المباشر كحل بديل...')
+        try {
+          const directConfig = {
+            type: settings.type,
+            connectionString: connectionString,
+            isConnected: false,
+            savedAt: new Date().toISOString(),
+            version: '2.0',
+            persistent: true
+          }
+          
+          // Save to localStorage as backup
+          localStorage.setItem('database-config-backup', JSON.stringify(directConfig))
+          
+          setSettings(prev => ({ 
+            ...prev, 
+            connectionString,
+            isConnected: false,
+            status: 'disconnected'
+          }))
+          
+          addNotification({
+            type: 'warning',
+            title: 'تم الحفظ محلياً',
+            message: 'تم حفظ الإعدادات في المتصفح. استخدم زر "تحميل ملف الإعدادات" لحفظها يدوياً.'
+          })
+        } catch (directError) {
+          console.error('❌ فشل حتى الحفظ المباشر:', directError)
+          addNotification({
+            type: 'error',
+            title: 'خطأ في الحفظ',
+            message: data.error || 'فشل في حفظ الإعدادات. يرجى المحاولة مرة أخرى.'
+          })
+        }
       }
     } catch (error) {
       console.error('❌ خطأ في حفظ الإعدادات:', error)
-      addNotification({
-        type: 'error',
-        title: 'خطأ في الاتصال',
-        message: 'فشل في حفظ الإعدادات. تحقق من اتصال الإنترنت.'
-      })
+      
+      // Try direct save as fallback
+      console.log('🔄 محاولة الحفظ المباشر كحل بديل...')
+      try {
+        const directConfig = {
+          type: settings.type,
+          connectionString: connectionString,
+          isConnected: false,
+          savedAt: new Date().toISOString(),
+          version: '2.0',
+          persistent: true
+        }
+        
+        // Save to localStorage as backup
+        localStorage.setItem('database-config-backup', JSON.stringify(directConfig))
+        
+        setSettings(prev => ({ 
+          ...prev, 
+          connectionString,
+          isConnected: false,
+          status: 'disconnected'
+        }))
+        
+        addNotification({
+          type: 'warning',
+          title: 'تم الحفظ محلياً',
+          message: 'تم حفظ الإعدادات في المتصفح. استخدم زر "تحميل ملف الإعدادات" لحفظها يدوياً.'
+        })
+      } catch (directError) {
+        console.error('❌ فشل حتى الحفظ المباشر:', directError)
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الاتصال',
+          message: 'فشل في حفظ الإعدادات. تحقق من اتصال الإنترنت.'
+        })
+      }
     } finally {
       setSaving(false)
     }
@@ -599,6 +697,20 @@ export default function DatabaseSettings() {
             >
               📥 تحميل ملف الإعدادات
             </ActionButton>
+            
+            <ActionButton
+              onClick={() => {
+                localStorage.removeItem('database-config-backup');
+                addNotification({
+                  type: 'info',
+                  title: 'تم مسح النسخة الاحتياطية',
+                  message: 'تم مسح النسخة الاحتياطية من المتصفح.'
+                });
+              }}
+              variant="secondary"
+            >
+              🗑️ مسح النسخة الاحتياطية
+            </ActionButton>
           </div>
         </div>
 
@@ -616,6 +728,8 @@ export default function DatabaseSettings() {
             <li>• <strong>للمساعدة:</strong> افتح Developer Tools (F12) وافحص Console للأخطاء</li>
             <li>• <strong>في حالة فشل الحفظ:</strong> تأكد من أن الخادم يعمل وأن لديك صلاحيات الكتابة</li>
             <li>• <strong>حل بديل:</strong> يمكنك تعديل ملف database-config.json يدوياً</li>
+            <li>• <strong>النسخة الاحتياطية:</strong> يتم حفظ الإعدادات في المتصفح كنسخة احتياطية</li>
+            <li>• <strong>استعادة الإعدادات:</strong> الصفحة تحمل الإعدادات من النسخة الاحتياطية تلقائياً</li>
           </ul>
         </div>
       </div>
