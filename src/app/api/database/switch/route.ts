@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       console.error('Error switching database:', error)
       return NextResponse.json({
         success: false,
-        error: `فشل في التبديل: ${error.message}`
+        error: `فشل في التبديل: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
       }, { status: 500 })
     }
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.error('Database switch error:', error)
     return NextResponse.json({
       success: false,
-      error: 'خطأ في الخادم'
+      error: `خطأ في الخادم: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
     }, { status: 500 })
   }
 }

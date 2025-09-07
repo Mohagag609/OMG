@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
+  DATABASE_TYPE = "postgresql"
   DATABASE_URL = "postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
   JWT_SECRET = "estate-management-development-secret-key"
 
