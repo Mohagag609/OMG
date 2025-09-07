@@ -8,7 +8,7 @@ async function setupDatabase() {
     
     // Push the schema to create tables
     const { execSync } = require('child_process')
-    execSync('npx prisma db push', { stdio: 'inherit' })
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
     
     console.log('Database setup completed successfully!')
   } catch (error) {

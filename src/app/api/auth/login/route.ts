@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
       data: {
         token,
         user: {
-          id: adminUser.id,
-          username: adminUser.username,
-          role: adminUser.role
+          id: user.id.toString(),
+          username: user.username,
+          role: user.role
         }
       },
       message: 'تم تسجيل الدخول بنجاح'
