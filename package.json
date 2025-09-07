@@ -12,6 +12,7 @@
     "db:push": "prisma db push --accept-data-loss",
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset",
+    "db:seed": "tsx prisma/seed.ts",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
     "postinstall": "prisma generate && node scripts/setup-db.js && node scripts/create-users.js",
@@ -44,6 +45,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "prisma": "^6.15.0"
+    "prisma": "^6.15.0",
+    "tsx": "^4.20.5"
   }
 }
