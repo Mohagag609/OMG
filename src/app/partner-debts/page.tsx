@@ -2,31 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { PartnerDebt, Partner } from '@/types'
+import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-
-interface PartnerDebt {
-  id: string
-  partnerId: string
-  amount: number
-  dueDate: string
-  status: string
-  notes?: string
-  createdAt?: string
-  updatedAt?: string
-  // Relations
-  partner?: {
-    id: string
-    name: string
-    phone?: string
-  }
-}
-
-interface Partner {
-  id: string
-  name: string
-  phone?: string
-  notes?: string
-}
 
 export default function PartnerDebts() {
   const [partnerDebts, setPartnerDebts] = useState<PartnerDebt[]>([])
@@ -34,7 +12,6 @@ export default function PartnerDebts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [newDebt, setNewDebt] = useState({
     partnerId: '',
@@ -65,7 +42,7 @@ export default function PartnerDebts() {
       })
       const debtsData = await debtsResponse.json()
       if (debtsData.success) {
-        setPartnerDebts(debtsData.data || [])
+        setPartnerDebts(debtsData.data)
       } else {
         setError(debtsData.error || 'خطأ في تحميل ديون الشركاء')
       }
@@ -76,7 +53,7 @@ export default function PartnerDebts() {
       })
       const partnersData = await partnersResponse.json()
       if (partnersData.success) {
-        setPartners(partnersData.data || [])
+        setPartners(partnersData.data)
       }
 
     } catch (err) {
@@ -87,16 +64,8 @@ export default function PartnerDebts() {
     }
   }
 
-  const handleAddDebt = async () => {
-    if (!newDebt.partnerId || !newDebt.amount || !newDebt.dueDate) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرجاء ملء جميع الحقول المطلوبة'
-      })
-      return
-    }
-
+  const handleAddDebt = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/partner-debts', {
@@ -183,76 +152,38 @@ export default function PartnerDebts() {
     return partner ? partner.name : 'شريك محذوف'
   }
 
-  const filteredDebts = partnerDebts.filter(debt => {
-    const matchesSearch = search === '' || 
-      getPartnerName(debt.partnerId).toLowerCase().includes(search.toLowerCase()) ||
-      debt.notes?.toLowerCase().includes(search.toLowerCase())
-    
-    const matchesStatus = statusFilter === '' || debt.status === statusFilter
-    
-    return matchesSearch && matchesStatus
-  })
-
   if (loading) {
     return (
       <div className="container">
-        <div className="panel loading">
+        <div className="panel">
           <h2>جاري التحميل...</h2>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            marginTop: '20px',
-            fontSize: '24px'
-          }}>
-            <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              border: '4px solid rgba(59, 130, 246, 0.3)',
-              borderTop: '4px solid rgb(59, 130, 246)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container fade-in">
-      <div className="header slide-in">
+    <div className="container">
+      <div className="header">
         <div className="brand">
           <div className="logo">💰</div>
           <h1>ديون الشركاء</h1>
         </div>
         <div className="tools">
-          <button className="btn primary" onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? 'إخفاء النموذج' : 'إضافة دين جديد'}
+          <button className="btn primary" onClick={() => setShowAddForm(true)}>
+            إضافة دين جديد
           </button>
           <button className="btn secondary" onClick={() => router.push('/partners')}>
             الشركاء
           </button>
-          <button className="btn secondary" onClick={() => router.push('/units')}>
-            الوحدات
-          </button>
-          <button className="btn secondary" onClick={() => router.push('/contracts')}>
-            العقود
-          </button>
-          <button className="btn secondary" onClick={() => router.push('/reports')}>
-            التقارير
-          </button>
-          <button className="btn warn" onClick={() => {
-            localStorage.removeItem('authToken')
-            router.push('/login')
-          }}>
-            تسجيل الخروج
+          <button className="btn secondary" onClick={() => router.push('/')}>
+            العودة للرئيسية
           </button>
         </div>
       </div>
 
       <div className="main-layout">
-        <div className="sidebar slide-in">
+        <div className="sidebar">
           <button className="tab" onClick={() => router.push('/')}>لوحة التحكم</button>
           <button className="tab" onClick={() => router.push('/customers')}>العملاء</button>
           <button className="tab" onClick={() => router.push('/units')}>الوحدات</button>
@@ -261,158 +192,142 @@ export default function PartnerDebts() {
           <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
           <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
           <button className="tab" onClick={() => router.push('/partners')}>الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-groups')}>مجموعات الشركاء</button>
+          <button className="tab active">ديون الشركاء</button>
           <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
           <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
           <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
         </div>
 
-        <div className="content slide-in">
-          {/* Add Debt Form */}
+        <div className="content">
           {showAddForm && (
-            <div className="panel">
+            <div className="panel" style={{ marginBottom: '20px' }}>
               <h2>إضافة دين شريك جديد</h2>
-              <div className="grid-2" style={{ gap: '16px' }}>
-                <div>
-                  <label className="form-label">الشريك *</label>
-                  <select
-                    className="form-select"
-                    value={newDebt.partnerId}
-                    onChange={(e) => setNewDebt({...newDebt, partnerId: e.target.value})}
-                  >
-                    <option value="">اختر شريك...</option>
-                    {partners.map(partner => (
-                      <option key={partner.id} value={partner.id}>
-                        {partner.name} {partner.phone && `(${partner.phone})`}
-                      </option>
-                    ))}
-                  </select>
+              <form onSubmit={handleAddDebt}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div className="form-group">
+                    <label className="form-label">الشريك</label>
+                    <select
+                      className="form-select"
+                      value={newDebt.partnerId}
+                      onChange={(e) => setNewDebt({...newDebt, partnerId: e.target.value})}
+                      required
+                    >
+                      <option value="">اختر الشريك</option>
+                      {partners.map((partner) => (
+                        <option key={partner.id} value={partner.id}>
+                          {partner.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">المبلغ</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={newDebt.amount}
+                      onChange={(e) => setNewDebt({...newDebt, amount: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">تاريخ الاستحقاق</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={newDebt.dueDate}
+                      onChange={(e) => setNewDebt({...newDebt, dueDate: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">ملاحظات</label>
+                    <textarea
+                      className="form-textarea"
+                      value={newDebt.notes}
+                      onChange={(e) => setNewDebt({...newDebt, notes: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="form-label">المبلغ *</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="مثال: 50000"
-                    value={newDebt.amount}
-                    onChange={(e) => setNewDebt({...newDebt, amount: e.target.value})}
-                  />
+                
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                  <button type="submit" className="btn primary">
+                    إضافة الدين
+                  </button>
+                  <button type="button" className="btn secondary" onClick={() => setShowAddForm(false)}>
+                    إلغاء
+                  </button>
                 </div>
-                <div>
-                  <label className="form-label">تاريخ الاستحقاق *</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={newDebt.dueDate}
-                    onChange={(e) => setNewDebt({...newDebt, dueDate: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">ملاحظات</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="ملاحظات اختيارية"
-                    value={newDebt.notes}
-                    onChange={(e) => setNewDebt({...newDebt, notes: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="tools">
-                <button className="btn" onClick={handleAddDebt}>
-                  إضافة الدين
-                </button>
-                <button className="btn secondary" onClick={() => setShowAddForm(false)}>
-                  إلغاء
-                </button>
-              </div>
+              </form>
             </div>
           )}
-
-          {/* Debts List */}
+          
           <div className="panel">
             <h2>قائمة ديون الشركاء</h2>
             
             {error && <div className="error-message">{error}</div>}
             
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ marginBottom: '20px' }}>
               <input
                 type="text"
-                placeholder="البحث في الديون..."
+                placeholder="البحث في ديون الشركاء..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="form-input"
-                style={{ width: '250px' }}
+                style={{ width: '300px' }}
               />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="form-select"
-                style={{ width: '150px' }}
-              >
-                <option value="">جميع الحالات</option>
-                <option value="غير مدفوع">غير مدفوع</option>
-                <option value="مدفوع">مدفوع</option>
-              </select>
-              <button className="btn secondary" onClick={() => {
-                setSearch('')
-                setStatusFilter('')
-              }}>
-                مسح الفلاتر
-              </button>
             </div>
 
-            {filteredDebts.length === 0 ? (
-              <p>لا توجد ديون</p>
-            ) : (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>الشريك</th>
-                      <th>المبلغ</th>
-                      <th>تاريخ الاستحقاق</th>
-                      <th>الحالة</th>
-                      <th>ملاحظات</th>
-                      <th>تاريخ الإضافة</th>
-                      <th>الإجراءات</th>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>الشريك</th>
+                    <th>المبلغ</th>
+                    <th>تاريخ الاستحقاق</th>
+                    <th>الحالة</th>
+                    <th>ملاحظات</th>
+                    <th>تاريخ الإضافة</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partnerDebts.filter(debt => 
+                    search === '' || 
+                    getPartnerName(debt.partnerId).toLowerCase().includes(search.toLowerCase()) ||
+                    debt.status.toLowerCase().includes(search.toLowerCase())
+                  ).map((debt) => (
+                    <tr key={debt.id}>
+                      <td>{getPartnerName(debt.partnerId)}</td>
+                      <td>{formatCurrency(debt.amount)}</td>
+                      <td>{formatDate(debt.dueDate)}</td>
+                      <td>
+                        <span className={`badge ${debt.status === 'مدفوع' ? 'ok' : 'warn'}`}>
+                          {debt.status}
+                        </span>
+                      </td>
+                      <td>{debt.notes || '-'}</td>
+                      <td>{debt.createdAt ? formatDate(debt.createdAt) : '-'}</td>
+                      <td>
+                        {debt.status !== 'مدفوع' && (
+                          <button
+                            className="btn ok"
+                            style={{ padding: '5px 10px', fontSize: '12px' }}
+                            onClick={() => handlePayDebt(debt.id)}
+                          >
+                            تسجيل السداد
+                          </button>
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDebts.map((debt) => (
-                      <tr key={debt.id}>
-                        <td>{getPartnerName(debt.partnerId)}</td>
-                        <td>{debt.amount.toLocaleString()} ج.م</td>
-                        <td>{new Date(debt.dueDate).toLocaleDateString('ar-SA')}</td>
-                        <td>
-                          <span style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: '4px', 
-                            fontSize: '12px',
-                            backgroundColor: debt.status === 'مدفوع' ? '#dcfce7' : '#fef2f2',
-                            color: debt.status === 'مدفوع' ? '#166534' : '#dc2626'
-                          }}>
-                            {debt.status}
-                          </span>
-                        </td>
-                        <td>{debt.notes || '-'}</td>
-                        <td>{debt.createdAt ? new Date(debt.createdAt).toLocaleDateString('ar-SA') : '-'}</td>
-                        <td>
-                          {debt.status !== 'مدفوع' && (
-                            <button
-                              className="btn ok"
-                              style={{ padding: '5px 10px', fontSize: '12px' }}
-                              onClick={() => handlePayDebt(debt.id)}
-                            >
-                              تسجيل السداد
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

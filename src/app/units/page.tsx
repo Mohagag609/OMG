@@ -15,9 +15,22 @@ interface PartnerGroup {
   }>
 }
 
+interface UnitPartner {
+  id: string
+  unitId: string
+  partnerId: string
+  percentage: number
+  partner?: {
+    id: string
+    name: string
+    phone?: string
+  }
+}
+
 export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
   const [partnerGroups, setPartnerGroups] = useState<PartnerGroup[]>([])
+  const [unitPartners, setUnitPartners] = useState<UnitPartner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -68,6 +81,15 @@ export default function Units() {
       const groupsData = await groupsResponse.json()
       if (groupsData.success) {
         setPartnerGroups(groupsData.data)
+      }
+
+      // Fetch unit partners
+      const unitPartnersResponse = await fetch('/api/unit-partners', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const unitPartnersData = await unitPartnersResponse.json()
+      if (unitPartnersData.success) {
+        setUnitPartners(unitPartnersData.data)
       }
 
     } catch (err) {
@@ -138,6 +160,15 @@ export default function Units() {
     }
   }
 
+  const getUnitPartners = (unitId: string) => {
+    return unitPartners.filter(up => up.unitId === unitId)
+  }
+
+  const getPartnerName = (partnerId: string) => {
+    const unitPartner = unitPartners.find(up => up.partnerId === partnerId)
+    return unitPartner?.partner?.name || 'شريك محذوف'
+  }
+
   if (loading) {
     return (
       <div className="container">
@@ -178,6 +209,7 @@ export default function Units() {
           <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
           <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
           <button className="tab" onClick={() => router.push('/partners')}>الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-debts')}>ديون الشركاء</button>
           <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
           <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
           <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
@@ -314,6 +346,7 @@ export default function Units() {
                     <th>المساحة</th>
                     <th>الطابق</th>
                     <th>المبنى</th>
+                    <th>الشركاء</th>
                     <th>السعر الإجمالي</th>
                     <th>الحالة</th>
                     <th>تاريخ الإضافة</th>
@@ -325,27 +358,37 @@ export default function Units() {
                     search === '' || 
                     unit.code.toLowerCase().includes(search.toLowerCase()) ||
                     (unit.name && unit.name.toLowerCase().includes(search.toLowerCase()))
-                  ).map((unit) => (
-                    <tr key={unit.id}>
-                      <td>{unit.code}</td>
-                      <td>{unit.name || '-'}</td>
-                      <td>{unit.unitType}</td>
-                      <td>{unit.area || '-'}</td>
-                      <td>{unit.floor || '-'}</td>
-                      <td>{unit.building || '-'}</td>
-                      <td>{formatCurrency(unit.totalPrice)}</td>
-                      <td>{unit.status}</td>
-                      <td>{unit.createdAt ? formatDate(unit.createdAt) : '-'}</td>
-                      <td>
-                        <button
-                          className="btn warn"
-                          style={{ padding: '5px 10px', fontSize: '12px' }}
-                        >
-                          حذف
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  ).map((unit) => {
+                    const partners = getUnitPartners(unit.id)
+                    const partnersText = partners.length > 0 
+                      ? partners.map(p => `${getPartnerName(p.partnerId)} (${p.percentage}%)`).join(', ')
+                      : 'لا يوجد شركاء'
+                    
+                    return (
+                      <tr key={unit.id}>
+                        <td>{unit.code}</td>
+                        <td>{unit.name || '-'}</td>
+                        <td>{unit.unitType}</td>
+                        <td>{unit.area || '-'}</td>
+                        <td>{unit.floor || '-'}</td>
+                        <td>{unit.building || '-'}</td>
+                        <td style={{ fontSize: '12px', maxWidth: '200px' }}>
+                          {partnersText}
+                        </td>
+                        <td>{formatCurrency(unit.totalPrice)}</td>
+                        <td>{unit.status}</td>
+                        <td>{unit.createdAt ? formatDate(unit.createdAt) : '-'}</td>
+                        <td>
+                          <button
+                            className="btn warn"
+                            style={{ padding: '5px 10px', fontSize: '12px' }}
+                          >
+                            حذف
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
