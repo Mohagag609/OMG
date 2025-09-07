@@ -240,10 +240,10 @@ export default function DatabaseSettings() {
     } finally {
       setLoading(false)
     }
-  }, [loading])
+  }, [loading, addNotification])
 
   // Test database connection - with protection against multiple calls
-  const testConnection = async () => {
+  const testConnection = useCallback(async () => {
     if (testing) return // Prevent multiple simultaneous tests
     
     if (!connectionString.trim()) {
@@ -271,10 +271,10 @@ export default function DatabaseSettings() {
       const data = await response.json()
       
       if (data.success) {
-        const updatedSettings = { 
+        const updatedSettings: DatabaseSettings = { 
           ...settings, 
           isConnected: true, 
-          status: 'connected',
+          status: 'connected' as const,
           lastTested: new Date().toISOString(),
           connectionString: connectionString // Update connection string
         }
@@ -330,7 +330,7 @@ export default function DatabaseSettings() {
     } finally {
       setTesting(false)
     }
-  }
+  }, [testing, connectionString, settings, addNotification])
 
   // Save database settings - with protection against multiple calls
   const saveSettings = async () => {
