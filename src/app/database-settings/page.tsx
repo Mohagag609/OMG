@@ -79,6 +79,7 @@ export default function DatabaseSettings() {
   const [resetting, setResetting] = useState(false)
   const [isEditingConnectionString, setIsEditingConnectionString] = useState(false)
   const [originalConnectionString, setOriginalConnectionString] = useState('')
+  const [tempConnectionString, setTempConnectionString] = useState('')
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -91,6 +92,7 @@ export default function DatabaseSettings() {
       if (data.success) {
         setSettings(data.data)
         setOriginalConnectionString(data.data.connectionString)
+        setTempConnectionString(data.data.connectionString)
       } else {
         // إعدادات افتراضية
         const defaultConnectionString = 'postgresql://username:password@host:port/database'
@@ -100,6 +102,7 @@ export default function DatabaseSettings() {
           isConnected: false
         })
         setOriginalConnectionString(defaultConnectionString)
+        setTempConnectionString(defaultConnectionString)
       }
     } catch (err) {
       console.error('Error loading database settings:', err)
@@ -284,6 +287,7 @@ export default function DatabaseSettings() {
       isConnected: false
     }))
     setOriginalConnectionString(newConnectionString)
+    setTempConnectionString(newConnectionString)
   }
 
   if (loading) {
@@ -373,8 +377,8 @@ export default function DatabaseSettings() {
               <div className="flex items-center space-x-2 space-x-reverse">
                 <input
                   type="text"
-                  value={settings.connectionString}
-                  onChange={(e: any) => setSettings(prev => ({ ...prev, connectionString: e.target.value }))}
+                  value={isEditingConnectionString ? tempConnectionString : settings.connectionString}
+                  onChange={(e: any) => setTempConnectionString(e.target.value)}
                   placeholder={settings.type === 'sqlite' 
                     ? 'file:./prisma/dev.db' 
                     : 'postgresql://username:password@host:port/database'
@@ -393,6 +397,8 @@ export default function DatabaseSettings() {
                       type="button"
                       onClick={() => {
                         // حفظ التغييرات
+                        setSettings(prev => ({ ...prev, connectionString: tempConnectionString }))
+                        setOriginalConnectionString(tempConnectionString)
                         setIsEditingConnectionString(false)
                         addNotification({
                           type: 'success',
@@ -408,8 +414,8 @@ export default function DatabaseSettings() {
                       type="button"
                       onClick={() => {
                         // إلغاء التعديل واستعادة النسخة الأصلية
+                        setTempConnectionString(originalConnectionString)
                         setIsEditingConnectionString(false)
-                        setSettings(prev => ({ ...prev, connectionString: originalConnectionString }))
                       }}
                       className="px-3 py-2 text-sm font-medium rounded-lg border bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 transition-colors"
                     >
@@ -419,7 +425,10 @@ export default function DatabaseSettings() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setIsEditingConnectionString(true)}
+                    onClick={() => {
+                      setTempConnectionString(settings.connectionString)
+                      setIsEditingConnectionString(true)
+                    }}
                     className="px-3 py-2 text-sm font-medium rounded-lg border bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700 transition-colors"
                   >
                     تعديل
