@@ -5,6 +5,7 @@ import { ApiResponse } from '@/types'
 
 // POST /api/trash/restore - Restore soft-deleted entity
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {

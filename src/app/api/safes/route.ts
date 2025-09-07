@@ -5,6 +5,7 @@ import { validateAmount, getValidationError } from '@/utils/validation'
 
 // GET /api/safes - Get all safes with pagination and search
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {

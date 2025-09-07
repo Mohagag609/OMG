@@ -6,6 +6,7 @@ import { calculateInstallmentStatus } from '@/utils/calculations'
 
 // GET /api/installments - Get all installments with pagination and search
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {

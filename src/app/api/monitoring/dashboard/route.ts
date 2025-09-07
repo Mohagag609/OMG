@@ -5,6 +5,7 @@ import { ApiResponse } from '@/types'
 
 // GET /api/monitoring/dashboard - Get monitoring dashboard data
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {

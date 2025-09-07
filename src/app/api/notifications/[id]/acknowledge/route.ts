@@ -5,6 +5,7 @@ import { ApiResponse } from '@/types'
 
 // POST /api/notifications/[id]/acknowledge - Acknowledge notification
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function POST(

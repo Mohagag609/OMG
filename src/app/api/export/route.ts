@@ -4,6 +4,7 @@ import { AppState, ApiResponse } from '@/types'
 
 // GET /api/export - Export all data as JSON
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {

@@ -5,6 +5,7 @@ import { ApiResponse, PaginatedResponse } from '@/types'
 
 // GET /api/backup/list - Get list of backups
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {

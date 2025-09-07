@@ -3,10 +3,11 @@ import { getUserFromRequest } from '@/lib/auth'
 import { getAuditLogs, getAuditStats, AuditLogFilter } from '@/lib/audit'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
-// GET /api/audit - Get audit logs
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// GET /api/audit - Get audit logs
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

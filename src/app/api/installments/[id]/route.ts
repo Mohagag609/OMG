@@ -6,6 +6,7 @@ import { calculateInstallmentStatus } from '@/utils/calculations'
 
 // GET /api/installments/[id] - Get installment by ID
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(

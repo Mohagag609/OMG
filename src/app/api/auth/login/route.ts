@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { generateToken, verifyPassword } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 

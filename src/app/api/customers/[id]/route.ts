@@ -6,6 +6,7 @@ import { formatPhone, formatNationalId } from '@/utils/formatting'
 
 // GET /api/customers/[id] - Get customer by ID
 
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export async function GET(
