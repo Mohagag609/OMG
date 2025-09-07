@@ -20,7 +20,7 @@ async function testDatabase() {
     console.log(`🏢 عدد العملاء: ${customerCount}`)
     
     // Get database info
-    const dbInfo = await prisma.$queryRaw`SELECT sqlite_version() as version`
+    const dbInfo = await prisma.$queryRaw`SELECT version() as version`
     console.log(`📊 إصدار قاعدة البيانات:`, dbInfo)
     
     console.log('🎉 جميع الاختبارات نجحت!')
