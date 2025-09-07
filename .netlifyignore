@@ -1,4 +1,4 @@
-# Ignore cache files
+# Ignore all cache and large files
 .next/cache
 .next/server/chunks
 .next/server/pages
@@ -14,26 +14,26 @@
 .next/server/routes-manifest.json
 .next/server/prerender-manifest.json
 .next/server/font-manifest.json
+.next/server/next-server.js
+.next/server/pages-manifest.json
+.next/server/app-manifest.json
+.next/server/pages/_app.js
+.next/server/pages/_document.js
+.next/server/pages/_error.js
+.next/server/pages/index.js
+.next/server/pages/login.js
+.next/server/pages/customers.js
+.next/server/pages/units.js
+.next/server/pages/contracts.js
+.next/server/pages/installments.js
+.next/server/pages/vouchers.js
+.next/server/pages/audit.js
+.next/server/pages/backup.js
+.next/server/pages/brokers.js
+.next/server/pages/partners.js
+.next/server/pages/reports.js
+.next/server/pages/treasury.js
+.next/server/pages/_not-found.js
 
-# Keep only essential files
+# Keep only essential static files
 !.next/static
-!.next/server/pages-manifest.json
-!.next/server/app-manifest.json
-!.next/server/next-server.js
-!.next/server/pages/_app.js
-!.next/server/pages/_document.js
-!.next/server/pages/_error.js
-!.next/server/pages/index.js
-!.next/server/pages/login.js
-!.next/server/pages/customers.js
-!.next/server/pages/units.js
-!.next/server/pages/contracts.js
-!.next/server/pages/installments.js
-!.next/server/pages/vouchers.js
-!.next/server/pages/audit.js
-!.next/server/pages/backup.js
-!.next/server/pages/brokers.js
-!.next/server/pages/partners.js
-!.next/server/pages/reports.js
-!.next/server/pages/treasury.js
-!.next/server/pages/_not-found.js
