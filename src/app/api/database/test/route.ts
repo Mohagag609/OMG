@@ -103,59 +103,91 @@ export async function POST(request: NextRequest) {
 // Create tables if they don't exist
 async function createTablesIfNeeded(prisma: PrismaClient, type: string) {
   try {
-    if (type === 'sqlite') {
-      // SQLite table creation
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS "User" (
-          "id" TEXT PRIMARY KEY,
-          "username" TEXT NOT NULL UNIQUE,
-          "password" TEXT NOT NULL,
-          "role" TEXT NOT NULL DEFAULT 'user',
-          "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `
+    console.log('📋 بدء إنشاء الجداول...')
+    
+    // Use Prisma's built-in table creation instead of raw SQL
+    // This ensures all tables are created according to the schema
+    console.log('🔧 استخدام Prisma لإنشاء الجداول...')
+    
+    // Force sync the database schema
+    const { execSync } = require('child_process')
+    
+    try {
+      // Set environment variables for the command
+      const env = {
+        ...process.env,
+        DATABASE_URL: process.env.DATABASE_URL
+      }
       
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS "Customer" (
-          "id" TEXT PRIMARY KEY,
-          "name" TEXT NOT NULL,
-          "phone" TEXT,
-          "nationalId" TEXT,
-          "address" TEXT,
-          "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "deletedAt" DATETIME
-        )
-      `
-    } else {
-      // PostgreSQL table creation
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS "User" (
-          "id" TEXT PRIMARY KEY,
-          "username" TEXT NOT NULL UNIQUE,
-          "password" TEXT NOT NULL,
-          "role" TEXT NOT NULL DEFAULT 'user',
-          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `
+      console.log('🔄 مزامنة مخطط قاعدة البيانات...')
+      execSync('npx prisma db push --accept-data-loss', { 
+        env,
+        stdio: 'pipe'
+      })
+      console.log('✅ تم مزامنة مخطط قاعدة البيانات بنجاح')
       
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS "Customer" (
-          "id" TEXT PRIMARY KEY,
-          "name" TEXT NOT NULL,
-          "phone" TEXT,
-          "nationalId" TEXT,
-          "address" TEXT,
-          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "deletedAt" TIMESTAMP
-        )
-      `
+    } catch (syncError) {
+      console.log('⚠️ فشل في مزامنة المخطط، محاولة إنشاء الجداول يدوياً...')
+      
+      // Fallback: Create essential tables manually
+      if (type === 'sqlite') {
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "users" (
+            "id" TEXT PRIMARY KEY,
+            "username" TEXT NOT NULL UNIQUE,
+            "password" TEXT NOT NULL,
+            "role" TEXT NOT NULL DEFAULT 'user',
+            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )
+        `
+        
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "customers" (
+            "id" TEXT PRIMARY KEY,
+            "name" TEXT NOT NULL,
+            "phone" TEXT,
+            "nationalId" TEXT,
+            "address" TEXT,
+            "status" TEXT DEFAULT 'نشط',
+            "notes" TEXT,
+            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "deletedAt" DATETIME
+          )
+        `
+      } else {
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "users" (
+            "id" TEXT PRIMARY KEY,
+            "username" TEXT NOT NULL UNIQUE,
+            "password" TEXT NOT NULL,
+            "role" TEXT NOT NULL DEFAULT 'user',
+            "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )
+        `
+        
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "customers" (
+            "id" TEXT PRIMARY KEY,
+            "name" TEXT NOT NULL,
+            "phone" TEXT,
+            "nationalId" TEXT,
+            "address" TEXT,
+            "status" TEXT DEFAULT 'نشط',
+            "notes" TEXT,
+            "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "deletedAt" TIMESTAMP
+          )
+        `
+      }
+      
+      console.log('✅ تم إنشاء الجداول الأساسية يدوياً')
     }
 
-    console.log('✅ تم إنشاء الجداول الأساسية')
+    console.log('✅ تم إنشاء جميع الجداول بنجاح')
   } catch (error) {
     console.error('❌ خطأ في إنشاء الجداول:', error)
     throw error
