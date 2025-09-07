@@ -73,8 +73,8 @@ export default function Home() {
   const handleExport = () => {
     if (!kpis) return
     
-    const installments = [] // TODO: Fetch installments data
-    const transactions = [] // TODO: Fetch transactions data
+    const installments: any[] = [] // TODO: Fetch installments data
+    const transactions: any[] = [] // TODO: Fetch transactions data
     
     exportDashboardData(kpis, installments, transactions)
     addNotification({
