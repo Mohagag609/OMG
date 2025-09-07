@@ -542,7 +542,7 @@ export default function DatabaseSettings() {
     
     setInitialized(true)
     loadSettings()
-  }, [initialized, loading, loadSettings, router]) // Include all dependencies
+  }, [initialized, loading, router, loadSettings]) // Include loadSettings to satisfy ESLint
 
   if (loading) {
     return (

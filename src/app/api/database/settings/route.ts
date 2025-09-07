@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     console.log('📋 جاري تحميل إعدادات قاعدة البيانات...')
 
     // Get database settings from config file
-    const settings = loadDatabaseConfig()
+    const settings = await loadDatabaseConfig()
 
     const response: ApiResponse<any> = {
       success: true,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ تم الحفظ بنجاح، جاري ضمان الاستمرارية...')
     
     // Ensure database type persistence
-    const persistenceEnsured = ensureDatabaseTypePersistence(type)
+    const persistenceEnsured = await ensureDatabaseTypePersistence(type)
     if (!persistenceEnsured) {
       console.log('⚠️ تحذير: فشل في ضمان استمرارية نوع قاعدة البيانات')
     }

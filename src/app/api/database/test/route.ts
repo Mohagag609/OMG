@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     // Set environment variable
     process.env.DATABASE_URL = connectionString
     console.log('🔧 تم تعيين متغير البيئة DATABASE_URL')
+    console.log('🔗 رابط قاعدة البيانات الجديد:', connectionString.substring(0, 50) + '...')
 
     // Create Prisma client with explicit URL
     prisma = new PrismaClient({
@@ -35,6 +36,10 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+    
+    // Also update the global DATABASE_URL for other operations
+    process.env.DATABASE_URL = connectionString
+    console.log('🔧 تم تحديث DATABASE_URL للعمليات الأخرى')
 
     // Test connection
     console.log('🔌 اختبار الاتصال...')

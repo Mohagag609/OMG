@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     console.log('🔄 بدء إعادة تهيئة قاعدة البيانات...')
 
     // Get current database URL
-    const databaseUrl = getCurrentDatabaseUrl()
+    const databaseUrl = await getCurrentDatabaseUrl()
     if (!databaseUrl) {
       return NextResponse.json(
         { success: false, error: 'رابط قاعدة البيانات غير محدد' },

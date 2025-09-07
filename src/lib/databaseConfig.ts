@@ -44,7 +44,7 @@ function ensureConfigFile(): void {
 }
 
 // Load database configuration with enhanced error handling and persistence
-export function loadDatabaseConfig(): DatabaseConfig {
+export async function loadDatabaseConfig(): Promise<DatabaseConfig> {
   try {
     console.log('📋 بدء تحميل إعدادات قاعدة البيانات...')
     console.log('📁 مسار الملف:', CONFIG_FILE)
@@ -67,12 +67,30 @@ export function loadDatabaseConfig(): DatabaseConfig {
           if (config.connectionString && !isConnected) {
             console.log('🔍 فحص حالة الاتصال...')
             try {
-              // Simple connection test - just check if we can parse the URL
+              // For PostgreSQL, we need to test actual connection
               if (config.type === 'postgresql' && config.connectionString.startsWith('postgresql://')) {
-                isConnected = true // Assume connected if URL is valid
-                console.log('✅ رابط PostgreSQL صحيح، افتراض الاتصال')
+                console.log('🔌 اختبار الاتصال الفعلي بـ PostgreSQL...')
+                // Test actual connection using Prisma
+                const { PrismaClient } = require('@prisma/client')
+                const testPrisma = new PrismaClient({
+                  datasources: {
+                    db: {
+                      url: config.connectionString
+                    }
+                  }
+                })
+                
+                try {
+                  await testPrisma.$connect()
+                  await testPrisma.$disconnect()
+                  isConnected = true
+                  console.log('✅ تم الاتصال بـ PostgreSQL بنجاح')
+                } catch (dbError: any) {
+                  console.log('❌ فشل الاتصال بـ PostgreSQL:', dbError?.message || dbError)
+                  isConnected = false
+                }
               } else if (config.type === 'sqlite' && config.connectionString.startsWith('file:')) {
-                isConnected = true // Assume connected if URL is valid
+                isConnected = true // SQLite files are local, assume connected
                 console.log('✅ رابط SQLite صحيح، افتراض الاتصال')
               }
             } catch (connectionError) {
@@ -98,6 +116,7 @@ export function loadDatabaseConfig(): DatabaseConfig {
           // Update environment variable immediately
           process.env.DATABASE_URL = config.connectionString
           console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+          console.log('🔗 رابط قاعدة البيانات المحدث:', config.connectionString.substring(0, 50) + '...')
           
           // If config doesn't have persistence flag or connection status changed, save it
           if (!config.persistent || config.isConnected !== isConnected) {
@@ -125,6 +144,8 @@ export function loadDatabaseConfig(): DatabaseConfig {
   console.log('📋 استخدام الإعدادات الافتراضية - SQLite')
   // Update environment variable with default
   process.env.DATABASE_URL = DEFAULT_CONFIG.connectionString
+  console.log('🔧 تم تحديث DATABASE_URL بالإعدادات الافتراضية')
+  console.log('🔗 رابط قاعدة البيانات الافتراضي:', DEFAULT_CONFIG.connectionString)
   return DEFAULT_CONFIG
 }
 
@@ -169,6 +190,7 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
         // Update environment variable immediately
         process.env.DATABASE_URL = config.connectionString
         console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+        console.log('🔗 رابط قاعدة البيانات المحفوظ:', config.connectionString.substring(0, 50) + '...')
         
         return true
       } else {
@@ -226,6 +248,7 @@ export function updateConnectionStatus(isConnected: boolean, details?: any): boo
     if (details && details.connectionString) {
       process.env.DATABASE_URL = details.connectionString
       console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+      console.log('🔗 رابط قاعدة البيانات المحدث:', details.connectionString.substring(0, 50) + '...')
     }
     
     return true
@@ -236,8 +259,8 @@ export function updateConnectionStatus(isConnected: boolean, details?: any): boo
 }
 
 // Get current database URL
-export function getCurrentDatabaseUrl(): string {
-  const config = loadDatabaseConfig()
+export async function getCurrentDatabaseUrl(): Promise<string> {
+  const config = await loadDatabaseConfig()
   return config.connectionString
 }
 
@@ -248,23 +271,23 @@ export function resetToDefaultConfig(): boolean {
 }
 
 // Check if database type changed
-export function hasDatabaseTypeChanged(newType: string): boolean {
-  const config = loadDatabaseConfig()
+export async function hasDatabaseTypeChanged(newType: string): Promise<boolean> {
+  const config = await loadDatabaseConfig()
   return config.type !== newType
 }
 
 // Force reload configuration
-export function forceReloadConfig(): DatabaseConfig {
+export async function forceReloadConfig(): Promise<DatabaseConfig> {
   console.log('🔄 إعادة تحميل إعدادات قاعدة البيانات...')
-  return loadDatabaseConfig()
+  return await loadDatabaseConfig()
 }
 
 // Ensure database type persistence - prevents reverting to SQLite on refresh
-export function ensureDatabaseTypePersistence(type: 'sqlite' | 'postgresql'): boolean {
+export async function ensureDatabaseTypePersistence(type: 'sqlite' | 'postgresql'): Promise<boolean> {
   try {
     console.log(`🔒 ضمان استمرارية نوع قاعدة البيانات: ${type}`)
     
-    const currentConfig = loadDatabaseConfig()
+    const currentConfig = await loadDatabaseConfig()
     
     // If the current type is different from the desired type, update it
     if (currentConfig.type !== type) {
@@ -303,9 +326,9 @@ export function ensureDatabaseTypePersistence(type: 'sqlite' | 'postgresql'): bo
 }
 
 // Get persistent database type - always returns the saved type
-export function getPersistentDatabaseType(): 'sqlite' | 'postgresql' {
+export async function getPersistentDatabaseType(): Promise<'sqlite' | 'postgresql'> {
   try {
-    const config = loadDatabaseConfig()
+    const config = await loadDatabaseConfig()
     console.log(`📋 نوع قاعدة البيانات المحفوظ: ${config.type}`)
     return config.type
   } catch (error: any) {
@@ -336,6 +359,7 @@ export function saveDatabaseConfigAlternative(config: DatabaseConfig): boolean {
     // Update environment variable
     process.env.DATABASE_URL = config.connectionString
     console.log('✅ تم حفظ الإعدادات بالطريقة البديلة')
+    console.log('🔗 رابط قاعدة البيانات المحدث:', config.connectionString.substring(0, 50) + '...')
     
     return true
   } catch (error: any) {
@@ -360,6 +384,7 @@ export function saveDatabaseConfigUltraSimple(type: string, connectionString: st
     
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8')
     process.env.DATABASE_URL = connectionString
+    console.log('🔗 رابط قاعدة البيانات المحدث:', connectionString.substring(0, 50) + '...')
     
     console.log('✅ تم الحفظ بالطريقة البسيطة جداً')
     return true
