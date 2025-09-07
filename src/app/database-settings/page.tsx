@@ -89,13 +89,13 @@ export default function DatabaseSettings() {
       const response = await fetch('/api/database/settings')
       
       const data = await response.json()
-      if (data.success) {
+      if (data.success && data.data) {
         setSettings(data.data)
         setOriginalConnectionString(data.data.connectionString)
         setTempConnectionString(data.data.connectionString)
       } else {
-        // إعدادات افتراضية
-        const defaultConnectionString = 'postgresql://username:password@host:port/database'
+        // إعدادات افتراضية - PostgreSQL
+        const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
         setSettings({
           type: 'postgresql',
           connectionString: defaultConnectionString,
@@ -106,15 +106,19 @@ export default function DatabaseSettings() {
       }
     } catch (err) {
       console.error('Error loading database settings:', err)
-      addNotification({
-        type: 'error',
-        title: 'خطأ في التحميل',
-        message: 'فشل في تحميل إعدادات قاعدة البيانات'
+      // إعدادات افتراضية في حالة الخطأ
+      const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+      setSettings({
+        type: 'postgresql',
+        connectionString: defaultConnectionString,
+        isConnected: false
       })
+      setOriginalConnectionString(defaultConnectionString)
+      setTempConnectionString(defaultConnectionString)
     } finally {
       setLoading(false)
     }
-  }, [addNotification])
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -278,7 +282,7 @@ export default function DatabaseSettings() {
   const handleTypeChange = (type: 'sqlite' | 'postgresql') => {
     const newConnectionString = type === 'sqlite' 
       ? 'file:./prisma/dev.db'
-      : 'postgresql://username:password@host:port/database'
+      : 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
     
     setSettings(prev => ({
       ...prev,
@@ -288,6 +292,15 @@ export default function DatabaseSettings() {
     }))
     setOriginalConnectionString(newConnectionString)
     setTempConnectionString(newConnectionString)
+    
+    // إعادة تعيين حالة التعديل
+    setIsEditingConnectionString(false)
+    
+    addNotification({
+      type: 'info',
+      title: 'تم تغيير نوع قاعدة البيانات',
+      message: `تم التبديل إلى ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'}`
+    })
   }
 
   if (loading) {
@@ -378,68 +391,55 @@ export default function DatabaseSettings() {
                 <input
                   type="text"
                   value={isEditingConnectionString ? tempConnectionString : settings.connectionString}
-                  onChange={(e: any) => setTempConnectionString(e.target.value)}
-                  placeholder={settings.type === 'sqlite' 
-                    ? 'file:./prisma/dev.db' 
-                    : 'postgresql://username:password@host:port/database'
-                  }
-                  disabled={!isEditingConnectionString}
-                  className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white ${
-                    isEditingConnectionString 
-                      ? 'border-gray-300 dark:border-gray-600' 
-                      : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400'
-                  }`}
-                  required
-                />
-                {isEditingConnectionString ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // حفظ التغييرات
-                        setSettings(prev => ({ ...prev, connectionString: tempConnectionString }))
-                        setOriginalConnectionString(tempConnectionString)
-                        setIsEditingConnectionString(false)
-                        addNotification({
-                          type: 'success',
-                          title: 'تم الحفظ',
-                          message: 'تم حفظ رابط قاعدة البيانات بنجاح'
-                        })
-                      }}
-                      className="px-3 py-2 text-sm font-medium rounded-lg border bg-green-100 text-green-700 border-green-300 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700 transition-colors"
-                    >
-                      حفظ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // إلغاء التعديل واستعادة النسخة الأصلية
-                        setTempConnectionString(originalConnectionString)
-                        setIsEditingConnectionString(false)
-                      }}
-                      className="px-3 py-2 text-sm font-medium rounded-lg border bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 transition-colors"
-                    >
-                      إلغاء
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
+                  onChange={(e: any) => {
+                    setTempConnectionString(e.target.value)
+                  }}
+                  onFocus={() => {
+                    if (!isEditingConnectionString) {
                       setTempConnectionString(settings.connectionString)
                       setIsEditingConnectionString(true)
-                    }}
-                    className="px-3 py-2 text-sm font-medium rounded-lg border bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700 transition-colors"
-                  >
-                    تعديل
-                  </button>
-                )}
+                    }
+                  }}
+                  placeholder={settings.type === 'sqlite' 
+                    ? 'file:./prisma/dev.db' 
+                    : 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+                  }
+                  disabled={false}
+                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white border-gray-300 dark:border-gray-600"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    // حفظ التغييرات
+                    setSettings(prev => ({ ...prev, connectionString: tempConnectionString }))
+                    setOriginalConnectionString(tempConnectionString)
+                    setIsEditingConnectionString(false)
+                    addNotification({
+                      type: 'success',
+                      title: 'تم الحفظ',
+                      message: 'تم حفظ رابط قاعدة البيانات بنجاح'
+                    })
+                  }}
+                  className="px-3 py-2 text-sm font-medium rounded-lg border bg-green-100 text-green-700 border-green-300 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700 transition-colors"
+                >
+                  حفظ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // إلغاء التعديل واستعادة النسخة الأصلية
+                    setTempConnectionString(originalConnectionString)
+                    setIsEditingConnectionString(false)
+                  }}
+                  className="px-3 py-2 text-sm font-medium rounded-lg border bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 transition-colors"
+                >
+                  إلغاء
+                </button>
               </div>
-              {!isEditingConnectionString && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  اضغط على زر &quot;تعديل&quot; لتغيير رابط قاعدة البيانات
-                </p>
-              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                يمكنك تعديل رابط قاعدة البيانات مباشرة أو استخدام الأزرار أدناه
+              </p>
             </div>
 
             {/* أمثلة */}
