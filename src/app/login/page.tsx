@@ -49,7 +49,7 @@ export default function Login() {
             placeholder="اسم المستخدم"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="login-input"
+            className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
             required
           />
           <input
@@ -57,7 +57,7 @@ export default function Login() {
             placeholder="كلمة المرور"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
+            className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
             required
           />
           <button

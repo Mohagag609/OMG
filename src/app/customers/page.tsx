@@ -43,9 +43,9 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
-    {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${className}`}
+      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal ${className}`}
       {...props}
     />
   </div>
@@ -53,9 +53,9 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
 
 const ModernSelect = ({ label, children, className = '', ...props }: any) => (
   <div className="space-y-2">
-    {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${className}`}
+      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold ${className}`}
       {...props}
     >
       {children}
@@ -481,7 +481,7 @@ export default function Customers() {
                 placeholder="🔍 ابحث في العملاء... (Ctrl+F)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
               />
             </div>
             <ModernButton variant="secondary" size="sm">
