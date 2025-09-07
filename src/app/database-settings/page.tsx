@@ -23,7 +23,7 @@ export default function DatabaseSettingsPage() {
     }
   }
 
-  const switchDatabase = async (dbType: 'sqlite' | 'postgresql') => {
+  const switchDatabase = async (dbType: 'sqlite' | 'postgresql-local' | 'postgresql-cloud') => {
     setIsLoading(true)
     setMessage('')
     
@@ -129,7 +129,7 @@ export default function DatabaseSettingsPage() {
                     </div>
                     
                     <button
-                      onClick={() => switchDatabase(key as 'sqlite' | 'postgresql')}
+                      onClick={() => switchDatabase(key as 'sqlite' | 'postgresql-local' | 'postgresql-cloud')}
                       disabled={isLoading || currentConfig?.type === key}
                       className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         currentConfig?.type === key

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const { databaseType } = await request.json()
 
-    if (!['sqlite', 'postgresql'].includes(databaseType)) {
+    if (!['sqlite', 'postgresql-local', 'postgresql-cloud'].includes(databaseType)) {
       return NextResponse.json({
         success: false,
         error: 'نوع قاعدة البيانات غير صحيح'
