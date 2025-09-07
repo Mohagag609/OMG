@@ -1,4 +1,4 @@
-// Database configuration management
+// Database configuration management - Complete rewrite
 import fs from 'fs'
 import path from 'path'
 
@@ -8,14 +8,14 @@ export interface DatabaseConfig {
   type: 'sqlite' | 'postgresql'
   connectionString: string
   isConnected: boolean
-  lastTested: string
+  lastTested?: string
   details?: any
 }
 
-// Default configuration
+// Default configuration - Always PostgreSQL
 const DEFAULT_CONFIG: DatabaseConfig = {
   type: 'postgresql',
-  connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+  connectionString: 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
   isConnected: false,
   lastTested: new Date().toISOString()
 }
@@ -26,14 +26,14 @@ export function loadDatabaseConfig(): DatabaseConfig {
     if (fs.existsSync(CONFIG_FILE)) {
       const configData = fs.readFileSync(CONFIG_FILE, 'utf8')
       const config = JSON.parse(configData)
-      console.log('📋 تم تحميل إعدادات قاعدة البيانات من الملف')
+      console.log('✅ تم تحميل إعدادات قاعدة البيانات من الملف:', config.type)
       return config
     }
   } catch (error) {
     console.error('❌ خطأ في تحميل إعدادات قاعدة البيانات:', error)
   }
   
-  console.log('📋 استخدام الإعدادات الافتراضية')
+  console.log('📋 استخدام الإعدادات الافتراضية - PostgreSQL')
   return DEFAULT_CONFIG
 }
 
@@ -48,9 +48,9 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
     
     // Write config file
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
-    console.log('💾 تم حفظ إعدادات قاعدة البيانات في الملف')
+    console.log('✅ تم حفظ إعدادات قاعدة البيانات في الملف:', config.type)
     
-    // Update environment variable
+    // Update environment variable immediately
     process.env.DATABASE_URL = config.connectionString
     console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
     
@@ -62,7 +62,7 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
 }
 
 // Update connection status
-export function updateConnectionStatus(isConnected: boolean, details?: any): void {
+export function updateConnectionStatus(isConnected: boolean, details?: any): boolean {
   try {
     const config = loadDatabaseConfig()
     config.isConnected = isConnected
@@ -72,9 +72,10 @@ export function updateConnectionStatus(isConnected: boolean, details?: any): voi
       config.details = details
     }
     
-    saveDatabaseConfig(config)
+    return saveDatabaseConfig(config)
   } catch (error) {
     console.error('❌ خطأ في تحديث حالة الاتصال:', error)
+    return false
   }
 }
 
@@ -82,6 +83,12 @@ export function updateConnectionStatus(isConnected: boolean, details?: any): voi
 export function getCurrentDatabaseUrl(): string {
   const config = loadDatabaseConfig()
   return config.connectionString
+}
+
+// Force reset to default PostgreSQL
+export function resetToDefaultConfig(): boolean {
+  console.log('🔄 إعادة تعيين الإعدادات إلى PostgreSQL الافتراضي')
+  return saveDatabaseConfig(DEFAULT_CONFIG)
 }
 
 // Check if database type changed

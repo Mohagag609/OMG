@@ -6,54 +6,51 @@ import { NotificationSystem, useNotifications } from '@/components/NotificationS
 import Layout from '@/components/Layout'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
-  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
+const ModernButton = ({ children, onClick, disabled = false, variant = 'primary', className = '' }: any) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+      variant === 'primary' 
+        ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400' 
+        : variant === 'success'
+        ? 'bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-400'
+        : variant === 'warning'
+        ? 'bg-yellow-600 text-white hover:bg-yellow-700 disabled:bg-gray-400'
+        : variant === 'danger'
+        ? 'bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400'
+        : 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-400'
+    } ${className}`}
+  >
     {children}
-  </div>
+  </button>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
-
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, type = 'text', value, onChange, placeholder, required = false, disabled = false }: any) => (
   <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <input 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal ${className}`}
-      {...props}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
     />
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, value, onChange, children }: any) => (
   <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <select 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold ${className}`}
-      {...props}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {label}
+    </label>
+    <select
+      value={value}
+      onChange={onChange}
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
     >
       {children}
     </select>
@@ -77,8 +74,6 @@ export default function DatabaseSettings() {
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
-  const [isEditingConnectionString, setIsEditingConnectionString] = useState(false)
-  const [originalConnectionString, setOriginalConnectionString] = useState('')
   const [tempConnectionString, setTempConnectionString] = useState('')
   
   const router = useRouter()
@@ -86,13 +81,14 @@ export default function DatabaseSettings() {
 
   const loadDatabaseSettings = useCallback(async () => {
     try {
+      console.log('📋 تحميل إعدادات قاعدة البيانات...')
       const response = await fetch('/api/database/settings')
       
       const data = await response.json()
       if (data.success && data.data) {
         setSettings(data.data)
-        setOriginalConnectionString(data.data.connectionString)
         setTempConnectionString(data.data.connectionString)
+        console.log('✅ تم تحميل الإعدادات:', data.data.type)
       } else {
         // إعدادات افتراضية - PostgreSQL
         const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
@@ -101,11 +97,11 @@ export default function DatabaseSettings() {
           connectionString: defaultConnectionString,
           isConnected: false
         })
-        setOriginalConnectionString(defaultConnectionString)
         setTempConnectionString(defaultConnectionString)
+        console.log('📋 استخدام الإعدادات الافتراضية')
       }
     } catch (err) {
-      console.error('Error loading database settings:', err)
+      console.error('❌ خطأ في تحميل الإعدادات:', err)
       // إعدادات افتراضية في حالة الخطأ
       const defaultConnectionString = 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
       setSettings({
@@ -113,7 +109,6 @@ export default function DatabaseSettings() {
         connectionString: defaultConnectionString,
         isConnected: false
       })
-      setOriginalConnectionString(defaultConnectionString)
       setTempConnectionString(defaultConnectionString)
     } finally {
       setLoading(false)
@@ -133,62 +128,41 @@ export default function DatabaseSettings() {
   const testConnection = async () => {
     setTesting(true)
     try {
+      console.log('🔍 اختبار الاتصال...')
       const response = await fetch('/api/database/test', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: settings.type,
-          connectionString: settings.connectionString
+          connectionString: tempConnectionString,
+          type: settings.type
         })
       })
-
+      
       const data = await response.json()
       if (data.success) {
-        setSettings(prev => ({
-          ...prev,
-          isConnected: true,
-          lastTested: new Date().toLocaleString('ar-SA')
-        }))
-        
-        const tablesInfo = data.data.tablesCreated 
-          ? ' وتم إنشاء الجداول تلقائياً' 
-          : ''
-        
+        setSettings(prev => ({ ...prev, isConnected: true }))
         addNotification({
           type: 'success',
-          title: 'تم ربط القاعدة بنجاح!',
-          message: `تم الاتصال بقاعدة البيانات ${settings.type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح${tablesInfo}`
+          title: 'نجح الاختبار',
+          message: 'تم اختبار الاتصال وإنشاء الجداول بنجاح'
         })
-        
-        // إظهار تفاصيل إضافية إذا تم إنشاء الجداول
-        if (data.data.tablesCreated) {
-          setTimeout(() => {
-            addNotification({
-              type: 'info',
-              title: 'تم إنشاء الجداول',
-              message: data.data.tablesMessage || 'تم إنشاء جميع الجداول المطلوبة'
-            })
-          }, 1000)
-        }
       } else {
-        setSettings(prev => ({
-          ...prev,
-          isConnected: false
-        }))
+        setSettings(prev => ({ ...prev, isConnected: false }))
         addNotification({
           type: 'error',
-          title: 'فشل في الاتصال',
-          message: data.error || 'فشل في الاتصال بقاعدة البيانات'
+          title: 'فشل الاختبار',
+          message: data.error || 'فشل في اختبار الاتصال'
         })
       }
     } catch (err) {
-      console.error('Error testing connection:', err)
+      console.error('❌ خطأ في اختبار الاتصال:', err)
+      setSettings(prev => ({ ...prev, isConnected: false }))
       addNotification({
         type: 'error',
-        title: 'خطأ في الاختبار',
-        message: 'فشل في اختبار الاتصال بقاعدة البيانات'
+        title: 'خطأ في الاتصال',
+        message: 'فشل في اختبار الاتصال'
       })
     } finally {
       setTesting(false)
@@ -198,19 +172,28 @@ export default function DatabaseSettings() {
   const saveSettings = async () => {
     setSaving(true)
     try {
+      console.log('💾 حفظ الإعدادات...')
       const response = await fetch('/api/database/settings', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(settings)
+        body: JSON.stringify({
+          type: settings.type,
+          connectionString: tempConnectionString
+        })
       })
-
+      
       const data = await response.json()
       if (data.success) {
+        setSettings(prev => ({ 
+          ...prev, 
+          connectionString: tempConnectionString,
+          isConnected: false 
+        }))
         addNotification({
           type: 'success',
-          title: 'تم الحفظ بنجاح',
+          title: 'تم الحفظ',
           message: 'تم حفظ إعدادات قاعدة البيانات بنجاح'
         })
       } else {
@@ -221,11 +204,11 @@ export default function DatabaseSettings() {
         })
       }
     } catch (err) {
-      console.error('Error saving settings:', err)
+      console.error('❌ خطأ في حفظ الإعدادات:', err)
       addNotification({
         type: 'error',
-        title: 'خطأ في الحفظ',
-        message: 'فشل في حفظ إعدادات قاعدة البيانات'
+        title: 'خطأ في الاتصال',
+        message: 'فشل في حفظ الإعدادات'
       })
     } finally {
       setSaving(false)
@@ -233,33 +216,27 @@ export default function DatabaseSettings() {
   }
 
   const resetDatabase = async () => {
-    if (!confirm('⚠️ تحذير: هذا الإجراء سيحذف جميع البيانات نهائياً!\n\nهل أنت متأكد من إعادة تهيئة قاعدة البيانات؟')) {
+    if (!confirm('هل أنت متأكد من إعادة تهيئة قاعدة البيانات؟ سيتم حذف جميع البيانات!')) {
       return
     }
 
     setResetting(true)
     try {
+      console.log('🔄 إعادة تهيئة قاعدة البيانات...')
       const response = await fetch('/api/database/reset-simple', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         }
       })
-
+      
       const data = await response.json()
       if (data.success) {
         addNotification({
           type: 'success',
-          title: 'تم إعادة التهيئة بنجاح!',
-          message: 'تم إعادة تهيئة قاعدة البيانات وإضافة البيانات التجريبية'
+          title: 'تم إعادة التهيئة',
+          message: 'تم إعادة تهيئة قاعدة البيانات بنجاح'
         })
-        
-        // تحديث حالة الاتصال
-        setSettings(prev => ({
-          ...prev,
-          isConnected: true,
-          lastTested: new Date().toLocaleString('ar-SA')
-        }))
       } else {
         addNotification({
           type: 'error',
@@ -268,10 +245,10 @@ export default function DatabaseSettings() {
         })
       }
     } catch (err) {
-      console.error('Error resetting database:', err)
+      console.error('❌ خطأ في إعادة تهيئة قاعدة البيانات:', err)
       addNotification({
         type: 'error',
-        title: 'خطأ في إعادة التهيئة',
+        title: 'خطأ في الاتصال',
         message: 'فشل في إعادة تهيئة قاعدة البيانات'
       })
     } finally {
@@ -290,11 +267,7 @@ export default function DatabaseSettings() {
       connectionString: newConnectionString,
       isConnected: false
     }))
-    setOriginalConnectionString(newConnectionString)
     setTempConnectionString(newConnectionString)
-    
-    // إعادة تعيين حالة التعديل
-    setIsEditingConnectionString(false)
     
     addNotification({
       type: 'info',
@@ -309,7 +282,7 @@ export default function DatabaseSettings() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+            <p className="text-gray-600 dark:text-gray-400">جاري تحميل الإعدادات...</p>
           </div>
         </div>
       </Layout>
@@ -318,31 +291,52 @@ export default function DatabaseSettings() {
 
   return (
     <Layout title="إعدادات قاعدة البيانات" subtitle="إدارة اتصال قاعدة البيانات" icon="🗄️">
-      <div className="max-w-4xl mx-auto space-y-8">
-        
-        {/* حالة الاتصال */}
-        <ModernCard>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">حالة الاتصال</h2>
-            <div className={`px-4 py-2 rounded-xl font-bold ${
-              settings.isConnected 
-                ? 'bg-green-100 text-green-900' 
-                : 'bg-red-100 text-red-900'
-            }`}>
-              {settings.isConnected ? '✅ متصل' : '❌ غير متصل'}
+      <NotificationSystem 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
+      
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* معلومات الاتصال الحالية */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            حالة الاتصال الحالية
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                نوع قاعدة البيانات
+              </label>
+              <div className={`px-3 py-2 rounded-lg ${
+                settings.type === 'postgresql' 
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                  : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              }`}>
+                {settings.type === 'postgresql' ? 'PostgreSQL' : 'SQLite'}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                حالة الاتصال
+              </label>
+              <div className={`px-3 py-2 rounded-lg ${
+                settings.isConnected 
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+              }`}>
+                {settings.isConnected ? 'متصل' : 'غير متصل'}
+              </div>
             </div>
           </div>
-          
-          {settings.lastTested && (
-            <div className="text-sm text-gray-600">
-              آخر اختبار: {settings.lastTested}
-            </div>
-          )}
-        </ModernCard>
+        </div>
 
         {/* إعدادات قاعدة البيانات */}
-        <ModernCard>
-          <h2 className="text-xl font-bold text-gray-900 mb-6">إعدادات قاعدة البيانات</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            إعدادات قاعدة البيانات
+          </h2>
           
           <div className="space-y-6">
             {/* نوع قاعدة البيانات */}
@@ -355,33 +349,6 @@ export default function DatabaseSettings() {
               <option value="postgresql">PostgreSQL (خادم)</option>
             </ModernSelect>
 
-            {/* معلومات قاعدة البيانات */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-bold text-gray-900 mb-3">
-                {settings.type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} - معلومات الاتصال
-              </h3>
-              
-              {settings.type === 'sqlite' ? (
-                <div className="space-y-3">
-                  <div className="text-sm text-gray-600">
-                    <strong>المسار:</strong> ملف قاعدة البيانات المحلي
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <strong>المميزات:</strong> سريع، لا يحتاج خادم، مناسب للتطوير
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-sm text-gray-600">
-                    <strong>الخادم:</strong> خادم قاعدة بيانات خارجي
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <strong>المميزات:</strong> قوي، يدعم عدة مستخدمين، مناسب للإنتاج
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* رابط الاتصال */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -390,31 +357,19 @@ export default function DatabaseSettings() {
               <div className="flex items-center space-x-2 space-x-reverse">
                 <input
                   type="text"
-                  value={isEditingConnectionString ? tempConnectionString : settings.connectionString}
-                  onChange={(e: any) => {
-                    setTempConnectionString(e.target.value)
-                  }}
-                  onFocus={() => {
-                    if (!isEditingConnectionString) {
-                      setTempConnectionString(settings.connectionString)
-                      setIsEditingConnectionString(true)
-                    }
-                  }}
+                  value={tempConnectionString}
+                  onChange={(e: any) => setTempConnectionString(e.target.value)}
                   placeholder={settings.type === 'sqlite' 
                     ? 'file:./prisma/dev.db' 
                     : 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
                   }
-                  disabled={false}
                   className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white border-gray-300 dark:border-gray-600"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => {
-                    // حفظ التغييرات
                     setSettings(prev => ({ ...prev, connectionString: tempConnectionString }))
-                    setOriginalConnectionString(tempConnectionString)
-                    setIsEditingConnectionString(false)
                     addNotification({
                       type: 'success',
                       title: 'تم الحفظ',
@@ -428,9 +383,7 @@ export default function DatabaseSettings() {
                 <button
                   type="button"
                   onClick={() => {
-                    // إلغاء التعديل واستعادة النسخة الأصلية
-                    setTempConnectionString(originalConnectionString)
-                    setIsEditingConnectionString(false)
+                    setTempConnectionString(settings.connectionString)
                   }}
                   className="px-3 py-2 text-sm font-medium rounded-lg border bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 transition-colors"
                 >
@@ -446,114 +399,84 @@ export default function DatabaseSettings() {
             <div className="bg-blue-50 rounded-xl p-4">
               <h4 className="font-bold text-blue-900 mb-2">أمثلة على روابط الاتصال:</h4>
               <div className="text-sm text-blue-800 space-y-1">
-                {settings.type === 'sqlite' ? (
-                  <>
-                    <div><code>file:./prisma/dev.db</code> - ملف محلي</div>
-                    <div><code>file:/absolute/path/to/database.db</code> - مسار مطلق</div>
-                  </>
-                ) : (
-                  <>
-                    <div><code>postgresql://user:pass@localhost:5432/dbname</code> - محلي</div>
-                    <div><code>postgresql://user:pass@host.com:5432/dbname?sslmode=require</code> - خارجي مع SSL</div>
-                  </>
-                )}
+                <p><strong>SQLite:</strong> file:./prisma/dev.db</p>
+                <p><strong>PostgreSQL:</strong> postgresql://username:password@host:port/database</p>
               </div>
             </div>
           </div>
-        </ModernCard>
+        </div>
 
         {/* أزرار التحكم */}
-        <ModernCard>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <ModernButton 
-                onClick={testConnection}
-                disabled={testing || !settings.connectionString}
-                variant={settings.isConnected ? 'success' : 'warning'}
-              >
-                {testing ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    جاري الاختبار...
-                  </>
-                ) : (
-                  <>
-                    <span className="mr-2">🔍</span>
-                    اختبار الاتصال
-                  </>
-                )}
-              </ModernButton>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            العمليات
+          </h2>
+          
+          <div className="flex flex-wrap gap-4">
+            <ModernButton 
+              onClick={testConnection}
+              disabled={testing || !tempConnectionString}
+              variant={settings.isConnected ? 'success' : 'warning'}
+            >
+              {testing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  جاري الاختبار...
+                </>
+              ) : (
+                <>
+                  🔍 اختبار الاتصال
+                </>
+              )}
+            </ModernButton>
 
-              <ModernButton 
-                onClick={saveSettings}
-                disabled={saving}
-                variant="primary"
-              >
-                {saving ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    جاري الحفظ...
-                  </>
-                ) : (
-                  <>
-                    <span className="mr-2">💾</span>
-                    حفظ الإعدادات
-                  </>
-                )}
-              </ModernButton>
+            <ModernButton 
+              onClick={saveSettings}
+              disabled={saving}
+              variant="primary"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  💾 حفظ الإعدادات
+                </>
+              )}
+            </ModernButton>
 
-              <ModernButton 
-                onClick={resetDatabase}
-                disabled={resetting}
-                variant="danger"
-              >
-                {resetting ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    جاري إعادة التهيئة...
-                  </>
-                ) : (
-                  <>
-                    <span className="mr-2">🔄</span>
-                    إعادة تهيئة قاعدة البيانات
-                  </>
-                )}
-              </ModernButton>
-            </div>
-
-            <div className="text-sm text-gray-500">
-              {settings.isConnected ? '✅ تم ربط القاعدة بنجاح' : '❌ غير متصل'}
-            </div>
+            <ModernButton 
+              onClick={resetDatabase}
+              disabled={resetting}
+              variant="danger"
+            >
+              {resetting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  جاري إعادة التهيئة...
+                </>
+              ) : (
+                <>
+                  🔄 إعادة تهيئة قاعدة البيانات
+                </>
+              )}
+            </ModernButton>
           </div>
-        </ModernCard>
+        </div>
 
         {/* معلومات إضافية */}
-        <ModernCard>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">معلومات إضافية</h3>
-          <div className="space-y-3 text-sm text-gray-600">
-            <div>
-              <strong>SQLite:</strong> قاعدة بيانات خفيفة وسريعة، مناسبة للتطوير والاختبار
-            </div>
-            <div>
-              <strong>PostgreSQL:</strong> قاعدة بيانات قوية ومتقدمة، مناسبة للإنتاج والتطبيقات الكبيرة
-            </div>
-            <div className="text-green-600 font-medium">
-              ✅ عند اختبار الاتصال، سيتم إنشاء الجداول تلقائياً إذا لم تكن موجودة
-            </div>
-            <div className="text-blue-600 font-medium">
-              🔧 النظام يفحص وجود الجداول وينشئها عند الحاجة
-            </div>
-            <div className="text-yellow-600 font-medium">
-              ⚠️ تأكد من صحة رابط الاتصال قبل الحفظ
-            </div>
-          </div>
-        </ModernCard>
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+          <h3 className="font-bold text-gray-900 dark:text-white mb-2">معلومات مهمة:</h3>
+          <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+            <li>• اختبار الاتصال سيقوم بإنشاء الجداول تلقائياً إذا لم تكن موجودة</li>
+            <li>• إعادة تهيئة قاعدة البيانات ستحذف جميع البيانات وتعيد إنشاء البيانات الافتراضية</li>
+            <li>• تأكد من صحة رابط قاعدة البيانات قبل الحفظ</li>
+            <li>• النظام يدعم SQLite للتطوير المحلي و PostgreSQL للإنتاج</li>
+          </ul>
+        </div>
       </div>
-      
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
     </Layout>
   )
 }

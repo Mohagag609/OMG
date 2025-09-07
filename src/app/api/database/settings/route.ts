@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiResponse } from '@/types'
-import { loadDatabaseConfig, saveDatabaseConfig, updateConnectionStatus } from '@/lib/databaseConfig'
+import { loadDatabaseConfig, saveDatabaseConfig } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -18,9 +18,10 @@ export async function GET(request: NextRequest) {
       data: settings
     }
 
+    console.log('✅ تم تحميل الإعدادات بنجاح:', settings.type)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting database settings:', error)
+    console.error('❌ خطأ في تحميل إعدادات قاعدة البيانات:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
@@ -83,15 +84,20 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Update environment variable
+    process.env.DATABASE_URL = connectionString
+    console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+    
     const response: ApiResponse<any> = {
       success: true,
       data: config,
       message: 'تم حفظ إعدادات قاعدة البيانات بنجاح'
     }
 
+    console.log('✅ تم حفظ الإعدادات بنجاح:', type)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error saving database settings:', error)
+    console.error('❌ خطأ في حفظ إعدادات قاعدة البيانات:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }

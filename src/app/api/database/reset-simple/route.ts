@@ -1,141 +1,213 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 import { ApiResponse } from '@/types'
-import { ensureEnvironmentVariables } from '@/lib/env'
+import { getCurrentDatabaseUrl, updateConnectionStatus } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// POST /api/database/reset-simple - Simple database reset without auth
+// POST /api/database/reset-simple - Reset database completely
 export async function POST(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    console.log('🔄 بدء إعادة تهيئة قاعدة البيانات البسيطة...')
-    ensureEnvironmentVariables()
+    console.log('🔄 بدء إعادة تهيئة قاعدة البيانات...')
 
-    // Import and create Prisma client
-    const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient()
+    // Get current database URL
+    const databaseUrl = getCurrentDatabaseUrl()
+    if (!databaseUrl) {
+      return NextResponse.json(
+        { success: false, error: 'رابط قاعدة البيانات غير محدد' },
+        { status: 400 }
+      )
+    }
 
-    try {
-      // Delete all data from all tables
-      await prisma.$transaction([
-        prisma.contract.deleteMany(),
-        prisma.customer.deleteMany(),
-        prisma.unit.deleteMany(),
-        prisma.partner.deleteMany(),
-        prisma.broker.deleteMany(),
-        prisma.safe.deleteMany(),
-        prisma.user.deleteMany(),
-      ])
+    // Set environment variables
+    process.env.DATABASE_URL = databaseUrl
+    process.env.JWT_SECRET = 'your-super-secret-jwt-key-2024'
+    console.log('🔧 تم تعيين متغيرات البيئة')
+
+    // Create Prisma client
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: databaseUrl
+        }
+      }
+    })
+
+    // Connect to database
+    await prisma.$connect()
+    console.log('🔌 تم الاتصال بقاعدة البيانات')
+
+    // Reset database directly
+    await resetDatabaseDirectly(prisma)
+    console.log('✅ تم إعادة تهيئة قاعدة البيانات')
+
+    // Update connection status
+    updateConnectionStatus(true, {
+      message: 'تم إعادة تهيئة قاعدة البيانات بنجاح',
+      lastReset: new Date().toISOString()
+    })
+
+    const response: ApiResponse<any> = {
+      success: true,
+      message: 'تم إعادة تهيئة قاعدة البيانات بنجاح',
+      data: {
+        resetAt: new Date().toISOString(),
+        databaseUrl: databaseUrl
+      }
+    }
+
+    console.log('🎉 تم إعادة تهيئة قاعدة البيانات بنجاح!')
+    return NextResponse.json(response)
+
+  } catch (error: any) {
+    console.error('❌ خطأ في إعادة تهيئة قاعدة البيانات:', error)
+    
+    // Update connection status as failed
+    updateConnectionStatus(false, {
+      error: error.message,
+      lastReset: new Date().toISOString()
+    })
+
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: `خطأ في إعادة تهيئة قاعدة البيانات: ${error.message}`,
+        details: error.message
+      },
+      { status: 500 }
+    )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+      console.log('🔌 تم قطع الاتصال')
+    }
+  }
+}
+
+// Reset database directly using Prisma
+async function resetDatabaseDirectly(prisma: PrismaClient) {
+  try {
+    console.log('🗑️ بدء حذف البيانات...')
+
+    // Delete all data in correct order (respecting foreign keys)
+    await prisma.$transaction(async (tx: any) => {
+      // Delete dependent tables first
+      await tx.installment.deleteMany()
+      await tx.voucher.deleteMany()
+      await tx.contract.deleteMany()
+      await tx.unitPartner.deleteMany()
+      await tx.partnerDebt.deleteMany()
+      await tx.safe.deleteMany()
       
-      console.log('✅ تم حذف جميع البيانات بنجاح')
-
-      // Create default users
-      const bcrypt = await import('bcryptjs')
+      // Delete main tables
+      await tx.unit.deleteMany()
+      await tx.partner.deleteMany()
+      await tx.broker.deleteMany()
+      await tx.customer.deleteMany()
       
-      // Create admin user
+      // Keep users for login
+      console.log('👥 الاحتفاظ بالمستخدمين للدخول')
+    })
+
+    console.log('✅ تم حذف البيانات بنجاح')
+
+    // Create default users
+    await createDefaultUsers(prisma)
+    console.log('✅ تم إنشاء المستخدمين الافتراضيين')
+
+    // Create sample data
+    await createSampleData(prisma)
+    console.log('✅ تم إنشاء البيانات التجريبية')
+
+  } catch (error) {
+    console.error('❌ خطأ في إعادة تهيئة قاعدة البيانات:', error)
+    throw error
+  }
+}
+
+// Create default users
+async function createDefaultUsers(prisma: PrismaClient) {
+  try {
+    const bcrypt = require('bcryptjs')
+    
+    // Check if admin exists
+    const existingAdmin = await prisma.user.findFirst({
+      where: { username: 'admin' }
+    })
+    
+    if (!existingAdmin) {
       await prisma.user.create({
         data: {
           username: 'admin',
-          password: await bcrypt.hash('admin123', 12),
-          email: 'admin@example.com',
-          fullName: 'مدير النظام',
-          role: 'admin',
-          isActive: true
+          password: await bcrypt.hash('admin123', 10),
+          role: 'admin'
         }
       })
-      
-      // Create regular user
+      console.log('✅ تم إنشاء مستخدم admin')
+    }
+
+    // Check if user exists
+    const existingUser = await prisma.user.findFirst({
+      where: { username: 'user' }
+    })
+    
+    if (!existingUser) {
       await prisma.user.create({
         data: {
           username: 'user',
-          password: await bcrypt.hash('user123', 12),
-          email: 'user@example.com',
-          fullName: 'مستخدم عادي',
-          role: 'user',
-          isActive: true
+          password: await bcrypt.hash('user123', 10),
+          role: 'user'
         }
       })
-
-      // Create default safe
-      await prisma.safe.create({
-        data: {
-          name: 'الخزنة الرئيسية',
-          balance: 0
-        }
-      })
-
-      // Create sample customer
-      await prisma.customer.create({
-        data: {
-          name: 'أحمد محمد علي',
-          phone: '01012345678',
-          nationalId: '12345678901234',
-          address: 'القاهرة، مصر',
-          status: 'نشط',
-          notes: 'عميل تجريبي'
-        }
-      })
-
-      // Create sample unit
-      await prisma.unit.create({
-        data: {
-          code: 'A-101',
-          name: 'شقة 101',
-          unitType: 'سكني',
-          area: '120 متر مربع',
-          floor: 'الطابق الأول',
-          building: 'المبنى أ',
-          totalPrice: 500000,
-          status: 'متاحة',
-          notes: 'وحدة تجريبية'
-        }
-      })
-
-      // Create sample partner
-      await prisma.partner.create({
-        data: {
-          name: 'محمد أحمد',
-          phone: '01087654321',
-          notes: 'شريك تجريبي'
-        }
-      })
-
-      // Create sample broker
-      await prisma.broker.create({
-        data: {
-          name: 'علي حسن',
-          phone: '01011111111',
-          notes: 'وسيط تجريبي'
-        }
-      })
-
-      console.log('✅ تم إضافة البيانات التجريبية بنجاح')
-
-      const response: ApiResponse<any> = {
-        success: true,
-        data: {
-          resetAt: new Date().toISOString(),
-          message: 'تم إعادة تهيئة قاعدة البيانات بنجاح'
-        },
-        message: 'تم إعادة تهيئة قاعدة البيانات وإضافة البيانات التجريبية بنجاح'
-      }
-      return NextResponse.json(response)
-
-    } catch (error: any) {
-      console.error('❌ خطأ في إعادة تهيئة قاعدة البيانات:', error)
-      return NextResponse.json(
-        { success: false, error: error.message || 'فشل في إعادة تهيئة قاعدة البيانات' },
-        { status: 500 }
-      )
-    } finally {
-      await prisma.$disconnect()
+      console.log('✅ تم إنشاء مستخدم user')
     }
 
   } catch (error) {
-    console.error('Error resetting database:', error)
-    return NextResponse.json(
-      { success: false, error: 'خطأ في إعادة تهيئة قاعدة البيانات' },
-      { status: 500 }
-    )
+    console.error('❌ خطأ في إنشاء المستخدمين الافتراضيين:', error)
+    throw error
+  }
+}
+
+// Create sample data
+async function createSampleData(prisma: PrismaClient) {
+  try {
+    // Create sample customer
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { name: 'عميل تجريبي' }
+    })
+    
+    if (!existingCustomer) {
+      await prisma.customer.create({
+        data: {
+          name: 'عميل تجريبي',
+          phone: '01234567890',
+          address: 'عنوان تجريبي'
+        }
+      })
+      console.log('✅ تم إنشاء عميل تجريبي')
+    }
+
+    // Create sample broker
+    const existingBroker = await prisma.broker.findFirst({
+      where: { name: 'وسيط تجريبي' }
+    })
+    
+    if (!existingBroker) {
+      await prisma.broker.create({
+        data: {
+          name: 'وسيط تجريبي',
+          phone: '01234567891',
+          notes: 'وسيط تجريبي للاختبار'
+        }
+      })
+      console.log('✅ تم إنشاء وسيط تجريبي')
+    }
+
+  } catch (error) {
+    console.error('❌ خطأ في إنشاء البيانات التجريبية:', error)
+    throw error
   }
 }
