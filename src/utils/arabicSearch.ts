@@ -56,7 +56,7 @@ export function createAdvancedArabicSearch(searchTerm: string, fields: string[])
   ]
   
   // Remove duplicates
-  const uniqueVariations = [...new Set(variations)]
+  const uniqueVariations = Array.from(new Set(variations))
   
   const searchConditions = fields.flatMap(field =>
     uniqueVariations.map(variation => ({
@@ -97,5 +97,5 @@ export function getArabicNameVariations(name: string): string[] {
     }
   }
   
-  return [...new Set(variations)]
+  return Array.from(new Set(variations))
 }

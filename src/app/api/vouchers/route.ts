@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const type = searchParams.get('type') || ''
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (search) {
       whereClause.OR = [

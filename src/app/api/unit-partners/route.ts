@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const unitId = searchParams.get('unitId')
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (unitId) {
       whereClause.unitId = unitId

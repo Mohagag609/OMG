@@ -9,13 +9,14 @@ export const runtime = 'nodejs'
 
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
   try {
     ensureEnvironmentVariables()
     console.log('📋 جاري تحميل العملاء...')
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient({
+    prisma = new PrismaClient({
       datasources: {
         db: {
           url: process.env.DATABASE_URL
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (search) {
       // استخدام البحث المتقدم للعربية
@@ -70,19 +71,22 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
+  let prisma: any = null
   try {
     ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء عميل جديد...')
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient({
+    prisma = new PrismaClient({
       datasources: {
         db: {
           url: process.env.DATABASE_URL
@@ -143,6 +147,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

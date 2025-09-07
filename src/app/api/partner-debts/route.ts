@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const partnerId = searchParams.get('partnerId')
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (partnerId) {
       whereClause.partnerId = partnerId

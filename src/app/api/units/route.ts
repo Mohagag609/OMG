@@ -9,13 +9,14 @@ export const runtime = 'nodejs'
 
 // GET /api/units - Get units with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
   try {
     ensureEnvironmentVariables()
     console.log('🏠 جاري تحميل الوحدات...')
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient({
+    prisma = new PrismaClient({
       datasources: {
         db: {
           url: process.env.DATABASE_URL
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
 
-    let whereClause: any = { deletedAt: null }
+    const whereClause: any = { deletedAt: null }
 
     if (search) {
       // استخدام البحث المتقدم للعربية
@@ -70,19 +71,22 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/units - Create new unit
 export async function POST(request: NextRequest) {
+  let prisma: any = null
   try {
     ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء وحدة جديدة...')
 
     // Create Prisma client with environment variables
     const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient({
+    prisma = new PrismaClient({
       datasources: {
         db: {
           url: process.env.DATABASE_URL
@@ -129,7 +133,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const totalPercent = partnerGroup.partners.reduce((sum, p) => sum + p.percentage, 0)
+    const totalPercent = partnerGroup.partners.reduce((sum: number, p: any) => sum + p.percentage, 0)
     if (totalPercent !== 100) {
       return NextResponse.json(
         { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
@@ -138,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create unit and link partners in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create unit
       const unit = await tx.unit.create({
         data: {
@@ -182,6 +186,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
