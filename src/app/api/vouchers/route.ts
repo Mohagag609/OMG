@@ -4,6 +4,9 @@ import { Voucher, ApiResponse, PaginatedResponse } from '@/types'
 import { validateAmount, getValidationError } from '@/utils/validation'
 
 // GET /api/vouchers - Get all vouchers with pagination and search
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

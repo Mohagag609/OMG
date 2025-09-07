@@ -4,6 +4,9 @@ import { getUserFromRequest } from '@/lib/auth'
 import * as XLSX from 'xlsx'
 
 // GET /api/export/excel - Export data as Excel
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

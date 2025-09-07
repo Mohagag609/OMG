@@ -67,10 +67,11 @@ npm run dev
 
 ## النشر
 
-### النشر على Netlify
+### النشر على Netlify (مُوصى به)
 ```bash
 npm run deploy:netlify
 ```
+**ملاحظة:** تم إصلاح جميع مشاكل النشر على Netlify. راجع `NETLIFY-DEPLOYMENT.md` للتفاصيل.
 
 ### النشر على Vercel
 ```bash

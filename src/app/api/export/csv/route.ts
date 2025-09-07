@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 
 // GET /api/export/csv - Export data as CSV
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

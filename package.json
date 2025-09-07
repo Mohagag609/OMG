@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma db push && next build",
     "start": "next start",
     "export": "next build && next export",
     "lint": "next lint",
@@ -15,7 +15,7 @@
     "db:reset": "prisma db push --force-reset",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/setup-db.js",
     "deploy:netlify": "npm run build && netlify deploy --prod",
     "deploy:vercel": "npm run build && vercel --prod",
     "deploy:render": "npm run build",

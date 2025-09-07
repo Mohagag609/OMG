@@ -3,6 +3,9 @@ import { getUserFromRequest } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
 // GET /api/auth/verify - Verify token and get user info
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

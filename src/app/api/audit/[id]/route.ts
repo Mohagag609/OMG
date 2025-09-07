@@ -4,6 +4,9 @@ import { getAuditLogById } from '@/lib/audit'
 import { ApiResponse } from '@/types'
 
 // GET /api/audit/[id] - Get audit log by ID
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

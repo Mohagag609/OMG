@@ -6,6 +6,9 @@ import { ApiResponse, PaginatedResponse } from '@/types'
 import { sortNotifications, groupNotifications } from '@/lib/notifications'
 
 // GET /api/notifications - Get user notifications
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

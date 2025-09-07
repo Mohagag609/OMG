@@ -4,6 +4,9 @@ import { getUserFromRequest } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
 // POST /api/notifications/[id]/acknowledge - Acknowledge notification
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

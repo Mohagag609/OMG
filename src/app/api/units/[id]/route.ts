@@ -5,6 +5,9 @@ import { validateUnitCode, getValidationError } from '@/utils/validation'
 import { formatUnitCode } from '@/utils/formatting'
 
 // GET /api/units/[id] - Get unit by ID
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

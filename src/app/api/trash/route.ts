@@ -4,6 +4,9 @@ import { getSoftDeletedEntities } from '@/lib/soft-delete'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
 // GET /api/trash - Get soft-deleted entities
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

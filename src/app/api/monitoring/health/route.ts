@@ -4,6 +4,9 @@ import { performHealthChecks } from '@/lib/monitoring'
 import { ApiResponse } from '@/types'
 
 // GET /api/monitoring/health - Get health checks
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

@@ -4,6 +4,9 @@ import { getAuditLogs, getAuditStats, AuditLogFilter } from '@/lib/audit'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
 // GET /api/audit - Get audit logs
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request)

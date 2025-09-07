@@ -5,6 +5,9 @@ import { validatePhone, validateNationalId, validateUnitCode } from '@/utils/val
 import { formatPhone, formatNationalId, formatUnitCode } from '@/utils/formatting'
 
 // POST /api/import - Import data from JSON
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

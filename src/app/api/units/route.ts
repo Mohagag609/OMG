@@ -5,6 +5,9 @@ import { validateUnitCode, getValidationError } from '@/utils/validation'
 import { formatUnitCode } from '@/utils/formatting'
 
 // GET /api/units - Get all units with pagination and search
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
