@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npx prisma generate && npm run build"
   publish = ".next"
 
 [build.environment]
@@ -19,6 +19,7 @@
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@prisma/client", "prisma"]
+  included_files = ["prisma/schema.prisma"]
 
 [[headers]]
   for = "/*"
