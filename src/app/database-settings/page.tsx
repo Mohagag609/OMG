@@ -93,10 +93,7 @@ export default function DatabaseSettings() {
 
   const loadDatabaseSettings = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/database/settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const response = await fetch('/api/database/settings')
       
       const data = await response.json()
       if (data.success) {
@@ -124,12 +121,10 @@ export default function DatabaseSettings() {
   const testConnection = async () => {
     setTesting(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/database/test', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           type: settings.type,
@@ -191,12 +186,10 @@ export default function DatabaseSettings() {
   const saveSettings = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/database/settings', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(settings)
       })

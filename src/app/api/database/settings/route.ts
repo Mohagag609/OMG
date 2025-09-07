@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -8,24 +7,7 @@ export const runtime = 'nodejs'
 // GET /api/database/settings - Get database settings
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('📋 جاري تحميل إعدادات قاعدة البيانات...')
 
     // Get database settings from environment or defaults
     const databaseUrl = process.env.DATABASE_URL || ''
@@ -57,24 +39,7 @@ export async function GET(request: NextRequest) {
 // POST /api/database/settings - Save database settings
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    console.log('💾 جاري حفظ إعدادات قاعدة البيانات...')
 
     const body = await request.json()
     const { type, connectionString } = body
