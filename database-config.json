@@ -1,13 +1,6 @@
 {
-  "type": "sqlite",
-  "connectionString": "file:./prisma/dev.db",
-  "isConnected": true,
-  "lastTested": "2025-09-07T13:24:45.817Z",
-  "details": {
-    "type": "SQLite",
-    "filePath": "./prisma/dev.db",
-    "message": "رابط SQLite صحيح",
-    "tablesCreated": false,
-    "tablesMessage": "خطأ في فحص الجداول: \nInvalid `prisma.user.findFirst()` invocation:\n\n\nerror: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.\n  -->  schema.prisma:10\n   | \n 9 |   provider = \"postgresql\"\n10 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
-  }
+  "type": "postgresql",
+  "connectionString": "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  "isConnected": false,
+  "lastTested": "2025-09-07T13:45:00.000Z"
 }
