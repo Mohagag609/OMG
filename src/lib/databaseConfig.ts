@@ -24,11 +24,15 @@ const DEFAULT_CONFIG: DatabaseConfig = {
   version: '1.0'
 }
 
-// Force create config file with default values
+// Force create config file with default values only if it doesn't exist
 function ensureConfigFile(): void {
   try {
     if (!fs.existsSync(CONFIG_FILE)) {
       console.log('📁 إنشاء ملف الإعدادات الافتراضي...')
+      const configDir = path.dirname(CONFIG_FILE)
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true })
+      }
       fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
       console.log('✅ تم إنشاء ملف الإعدادات الافتراضي')
     }
@@ -42,9 +46,6 @@ export function loadDatabaseConfig(): DatabaseConfig {
   try {
     console.log('📋 بدء تحميل إعدادات قاعدة البيانات...')
     console.log('📁 مسار الملف:', CONFIG_FILE)
-    
-    // Ensure config file exists
-    ensureConfigFile()
     
     if (fs.existsSync(CONFIG_FILE)) {
       console.log('📁 الملف موجود، جاري القراءة...')
@@ -73,7 +74,9 @@ export function loadDatabaseConfig(): DatabaseConfig {
         console.log('⚠️ ملف الإعدادات فارغ، استخدام الإعدادات الافتراضية')
       }
     } else {
-      console.log('📁 الملف غير موجود، استخدام الإعدادات الافتراضية')
+      console.log('📁 الملف غير موجود، إنشاء ملف الإعدادات الافتراضي...')
+      // Only create default config file if it doesn't exist
+      ensureConfigFile()
     }
   } catch (error: any) {
     console.error('❌ خطأ في تحميل إعدادات قاعدة البيانات:', error?.message)

@@ -2,18 +2,7 @@
 export function ensureEnvironmentVariables() {
   console.log('🔧 بدء إعداد متغيرات البيئة...')
   
-  // Always set default values first
-  if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-    console.log('🔧 تم تعيين DATABASE_URL الافتراضي')
-  }
-  
-  if (!process.env.JWT_SECRET) {
-    process.env.JWT_SECRET = "estate-management-development-secret-key"
-    console.log('🔧 تم تعيين JWT_SECRET الافتراضي')
-  }
-  
-  // Try to load from config file if it exists
+  // Try to load from config file first
   try {
     const fs = require('fs')
     const path = require('path')
@@ -30,6 +19,17 @@ export function ensureEnvironmentVariables() {
     }
   } catch (error) {
     console.log('⚠️ لم يتم العثور على ملف الإعدادات أو خطأ في القراءة')
+  }
+  
+  // Only set default values if not already set
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    console.log('🔧 تم تعيين DATABASE_URL الافتراضي')
+  }
+  
+  if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = "estate-management-development-secret-key"
+    console.log('🔧 تم تعيين JWT_SECRET الافتراضي')
   }
   
   console.log('🔧 متغيرات البيئة مُعدة:', {
