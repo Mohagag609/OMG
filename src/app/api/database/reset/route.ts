@@ -18,9 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
+    console.log('🔑 Token received:', token.substring(0, 50) + '...')
+    
     const user = await getUserFromToken(token)
+    console.log('👤 User from token:', user)
     
     if (!user) {
+      console.log('❌ No user found from token')
       return NextResponse.json(
         { success: false, error: 'غير مخول للوصول' },
         { status: 401 }
