@@ -76,6 +76,7 @@ export default function DatabaseSettings() {
   const [loading, setLoading] = useState(true)
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false)
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -207,6 +208,55 @@ export default function DatabaseSettings() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const resetDatabase = async () => {
+    if (!confirm('⚠️ تحذير: هذا الإجراء سيحذف جميع البيانات نهائياً!\n\nهل أنت متأكد من إعادة تهيئة قاعدة البيانات؟')) {
+      return
+    }
+
+    setResetting(true)
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/database/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        addNotification({
+          type: 'success',
+          title: 'تم إعادة التهيئة بنجاح!',
+          message: 'تم إعادة تهيئة قاعدة البيانات وإضافة البيانات التجريبية'
+        })
+        
+        // تحديث حالة الاتصال
+        setSettings(prev => ({
+          ...prev,
+          isConnected: true,
+          lastTested: new Date().toLocaleString('ar-SA')
+        }))
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في إعادة التهيئة',
+          message: data.error || 'فشل في إعادة تهيئة قاعدة البيانات'
+        })
+      }
+    } catch (err) {
+      console.error('Error resetting database:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في إعادة التهيئة',
+        message: 'فشل في إعادة تهيئة قاعدة البيانات'
+      })
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -368,6 +418,24 @@ export default function DatabaseSettings() {
                   <>
                     <span className="mr-2">💾</span>
                     حفظ الإعدادات
+                  </>
+                )}
+              </ModernButton>
+
+              <ModernButton 
+                onClick={resetDatabase}
+                disabled={resetting}
+                variant="danger"
+              >
+                {resetting ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    جاري إعادة التهيئة...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">🔄</span>
+                    إعادة تهيئة قاعدة البيانات
                   </>
                 )}
               </ModernButton>

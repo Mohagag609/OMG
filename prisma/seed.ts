@@ -5,6 +5,37 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 بدء إضافة البيانات التجريبية...')
 
+  // إنشاء المستخدمين الافتراضيين
+  const bcrypt = require('bcryptjs')
+  
+  // إنشاء مستخدم admin
+  await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: { password: await bcrypt.hash('admin123', 12) },
+    create: {
+      username: 'admin',
+      password: await bcrypt.hash('admin123', 12),
+      email: 'admin@example.com',
+      fullName: 'مدير النظام',
+      role: 'admin'
+    }
+  })
+  console.log('✅ تم إنشاء مستخدم admin')
+
+  // إنشاء مستخدم عادي
+  await prisma.user.upsert({
+    where: { username: 'user' },
+    update: { password: await bcrypt.hash('user123', 12) },
+    create: {
+      username: 'user',
+      password: await bcrypt.hash('user123', 12),
+      email: 'user@example.com',
+      fullName: 'مستخدم عادي',
+      role: 'user'
+    }
+  })
+  console.log('✅ تم إنشاء مستخدم user')
+
   // إنشاء خزنة افتراضية (إذا لم تكن موجودة)
   let defaultSafe = await prisma.safe.findFirst({
     where: { name: 'الخزنة الرئيسية' }
