@@ -214,7 +214,8 @@ export default function DatabaseSettings() {
           ...prev, 
           isConnected: true, 
           status: 'connected',
-          lastTested: new Date().toISOString()
+          lastTested: new Date().toISOString(),
+          connectionString: connectionString // Update connection string
         }))
         
         addNotification({
@@ -284,14 +285,14 @@ export default function DatabaseSettings() {
         setSettings(prev => ({ 
           ...prev, 
           connectionString,
-          isConnected: false,
+          isConnected: false, // Reset connection status after save
           status: 'disconnected'
         }))
         
         addNotification({
           type: 'success',
           title: 'تم الحفظ',
-          message: 'تم حفظ إعدادات قاعدة البيانات بنجاح'
+          message: 'تم حفظ إعدادات قاعدة البيانات بنجاح. يمكنك الآن اختبار الاتصال.'
         })
       } else {
         addNotification({
@@ -567,6 +568,7 @@ export default function DatabaseSettings() {
             <li>• تأكد من صحة رابط قاعدة البيانات قبل الحفظ</li>
             <li>• النظام يدعم SQLite للتطوير المحلي و PostgreSQL للإنتاج</li>
             <li>• بعد تغيير نوع قاعدة البيانات، يجب اختبار الاتصال مرة أخرى</li>
+            <li>• <strong>ترتيب العمليات:</strong> احفظ الإعدادات أولاً، ثم اختبر الاتصال</li>
           </ul>
         </div>
       </div>

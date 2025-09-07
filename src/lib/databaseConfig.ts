@@ -150,6 +150,8 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
         return true
       } else {
         console.log('❌ فشل في التحقق من صحة البيانات المحفوظة')
+        console.log('📄 البيانات المتوقعة:', { type: config.type, connectionString: config.connectionString.substring(0, 50) })
+        console.log('📄 البيانات المحفوظة:', { type: savedConfig.type, connectionString: savedConfig.connectionString?.substring(0, 50) })
         return false
       }
     } else {
@@ -159,22 +161,24 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
   } catch (error: any) {
     console.error('❌ خطأ في حفظ إعدادات قاعدة البيانات:', error?.message)
     console.error('📁 مسار الملف:', CONFIG_FILE)
+    console.error('📄 تفاصيل الخطأ:', error)
     return false
   }
 }
 
-// Update connection status
+// Update connection status - without saving to avoid conflicts
 export function updateConnectionStatus(isConnected: boolean, details?: any): boolean {
   try {
-    const config = loadDatabaseConfig()
-    config.isConnected = isConnected
-    config.lastTested = new Date().toISOString()
+    console.log(`🔧 تحديث حالة الاتصال: ${isConnected ? 'متصل' : 'غير متصل'}`)
     
-    if (details) {
-      config.details = details
+    // Just update the environment variable, don't save to file
+    // This prevents conflicts with manual saves
+    if (details && details.connectionString) {
+      process.env.DATABASE_URL = details.connectionString
+      console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
     }
     
-    return saveDatabaseConfig(config)
+    return true
   } catch (error: any) {
     console.error('❌ خطأ في تحديث حالة الاتصال:', error?.message)
     return false
