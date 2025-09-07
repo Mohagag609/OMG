@@ -1,0 +1,59 @@
+{
+  "name": "estate-management",
+  "version": "1.0.0",
+  "description": "تطبيق Next.js لإدارة الاستثمارات العقارية مع نظام شامل للمراقبة والنسخ الاحتياطية",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next build && next export",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma db push --force-reset",
+    "backup:create": "node scripts/create-backup.js",
+    "backup:restore": "node scripts/restore-backup.js",
+    "postinstall": "prisma generate",
+    "deploy:netlify": "npm run build && netlify deploy --prod",
+    "deploy:vercel": "npm run build && vercel --prod",
+    "deploy:render": "npm run build",
+    "deploy:railway": "npm run build",
+    "deploy:digitalocean": "npm run build"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "prisma": "^5.0.0",
+    "@prisma/client": "^5.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/react": "^18.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/bcryptjs": "^2.4.0",
+    "tailwindcss": "^3.0.0",
+    "postcss": "^8.0.0",
+    "autoprefixer": "^10.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0"
+  },
+  "keywords": [
+    "estate",
+    "management",
+    "real-estate",
+    "nextjs",
+    "typescript",
+    "prisma",
+    "sqlite"
+  ],
+  "author": "Estate Management Team",
+  "license": "MIT"
+}

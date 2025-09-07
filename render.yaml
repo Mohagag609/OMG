@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: estate-management
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./dev.db
+    healthCheckPath: /api/monitoring/health
+    autoDeploy: true
