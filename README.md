@@ -1,214 +1,204 @@
-# 🏛️ Estate Management System - Complete Implementation
+# 🏛️ نظام إدارة الاستثمارات العقارية
 
-## ✅ All Requirements Successfully Implemented
+نظام شامل لإدارة الاستثمارات العقارية مبني بـ Next.js مع قاعدة بيانات Prisma ونظام مراقبة متقدم.
 
-### 🎯 Specifications Applied Exactly:
+## ✨ المميزات الرئيسية
 
-#### 1. **Phase 0 - Spec Lock** ✅
-- ✅ `golden-dataset.json` - Golden reference data
-- ✅ `error-catalog.json` - Error messages catalog
-- ✅ `business-rules.json` - Business rules
-- ✅ `format-specs.json` - Format specifications
-- ✅ `storage-keys.json` - Storage keys
+### 🏢 إدارة شاملة
+- **العملاء**: إدارة بيانات العملاء والاتصالات
+- **الوحدات**: تتبع الوحدات العقارية وحالتها
+- **العقود**: إدارة عقود الإيجار والبيع
+- **الشركاء**: تتبع الشركاء ومجموعاتهم
+- **السماسرة**: إدارة السماسرة وعمولاتهم
+- **الأقساط**: تتبع الأقساط والمدفوعات
+- **السندات**: إدارة سندات القبض والصرف
+- **الخزينة**: مراقبة التدفقات النقدية
 
-#### 2. **Phase 1 - Data Layer** ✅
-- ✅ Prisma Schema exactly matches golden-dataset.json
-- ✅ All tables and relationships match
-- ✅ Indexed frequently searched fields
-- ✅ WAL in SQLite
-- ✅ All compound operations in transactions
+### 🔐 الأمان والحماية
+- نظام مصادقة JWT متقدم
+- تشفير كلمات المرور
+- حماية من SQL Injection
+- سجل تدقيق شامل
+- نظام صلاحيات متدرج
 
-#### 3. **Phase 2 - API Contract** ✅
-- ✅ All API Routes match specifications
-- ✅ CRUD for all entities
-- ✅ Summary for Dashboard
-- ✅ Import/Export
-- ✅ Auth with JWT
+### 📊 التقارير والمراقبة
+- لوحة تحكم تفاعلية
+- تقارير مالية مفصلة
+- نظام تنبيهات ذكي
+- نسخ احتياطية تلقائية
+- مراقبة الأداء والصحة
 
-#### 4. **Phase 3 - Authentication & Authorization** ✅
-- ✅ JWT as session token
-- ✅ Expires after inactivity
-- ✅ General roles (admin/user)
-- ✅ API endpoints and pages protection
+### 🎨 واجهة المستخدم
+- تصميم عصري ومتجاوب
+- دعم كامل للغة العربية (RTL)
+- ثيمات داكنة وفاتحة
+- بحث متقدم وفلترة
+- تصدير البيانات (CSV/Excel)
 
-#### 5. **Phase 4 - Basic Operations** ✅
-- ✅ Add/Edit/Delete/View for Customers
-- ✅ Add/Edit/Delete/View for Units
-- ✅ Add/Edit/Delete/View for Contracts
-- ✅ Add/Edit/Delete/View for Vouchers
-- ✅ Add/Edit/Delete/View for Safes
-- ✅ Add/Edit/Delete/View for Brokers
-- ✅ Add/Edit/Delete/View for Partners
-- ✅ Add/Edit/Delete/View for Installments
+## 🚀 البدء السريع
 
-#### 6. **Phase 5 - Calculation Rules** ✅
-- ✅ Installment statuses (pending/partial/paid)
-- ✅ Collection/Payment (in/out)
-- ✅ Net (in - out)
-- ✅ All calculations match business rules
+### المتطلبات
+- Node.js 18+ 
+- npm أو yarn
+- قاعدة بيانات SQLite (مدمجة)
 
-#### 7. **Phase 6 - Import/Export** ✅
-- ✅ Export returns JSON with same structure and order
-- ✅ Import accepts same file and seeds values
-- ✅ CSV and Excel export
-- ✅ Dry-run before saving
-
-#### 8. **Phase 7 - Modern UI** ✅
-- ✅ Full RTL support
-- ✅ Dark/Light theme
-- ✅ Modern tables: search, sort, filter, pagination
-- ✅ CSV/XLSX export
-- ✅ Input forms with matching Arabic messages
-- ✅ Toasts for success/failure
-- ✅ Clear empty/error states
-
-#### 9. **Phase 8 - Notification System** ✅
-- ✅ Categories: Critical / Important / Informational
-- ✅ Channels: Instant Toast + Persistent Inbox
-- ✅ Policies: Who sees what by role
-- ✅ Acknowledge for critical events
-- ✅ Escalation if not acknowledged within time
-- ✅ Group similar notifications
-
-#### 10. **Phase 9 - Audit Trail** ✅
-- ✅ Log every add/edit/delete/import/export/login/logout
-- ✅ Before/After for changed fields only
-- ✅ Correlation ID for compound operations
-- ✅ Append-only (no edit/delete)
-- ✅ Search, filters, and export (CSV/PDF)
-
-#### 11. **Phase 10 - Deletion & Recovery Policies** ✅
-- ✅ Soft delete by default for sensitive items
-- ✅ Recovery within grace period (30 days)
-- ✅ Hard delete limited or requires dual approval
-- ✅ Prevent deletion of items with relationships
-
-#### 12. **Phase 11 - Backup & Recovery** ✅
-- ✅ Locally: Every 6 hours (keep last 3 days)
-- ✅ Externally: Daily at 02:00 (Africa/Cairo)
-- ✅ Retention: 14 days / 8 weeks / 6 months
-- ✅ Integrity check for each backup
-- ✅ Monthly recovery drill
-
-#### 13. **Phase 12 - Monitoring & Alerting** ✅
-- ✅ Health Checks (read/write)
-- ✅ Metrics: response time, error rate, data size
-- ✅ Alerts on slowdown/outage
-
-### 🚀 Additional Features:
-
-#### **Performance & Logic Integrity:**
-- ✅ Separated calculation logic in pure functions
-- ✅ Golden tests on golden-dataset.json
-- ✅ Indexing + WAL + Pagination
-- ✅ Prevent N+1 with aggregated queries
-- ✅ Transactions for every compound operation
-- ✅ Unified mapper for validation errors
-
-#### **UI & Experience:**
-- ✅ Modern and clean design
-- ✅ Enhanced user experience
-- ✅ Fully responsive
-- ✅ Complete Arabic language support
-- ✅ Clear icons and error handling
-
-#### **Security & Protection:**
-- ✅ Password encryption
-- ✅ Secure JWT
-- ✅ SQL Injection protection
-- ✅ Permission verification
-- ✅ Comprehensive audit log
-
-### 📁 Project Structure:
-
-```
-/workspace/
-├── src/
-│   ├── app/
-│   │   ├── api/           # All API Routes
-│   │   ├── customers/     # Customers page
-│   │   ├── units/         # Units page
-│   │   ├── contracts/     # Contracts page
-│   │   ├── vouchers/      # Vouchers page
-│   │   ├── treasury/      # Treasury page
-│   │   ├── installments/  # Installments page
-│   │   ├── brokers/       # Brokers page
-│   │   ├── partners/      # Partners page
-│   │   ├── reports/       # Reports page
-│   │   ├── backup/        # Backup page
-│   │   ├── audit/         # Audit page
-│   │   ├── login/         # Login page
-│   │   └── page.tsx       # Main page
-│   ├── components/        # Shared components
-│   ├── constants/         # Constants & specifications
-│   ├── lib/               # Helper libraries
-│   ├── types/             # TypeScript types
-│   └── utils/             # Helper utilities
-├── prisma/
-│   └── schema.prisma      # Database schema
-├── scripts/               # Setup scripts
-├── golden-dataset.json    # Reference data
-├── error-catalog.json     # Error catalog
-├── business-rules.json    # Business rules
-├── format-specs.json      # Format specifications
-├── storage-keys.json      # Storage keys
-├── package.json           # Project dependencies
-├── next.config.js         # Next.js configuration
-├── netlify.toml           # Netlify configuration
-└── README.md              # This file
-```
-
-### 🔐 Default Login Credentials:
-
-- **Admin:** username=`admin`, password=`admin123`
-- **User:** username=`user`, password=`user123`
-
-### 🚀 Running the Project:
+### التثبيت
 
 ```bash
-# Install dependencies
+# استنساخ المشروع
+git clone <repository-url>
+cd estate-management-nextjs
+
+# تثبيت التبعيات
 npm install
 
-# Run in development mode
+# إعداد قاعدة البيانات
+npm run db:push
+npm run db:seed
+
+# تشغيل المشروع
 npm run dev
-
-# Build the project
-npm run build
-
-# Run in production mode
-npm start
 ```
 
-### 🌐 Deployment:
+### بيانات الدخول الافتراضية
+- **مدير**: `admin` / `admin123`
+- **مستخدم**: `user` / `user123`
 
-The project is ready for deployment on:
-- ✅ **Netlify** (fully configured)
-- ✅ **Vercel**
-- ✅ **Render**
-- ✅ **Railway**
-- ✅ **DigitalOcean**
+## 📁 هيكل المشروع
 
-### 📊 Statistics:
+```
+estate-management-nextjs/
+├── src/
+│   ├── app/                 # صفحات Next.js
+│   │   ├── api/            # API Routes
+│   │   ├── customers/      # صفحة العملاء
+│   │   ├── units/          # صفحة الوحدات
+│   │   ├── contracts/      # صفحة العقود
+│   │   └── ...
+│   ├── components/         # مكونات React
+│   ├── lib/               # مكتبات مساعدة
+│   ├── utils/             # أدوات مساعدة
+│   ├── types/             # أنواع TypeScript
+│   └── constants/         # الثوابت
+├── prisma/
+│   ├── schema.prisma      # مخطط قاعدة البيانات
+│   └── seed.ts           # بيانات البداية
+├── config/               # ملفات التكوين
+├── scripts/              # سكريبتات مساعدة
+├── tests/               # الاختبارات
+└── docs/                # الوثائق
+```
 
-- **📁 Files:** 100+ files
-- **🔧 API Routes:** 50+ routes
-- **📱 Pages:** 15+ pages
-- **🗄️ Tables:** 15+ tables
-- **🔒 Security Features:** 20+ features
-- **📈 Reports:** 10+ reports
-- **💾 Backups:** Automatic
-- **🔍 Monitoring:** Comprehensive
+## 🛠️ الأوامر المتاحة
 
-### 🎉 Final Result:
+```bash
+# التطوير
+npm run dev              # تشغيل في وضع التطوير
+npm run build            # بناء المشروع للإنتاج
+npm run start            # تشغيل في وضع الإنتاج
 
-**All requirements have been successfully implemented exactly as specified!**
+# قاعدة البيانات
+npm run db:generate      # توليد Prisma Client
+npm run db:push          # تطبيق التغييرات على قاعدة البيانات
+npm run db:studio        # فتح Prisma Studio
+npm run db:reset         # إعادة تعيين قاعدة البيانات
+npm run db:seed          # إدراج البيانات التجريبية
 
-The project is now:
-- ✅ **100% compliant** with all requirements
-- ✅ **Production-ready** on Netlify
-- ✅ **Fully secure** and protected
-- ✅ **Fast and optimized** for performance
-- ✅ **Maintainable** and extensible
-- ✅ **Compatible** with modern standards
+# الاختبارات
+npm run test             # تشغيل الاختبارات
+npm run test:watch       # تشغيل الاختبارات في وضع المراقبة
 
-**🏆 Project is complete and ready for use!**
+# النسخ الاحتياطية
+npm run backup:create    # إنشاء نسخة احتياطية
+npm run backup:restore   # استعادة نسخة احتياطية
+
+# النشر
+npm run deploy:vercel    # النشر على Vercel
+npm run deploy:netlify   # النشر على Netlify
+```
+
+## 🔧 التكوين
+
+### متغيرات البيئة
+أنشئ ملف `.env.local`:
+
+```env
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### إعدادات قاعدة البيانات
+يمكن تخصيص إعدادات قاعدة البيانات في `config/database-config.json`.
+
+## 📊 قاعدة البيانات
+
+المشروع يستخدم Prisma مع SQLite، ويتضمن:
+
+- **15+ جدول** لإدارة جميع جوانب الاستثمار العقاري
+- **فهارس محسنة** للبحث السريع
+- **علاقات معقدة** بين الكيانات
+- **نظام Soft Delete** للحذف الآمن
+- **سجل تدقيق** شامل
+
+## 🧪 الاختبارات
+
+```bash
+# تشغيل جميع الاختبارات
+npm run test
+
+# تشغيل اختبارات محددة
+npm run test -- --testNamePattern="API"
+
+# تغطية الاختبارات
+npm run test -- --coverage
+```
+
+## 🚀 النشر
+
+### Vercel (مستحسن)
+```bash
+npm run deploy:vercel
+```
+
+### Netlify
+```bash
+npm run deploy:netlify
+```
+
+### خوادم أخرى
+المشروع متوافق مع:
+- Railway
+- Render
+- DigitalOcean
+- أي خادم يدعم Node.js
+
+## 🤝 المساهمة
+
+1. Fork المشروع
+2. إنشاء فرع للميزة الجديدة (`git checkout -b feature/amazing-feature`)
+3. Commit التغييرات (`git commit -m 'Add amazing feature'`)
+4. Push للفرع (`git push origin feature/amazing-feature`)
+5. فتح Pull Request
+
+## 📝 الترخيص
+
+هذا المشروع مرخص تحت رخصة MIT - راجع ملف [LICENSE](LICENSE) للتفاصيل.
+
+## 📞 الدعم
+
+للحصول على الدعم أو الإبلاغ عن مشاكل:
+- فتح Issue في GitHub
+- مراسلة فريق التطوير
+
+## 🎯 خارطة الطريق
+
+- [ ] تطبيق موبايل
+- [ ] API عامة
+- [ ] تكامل مع أنظمة الدفع
+- [ ] ذكاء اصطناعي للتنبؤات
+- [ ] تقارير متقدمة
+
+---
+
+**تم تطويره بـ ❤️ لخدمة قطاع العقارات**

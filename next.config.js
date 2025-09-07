@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: false, // إصلاح مشكلة API routes
+  trailingSlash: false,
   images: {
     unoptimized: true
   },
@@ -8,13 +8,25 @@ const nextConfig = {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken', '@prisma/client']
   },
   webpack: (config, { isServer }) => {
-    // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {
       config.externals = config.externals.filter(external =>
         external !== 'bcryptjs' && external !== 'jsonwebtoken' && external !== '@prisma/client'
       )
     }
     return config
+  },
+  // تحسين الأداء
+  swcMinify: true,
+  compress: true,
+  // تحسين الأمان
+  poweredByHeader: false,
+  // تحسين التطوير
+  reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
   }
 }
 

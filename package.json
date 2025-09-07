@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma db push --accept-data-loss && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push --accept-data-loss",
     "db:studio": "prisma studio",
@@ -15,12 +16,11 @@
     "db:seed": "tsx prisma/seed.ts",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "postinstall": "prisma generate && node scripts/setup-db.js && node scripts/create-users.js",
     "deploy:netlify": "npm run build && netlify deploy --prod",
-    "deploy:vercel": "npm run build && vercel --prod",
-    "deploy:render": "npm run build",
-    "deploy:railway": "npm run build",
-    "deploy:digitalocean": "npm run build"
+    "deploy:vercel": "npm run build && vercel --prod"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
@@ -45,6 +45,12 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
     "prisma": "^6.15.0",
     "tsx": "^4.20.5"
   }
