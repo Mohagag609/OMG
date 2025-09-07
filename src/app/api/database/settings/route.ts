@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiResponse } from '@/types'
+import { loadDatabaseConfig, saveDatabaseConfig, updateConnectionStatus } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -9,17 +10,8 @@ export async function GET(request: NextRequest) {
   try {
     console.log('📋 جاري تحميل إعدادات قاعدة البيانات...')
 
-    // Get database settings from environment or defaults
-    const databaseUrl = process.env.DATABASE_URL || ''
-    const isPostgreSQL = databaseUrl.startsWith('postgresql://')
-    const isSQLite = databaseUrl.startsWith('file:')
-
-    const settings = {
-      type: isPostgreSQL ? 'postgresql' : 'sqlite',
-      connectionString: databaseUrl,
-      isConnected: true, // Assume connected if we can read env
-      lastTested: new Date().toISOString()
-    }
+    // Get database settings from config file
+    const settings = loadDatabaseConfig()
 
     const response: ApiResponse<any> = {
       success: true,
@@ -74,16 +66,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In a real application, you would save these settings to a secure storage
-    // For now, we'll just return success
+    // Save settings to config file
+    const config = {
+      type,
+      connectionString,
+      isConnected: false, // Will be tested separately
+      lastTested: new Date().toISOString()
+    }
+    
+    const saved = saveDatabaseConfig(config)
+    
+    if (!saved) {
+      return NextResponse.json(
+        { success: false, error: 'فشل في حفظ إعدادات قاعدة البيانات' },
+        { status: 500 }
+      )
+    }
+    
     const response: ApiResponse<any> = {
       success: true,
-      data: {
-        type,
-        connectionString,
-        isConnected: false, // Will be tested separately
-        lastTested: new Date().toISOString()
-      },
+      data: config,
       message: 'تم حفظ إعدادات قاعدة البيانات بنجاح'
     }
 

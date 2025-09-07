@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiResponse } from '@/types'
+import { updateConnectionStatus } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -37,6 +38,13 @@ export async function POST(request: NextRequest) {
     if (testResult.success) {
       // إذا نجح الاتصال، ننشئ الجداول تلقائياً
       const createTablesResult = await createTablesIfNeeded(type, connectionString)
+      
+      // Update connection status in config
+      updateConnectionStatus(true, {
+        ...testResult.details,
+        tablesCreated: createTablesResult.tablesCreated,
+        tablesMessage: createTablesResult.message
+      })
       
       const response: ApiResponse<any> = {
         success: true,
@@ -197,33 +205,66 @@ async function createTablesIfNeeded(type: string, connectionString: string): Pro
       if (error.code === 'P2021' || error.message.includes('does not exist')) {
         console.log('📋 الجداول غير موجودة، سيتم إنشاؤها...')
         
-        // Use Prisma to push schema to new database
-        const { execSync } = await import('child_process')
-        
-        // Temporarily set DATABASE_URL for Prisma
-        const originalUrl = process.env.DATABASE_URL
-        process.env.DATABASE_URL = connectionString
-        
+        // Try to create basic tables using raw SQL
         try {
-          // Push schema to create tables
-          execSync('npx prisma db push --accept-data-loss', {
-            stdio: 'pipe',
-            cwd: process.cwd()
-          })
+          if (type === 'sqlite') {
+            await tempClient.$executeRaw`CREATE TABLE IF NOT EXISTS "User" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "username" TEXT NOT NULL UNIQUE,
+              "email" TEXT,
+              "password" TEXT NOT NULL,
+              "fullName" TEXT,
+              "role" TEXT NOT NULL DEFAULT 'user',
+              "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )`
+            
+            await tempClient.$executeRaw`CREATE TABLE IF NOT EXISTS "Customer" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "name" TEXT NOT NULL,
+              "phone" TEXT,
+              "nationalId" TEXT,
+              "address" TEXT,
+              "status" TEXT NOT NULL DEFAULT 'نشط',
+              "notes" TEXT,
+              "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "deletedAt" DATETIME
+            )`
+          } else {
+            // For PostgreSQL, use different syntax
+            await tempClient.$executeRaw`CREATE TABLE IF NOT EXISTS "User" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "username" TEXT NOT NULL UNIQUE,
+              "email" TEXT,
+              "password" TEXT NOT NULL,
+              "fullName" TEXT,
+              "role" TEXT NOT NULL DEFAULT 'user',
+              "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )`
+            
+            await tempClient.$executeRaw`CREATE TABLE IF NOT EXISTS "Customer" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "name" TEXT NOT NULL,
+              "phone" TEXT,
+              "nationalId" TEXT,
+              "address" TEXT,
+              "status" TEXT NOT NULL DEFAULT 'نشط',
+              "notes" TEXT,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "deletedAt" TIMESTAMP
+            )`
+          }
           
           console.log('✅ تم إنشاء الجداول بنجاح')
           
-          // Restore original DATABASE_URL
-          process.env.DATABASE_URL = originalUrl
-          
           return {
             tablesCreated: true,
-            message: 'تم إنشاء جميع الجداول بنجاح'
+            message: 'تم إنشاء الجداول الأساسية بنجاح'
           }
         } catch (pushError: any) {
-          // Restore original DATABASE_URL
-          process.env.DATABASE_URL = originalUrl
-          
           console.error('❌ فشل في إنشاء الجداول:', pushError.message)
           return {
             tablesCreated: false,
