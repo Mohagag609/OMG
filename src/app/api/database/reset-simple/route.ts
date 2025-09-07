@@ -9,9 +9,13 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔄 بدء إعادة تهيئة قاعدة البيانات البسيطة...')
 
-    // Set environment variables
-    process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-    process.env.JWT_SECRET = "estate-management-development-secret-key"
+    // Set environment variables (use existing or default)
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    }
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = "estate-management-development-secret-key"
+    }
 
     // Import and create Prisma client
     const { PrismaClient } = await import('@prisma/client')
