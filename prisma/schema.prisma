@@ -1,0 +1,299 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id         String  @id @default(cuid())
+  name       String
+  phone      String  @unique
+  nationalId String? @unique
+  address    String?
+  status     String  @default("نشط")
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  
+  // Relations
+  contracts Contract[]
+  
+  @@map("customers")
+}
+
+model Unit {
+  id        String  @id @default(cuid())
+  code      String  @unique
+  name      String?
+  unitType  String  @default("سكني")
+  area      String?
+  floor     String?
+  building  String?
+  totalPrice Float  @default(0)
+  status    String  @default("متاحة")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  contracts     Contract[]
+  installments  Installment[]
+  vouchers      Voucher[]
+  unitPartners  UnitPartner[]
+  
+  @@map("units")
+}
+
+model Partner {
+  id        String  @id @default(cuid())
+  name      String
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  unitPartners UnitPartner[]
+  partnerDebts PartnerDebt[]
+  
+  @@map("partners")
+}
+
+model UnitPartner {
+  id        String  @id @default(cuid())
+  unitId    String
+  partnerId String
+  percentage Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  unit    Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  @@unique([unitId, partnerId])
+  @@map("unit_partners")
+}
+
+model Contract {
+  id              String   @id @default(cuid())
+  unitId          String
+  customerId      String
+  start           DateTime
+  totalPrice      Float
+  discountAmount  Float    @default(0)
+  brokerName      String?
+  commissionSafeId String?
+  brokerAmount    Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  // Relations
+  unit      Unit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("contracts")
+}
+
+model Installment {
+  id        String   @id @default(cuid())
+  unitId    String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  
+  @@map("installments")
+}
+
+model Safe {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  balance   Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  vouchers        Voucher[]
+  transfersFrom   Transfer[] @relation("TransferFrom")
+  transfersTo     Transfer[] @relation("TransferTo")
+  
+  @@map("safes")
+}
+
+model Transfer {
+  id          String   @id @default(cuid())
+  fromSafeId  String
+  toSafeId    String
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  
+  // Relations
+  fromSafe Safe @relation("TransferFrom", fields: [fromSafeId], references: [id], onDelete: Cascade)
+  toSafe   Safe @relation("TransferTo", fields: [toSafeId], references: [id], onDelete: Cascade)
+  
+  @@map("transfers")
+}
+
+model Voucher {
+  id          String   @id @default(cuid())
+  type        String   // receipt or payment
+  date        DateTime
+  amount      Float
+  safeId      String
+  description String
+  payer       String?
+  beneficiary String?
+  linkedRef   String?  // Reference to unit, contract, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  
+  // Relations
+  safe Safe @relation(fields: [safeId], references: [id], onDelete: Cascade)
+  unit Unit? @relation(fields: [linkedRef], references: [id], onDelete: SetNull)
+  
+  @@map("vouchers")
+}
+
+model Broker {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  brokerDues BrokerDue[]
+  
+  @@map("brokers")
+}
+
+model BrokerDue {
+  id        String   @id @default(cuid())
+  brokerId  String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  broker Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  
+  @@map("broker_dues")
+}
+
+model PartnerGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@map("partner_groups")
+}
+
+model PartnerDebt {
+  id        String   @id @default(cuid())
+  partnerId String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  @@map("partner_debts")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  oldValues   String?  // JSON string
+  newValues   String?  // JSON string
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
+}
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  @@map("settings")
+}
+
+model KeyVal {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  @@map("keyval")
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  type            String    // critical, important, info
+  title           String
+  message         String
+  category        String
+  acknowledged    Boolean   @default(false)
+  acknowledgedAt  DateTime?
+  acknowledgedBy  String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  data            String?   // JSON string
+  
+  @@map("notifications")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  email     String?  @unique
+  fullName  String?
+  role      String   @default("admin")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
