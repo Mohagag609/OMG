@@ -112,14 +112,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if phone already exists
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { phone }
+    // Check if name already exists
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { 
+        name: name,
+        deletedAt: null
+      }
     })
 
     if (existingCustomer) {
       return NextResponse.json(
-        { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+        { success: false, error: 'اسم العميل مستخدم بالفعل' },
         { status: 400 }
       )
     }

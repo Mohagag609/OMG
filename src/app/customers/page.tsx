@@ -6,7 +6,7 @@ import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
-import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
+import { checkDuplicateName } from '@/utils/duplicateCheck'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -153,32 +153,12 @@ export default function Customers() {
       return
     }
 
-    // فحص تكرار الاسم
+    // فحص تكرار الاسم فقط
     if (checkDuplicateName(newCustomer.name, customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
         message: 'اسم العميل موجود بالفعل'
-      })
-      return
-    }
-
-    // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone && checkDuplicatePhone(newCustomer.phone, customers)) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'رقم الهاتف موجود بالفعل'
-      })
-      return
-    }
-
-    // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId && checkDuplicateNationalId(newCustomer.nationalId, customers)) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرقم القومي موجود بالفعل'
       })
       return
     }
@@ -270,32 +250,12 @@ export default function Customers() {
       return
     }
 
-    // فحص تكرار الاسم (باستثناء العميل الحالي)
+    // فحص تكرار الاسم فقط (باستثناء العميل الحالي)
     if (checkDuplicateName(newCustomer.name, customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
         message: 'اسم العميل موجود بالفعل'
-      })
-      return
-    }
-
-    // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone && checkDuplicatePhone(newCustomer.phone, customers, editingCustomer.id)) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'رقم الهاتف موجود بالفعل'
-      })
-      return
-    }
-
-    // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId && checkDuplicateNationalId(newCustomer.nationalId, customers, editingCustomer.id)) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرقم القومي موجود بالفعل'
       })
       return
     }
