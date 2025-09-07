@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build && rm -rf .next/cache"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
@@ -10,24 +10,6 @@
   command = "npm run dev"
   port = 3000
   publish = ".next"
-
-# Ignore large files during deployment
-[build.processing]
-  skip_processing = false
-
-[build.processing.css]
-  bundle = true
-  minify = true
-
-[build.processing.js]
-  bundle = true
-  minify = true
-
-[build.processing.html]
-  pretty_urls = true
-
-[build.processing.images]
-  compress = true
 
 [[headers]]
   for = "/*"
