@@ -1,0 +1,6 @@
+{
+  "type": "postgresql",
+  "connectionString": "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  "isConnected": false,
+  "lastTested": "2025-09-07T14:21:55.298Z"
+}
