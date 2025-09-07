@@ -4,19 +4,75 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Installment } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
+import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+
+// Modern UI Components
+const ModernCard = ({ children, className = '', ...props }: any) => (
+  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
+    {children}
+  </div>
+)
+
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+  const variants: { [key: string]: string } = {
+    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
+    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
+    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
+    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
+    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
+    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
+  }
+  
+  const sizes: { [key: string]: string } = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-2.5 text-sm font-medium',
+    lg: 'px-6 py-3 text-base font-medium'
+  }
+  
+  return (
+    <button 
+      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
 
 export default function Installments() {
   const [installments, setInstallments] = useState<Installment[]>([])
-  const [units, setUnits] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [unitFilter, setUnitFilter] = useState('')
+  
   const router = useRouter()
+  const { notifications, addNotification, removeNotification } = useNotifications()
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'f':
+            e.preventDefault()
+            document.getElementById('search-input')?.focus()
+            break
+          case 'Escape':
+            e.preventDefault()
+            setSearch('')
+            setStatusFilter('')
+            break
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [])
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
@@ -24,32 +80,15 @@ export default function Installments() {
     }
     
     fetchInstallments()
-    fetchUnits()
   }, [])
 
   const fetchInstallments = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const params = new URLSearchParams()
-      if (search) params.append('search', search)
-      if (statusFilter) params.append('status', statusFilter)
-      if (unitFilter) params.append('unitId', unitFilter)
-
-      const response = await fetch(`/api/installments?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch('/api/installments', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('authToken')
-          router.push('/login')
-          return
-        }
-        throw new Error('فشل في تحميل الأقساط')
-      }
-
+      
       const data = await response.json()
       if (data.success) {
         setInstallments(data.data)
@@ -57,183 +96,287 @@ export default function Installments() {
         setError(data.error || 'خطأ في تحميل الأقساط')
       }
     } catch (err) {
-      console.error('Installments error:', err)
+      console.error('Error fetching installments:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchUnits = async () => {
+  const handlePayInstallment = async (installmentId: string) => {
+    if (!confirm('هل أنت متأكد من تسديد هذا القسط؟')) return
+
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/units', {
+      const response = await fetch(`/api/installments/${installmentId}`, {
+        method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ status: 'مدفوع' })
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setUnits(data.data || [])
-        }
+      const data = await response.json()
+      if (data.success) {
+        setSuccess('تم تسديد القسط بنجاح!')
+        setError(null)
+        fetchInstallments()
+        addNotification({
+          type: 'success',
+          title: 'تم التسديد بنجاح',
+          message: 'تم تسديد القسط بنجاح'
+        })
+      } else {
+        setError(data.error || 'خطأ في تسديد القسط')
+        setSuccess(null)
+        addNotification({
+          type: 'error',
+          title: 'خطأ في التسديد',
+          message: data.error || 'فشل في تسديد القسط'
+        })
       }
     } catch (err) {
-      console.error('Units error:', err)
+      console.error('Pay installment error:', err)
+      setError('خطأ في تسديد القسط')
+      setSuccess(null)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التسديد',
+        message: 'فشل في تسديد القسط'
+      })
     }
   }
 
-  const handleSearch = () => {
-    fetchInstallments()
+  const handleDeleteInstallment = async (installmentId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا القسط؟')) return
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/installments/${installmentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setSuccess('تم حذف القسط بنجاح!')
+        setError(null)
+        fetchInstallments()
+        addNotification({
+          type: 'success',
+          title: 'تم الحذف بنجاح',
+          message: 'تم حذف القسط بنجاح'
+        })
+      } else {
+        setError(data.error || 'خطأ في حذف القسط')
+        setSuccess(null)
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الحذف',
+          message: data.error || 'فشل في حذف القسط'
+        })
+      }
+    } catch (err) {
+      console.error('Delete installment error:', err)
+      setError('خطأ في حذف القسط')
+      setSuccess(null)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الحذف',
+        message: 'فشل في حذف القسط'
+      })
+    }
   }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'مدفوع':
+        return 'bg-green-100 text-green-800'
+      case 'مستحق':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'متأخر':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const filteredInstallments = installments.filter(installment => {
+    const matchesSearch = search === '' || 
+      installment.unit?.code.toLowerCase().includes(search.toLowerCase()) ||
+      installment.notes?.toLowerCase().includes(search.toLowerCase())
+    
+    const matchesStatus = statusFilter === '' || installment.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
 
   if (loading) {
     return (
-      <div className="container">
-        <div className="panel">
-          <h2>جاري التحميل...</h2>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container">
-      <div className="header">
-        <div className="brand">
-          <div className="logo">📅</div>
-          <h1>إدارة الأقساط</h1>
-        </div>
-        <div className="tools">
-          <button className="btn primary">
-            إضافة قسط جديد
-          </button>
-          <button className="btn secondary" onClick={() => router.push('/')}>
-            العودة للرئيسية
-          </button>
-        </div>
-      </div>
-
-      <div className="main-layout">
-        <div className="sidebar">
-          <button className="tab" onClick={() => router.push('/')}>لوحة التحكم</button>
-          <button className="tab" onClick={() => router.push('/customers')}>العملاء</button>
-          <button className="tab" onClick={() => router.push('/units')}>الوحدات</button>
-          <button className="tab" onClick={() => router.push('/contracts')}>العقود</button>
-          <button className="tab" onClick={() => router.push('/brokers')}>السماسرة</button>
-          <button className="tab active">الأقساط</button>
-          <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
-          <button className="tab" onClick={() => router.push('/partners')}>الشركاء</button>
-          <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
-          <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
-          <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
-        </div>
-
-        <div className="content">
-          <div className="panel">
-            <h2>قائمة الأقساط</h2>
-            
-            {error && <div className="error-message">{error}</div>}
-            
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                placeholder="البحث في الأقساط..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="form-input"
-                style={{ width: '250px' }}
-              />
-              <select
-                value={unitFilter}
-                onChange={(e) => setUnitFilter(e.target.value)}
-                className="form-select"
-                style={{ width: '200px' }}
-              >
-                <option value="">جميع الوحدات</option>
-                {units.map((unit: any) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.code} - {unit.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="form-select"
-                style={{ width: '150px' }}
-              >
-                <option value="">جميع الحالات</option>
-                <option value="غير مدفوع">غير مدفوع</option>
-                <option value="جزئي">جزئي</option>
-                <option value="مدفوع">مدفوع</option>
-              </select>
-              <button className="btn primary" onClick={handleSearch}>
-                بحث
-              </button>
-              <button className="btn secondary" onClick={() => {
-                setSearch('')
-                setUnitFilter('')
-                setStatusFilter('')
-                fetchInstallments()
-              }}>
-                مسح الفلاتر
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">📅</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">إدارة الأقساط</h1>
+                <p className="text-gray-600">نظام متطور لإدارة أقساط العقود</p>
+              </div>
             </div>
-
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>الوحدة</th>
-                    <th>المبلغ</th>
-                    <th>تاريخ الاستحقاق</th>
-                    <th>الحالة</th>
-                    <th>ملاحظات</th>
-                    <th>تاريخ الإضافة</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {installments.map((installment) => (
-                    <tr key={installment.id}>
-                      <td>{installment.unit?.code || '-'}</td>
-                      <td>{formatCurrency(installment.amount)}</td>
-                      <td>{formatDate(installment.dueDate)}</td>
-                      <td>
-                        <span style={{ 
-                          padding: '4px 8px', 
-                          borderRadius: '4px', 
-                          fontSize: '12px',
-                          backgroundColor: 
-                            installment.status === 'مدفوع' ? '#dcfce7' :
-                            installment.status === 'جزئي' ? '#fef3c7' : '#fef2f2',
-                          color: 
-                            installment.status === 'مدفوع' ? '#166534' :
-                            installment.status === 'جزئي' ? '#92400e' : '#dc2626'
-                        }}>
-                          {installment.status}
-                        </span>
-                      </td>
-                      <td>{installment.notes || '-'}</td>
-                      <td>{installment.createdAt ? formatDate(installment.createdAt) : '-'}</td>
-                      <td>
-                        <button
-                          className="btn warn"
-                          style={{ padding: '5px 10px', fontSize: '12px' }}
-                        >
-                          حذف
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <ModernButton variant="secondary" onClick={() => router.push('/contracts')}>
+                📋 إضافة عقد جديد
+              </ModernButton>
+              <ModernButton variant="secondary" onClick={() => router.push('/')}>
+                العودة للرئيسية
+              </ModernButton>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Search and Filters */}
+        <ModernCard className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="relative">
+                <input
+                  id="search-input"
+                  type="text"
+                  placeholder="🔍 ابحث في الأقساط... (Ctrl+F)"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              >
+                <option value="">جميع الحالات</option>
+                <option value="مستحق">مستحق</option>
+                <option value="مدفوع">مدفوع</option>
+                <option value="متأخر">متأخر</option>
+              </select>
+              <ModernButton variant="secondary" size="sm">
+                📊 تصدير CSV
+              </ModernButton>
+              <ModernButton variant="secondary" size="sm">
+                🖨️ طباعة PDF
+              </ModernButton>
+            </div>
+            <div className="text-sm text-gray-500">
+              {filteredInstallments.length} قسط
+            </div>
+          </div>
+        </ModernCard>
+
+        {/* Installments List */}
+        <ModernCard>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">قائمة الأقساط</h2>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <span className="text-sm text-gray-500">آخر تحديث:</span>
+              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-center">
+                <span className="text-red-500 mr-2">⚠️</span>
+                <span className="text-red-700">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✅</span>
+                <span className="text-green-700">{success}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الوحدة</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الاستحقاق</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الملاحظات</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInstallments.map((installment) => (
+                  <tr key={installment.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                    <td className="py-4 px-6">
+                      <div className="font-medium text-gray-900">{installment.unit?.code || 'غير محدد'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-semibold text-green-600">{formatCurrency(installment.amount)}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-600">{formatDate(installment.dueDate)}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(installment.status)}`}>
+                        {installment.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-600 max-w-xs truncate">{installment.notes || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        {installment.status !== 'مدفوع' && (
+                          <ModernButton 
+                            size="sm" 
+                            variant="success" 
+                            onClick={() => handlePayInstallment(installment.id)}
+                          >
+                            💰 تسديد
+                          </ModernButton>
+                        )}
+                        <ModernButton size="sm" variant="danger" onClick={() => handleDeleteInstallment(installment.id)}>
+                          🗑️ حذف
+                        </ModernButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ModernCard>
+      </div>
+      
+      <NotificationSystem 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   )
 }
