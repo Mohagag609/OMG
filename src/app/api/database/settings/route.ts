@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiResponse } from '@/types'
-import { loadDatabaseConfig, saveDatabaseConfig } from '@/lib/databaseConfig'
+import { loadDatabaseConfig, saveDatabaseConfig, ensureDatabaseTypePersistence } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -67,12 +67,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Save settings to config file
+    // Save settings to config file with persistence
     const config = {
       type,
       connectionString,
       isConnected: false, // Will be tested separately
-      lastTested: new Date().toISOString()
+      lastTested: new Date().toISOString(),
+      persistent: true // Ensure persistence
     }
     
     const saved = saveDatabaseConfig(config)
@@ -82,6 +83,12 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'فشل في حفظ إعدادات قاعدة البيانات' },
         { status: 500 }
       )
+    }
+    
+    // Ensure database type persistence
+    const persistenceEnsured = ensureDatabaseTypePersistence(type)
+    if (!persistenceEnsured) {
+      console.log('⚠️ تحذير: فشل في ضمان استمرارية نوع قاعدة البيانات')
     }
     
     // Update environment variable

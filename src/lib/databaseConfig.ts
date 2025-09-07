@@ -1,4 +1,4 @@
-// Database configuration management - Complete rewrite for reliability
+// Database configuration management - Enhanced reliability and persistence
 import fs from 'fs'
 import path from 'path'
 
@@ -12,16 +12,18 @@ export interface DatabaseConfig {
   details?: any
   savedAt?: string
   version?: string
+  persistent?: boolean // New field to ensure persistence
 }
 
-// Default configuration - Always SQLite
+// Default configuration - SQLite for development
 const DEFAULT_CONFIG: DatabaseConfig = {
   type: 'sqlite',
   connectionString: 'file:./prisma/dev.db',
   isConnected: false,
   lastTested: new Date().toISOString(),
   savedAt: new Date().toISOString(),
-  version: '1.0'
+  version: '2.0',
+  persistent: true
 }
 
 // Force create config file with default values only if it doesn't exist
@@ -41,7 +43,7 @@ function ensureConfigFile(): void {
   }
 }
 
-// Load database configuration with enhanced error handling
+// Load database configuration with enhanced error handling and persistence
 export function loadDatabaseConfig(): DatabaseConfig {
   try {
     console.log('📋 بدء تحميل إعدادات قاعدة البيانات...')
@@ -56,17 +58,31 @@ export function loadDatabaseConfig(): DatabaseConfig {
         
         const config = JSON.parse(configData)
         
-        // Validate config structure
+        // Validate config structure and ensure persistence
         if (config.type && config.connectionString) {
+          // Ensure the config has persistence flag
+          const persistentConfig = {
+            ...config,
+            persistent: true,
+            version: config.version || '2.0'
+          }
+          
           console.log('✅ تم تحميل إعدادات قاعدة البيانات من الملف:', config.type)
           console.log('🔗 رابط الاتصال:', config.connectionString.substring(0, 50) + '...')
           console.log('📅 وقت الحفظ:', config.savedAt || 'غير محدد')
+          console.log('💾 الإعدادات محفوظة:', config.persistent ? 'نعم' : 'لا')
           
-          // Update environment variable
+          // Update environment variable immediately
           process.env.DATABASE_URL = config.connectionString
           console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
           
-          return config
+          // If config doesn't have persistence flag, save it with the flag
+          if (!config.persistent) {
+            console.log('💾 إضافة علامة الاستمرارية للإعدادات...')
+            saveDatabaseConfig(persistentConfig)
+          }
+          
+          return persistentConfig
         } else {
           console.log('⚠️ ملف الإعدادات تالف، استخدام الإعدادات الافتراضية')
         }
@@ -89,7 +105,7 @@ export function loadDatabaseConfig(): DatabaseConfig {
   return DEFAULT_CONFIG
 }
 
-// Save database configuration with enhanced reliability
+// Save database configuration with enhanced reliability and persistence
 export function saveDatabaseConfig(config: DatabaseConfig): boolean {
   try {
     console.log('💾 بدء حفظ إعدادات قاعدة البيانات...')
@@ -104,12 +120,13 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
       console.log('📁 تم إنشاء المجلد:', configDir)
     }
     
-    // Add metadata to config
+    // Add metadata to config with persistence flag
     const configWithMetadata = {
       ...config,
       savedAt: new Date().toISOString(),
-      version: '1.0',
-      lastModified: new Date().toISOString()
+      version: '2.0',
+      lastModified: new Date().toISOString(),
+      persistent: true // Ensure persistence
     }
     
     // Write config file with proper formatting
@@ -124,6 +141,7 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
       if (savedConfig.type === config.type && savedConfig.connectionString === config.connectionString) {
         console.log('✅ تم حفظ إعدادات قاعدة البيانات بنجاح:', savedConfig.type)
         console.log('📅 وقت الحفظ:', savedConfig.savedAt)
+        console.log('💾 الإعدادات محفوظة:', savedConfig.persistent ? 'نعم' : 'لا')
         
         // Update environment variable immediately
         process.env.DATABASE_URL = config.connectionString
@@ -185,4 +203,59 @@ export function hasDatabaseTypeChanged(newType: string): boolean {
 export function forceReloadConfig(): DatabaseConfig {
   console.log('🔄 إعادة تحميل إعدادات قاعدة البيانات...')
   return loadDatabaseConfig()
+}
+
+// Ensure database type persistence - prevents reverting to SQLite on refresh
+export function ensureDatabaseTypePersistence(type: 'sqlite' | 'postgresql'): boolean {
+  try {
+    console.log(`🔒 ضمان استمرارية نوع قاعدة البيانات: ${type}`)
+    
+    const currentConfig = loadDatabaseConfig()
+    
+    // If the current type is different from the desired type, update it
+    if (currentConfig.type !== type) {
+      console.log(`🔄 تغيير نوع قاعدة البيانات من ${currentConfig.type} إلى ${type}`)
+      
+      const updatedConfig = {
+        ...currentConfig,
+        type,
+        persistent: true,
+        savedAt: new Date().toISOString(),
+        version: '2.0'
+      }
+      
+      return saveDatabaseConfig(updatedConfig)
+    }
+    
+    // Ensure persistence flag is set
+    if (!currentConfig.persistent) {
+      console.log('💾 إضافة علامة الاستمرارية للإعدادات الحالية')
+      const persistentConfig = {
+        ...currentConfig,
+        persistent: true,
+        savedAt: new Date().toISOString(),
+        version: '2.0'
+      }
+      
+      return saveDatabaseConfig(persistentConfig)
+    }
+    
+    console.log('✅ نوع قاعدة البيانات محفوظ بالفعل')
+    return true
+  } catch (error: any) {
+    console.error('❌ خطأ في ضمان استمرارية نوع قاعدة البيانات:', error?.message)
+    return false
+  }
+}
+
+// Get persistent database type - always returns the saved type
+export function getPersistentDatabaseType(): 'sqlite' | 'postgresql' {
+  try {
+    const config = loadDatabaseConfig()
+    console.log(`📋 نوع قاعدة البيانات المحفوظ: ${config.type}`)
+    return config.type
+  } catch (error: any) {
+    console.error('❌ خطأ في الحصول على نوع قاعدة البيانات المحفوظ:', error?.message)
+    return 'sqlite' // Default fallback
+  }
 }
