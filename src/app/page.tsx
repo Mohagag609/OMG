@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation'
 import { DashboardKPIs } from '@/types'
 import { formatCurrency, formatPercentage } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { BarChart, LineChart, DoughnutChart } from '@/components/Charts'
+import { exportDashboardData } from '@/utils/export'
 
 export default function Home() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -65,6 +68,24 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleExport = () => {
+    if (!kpis) return
+    
+    const installments = [] // TODO: Fetch installments data
+    const transactions = [] // TODO: Fetch transactions data
+    
+    exportDashboardData(kpis, installments, transactions)
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير بيانات لوحة التحكم إلى ملف Excel'
+    })
+  }
+
+  const handleDateFilterChange = () => {
+    fetchDashboardData()
   }
 
   if (loading) {
@@ -127,6 +148,9 @@ export default function Home() {
           <button className="btn secondary" onClick={() => router.push('/reports')}>
             التقارير
           </button>
+          <button className="btn ok" onClick={handleExport}>
+            تصدير Excel
+          </button>
           <button className="btn warn" onClick={() => {
             localStorage.removeItem('authToken')
             router.push('/login')
@@ -152,8 +176,42 @@ export default function Home() {
         </div>
 
         <div className="content slide-in">
+          {/* Date Filters */}
           <div className="panel">
-            <h2>لوحة التحكم</h2>
+            <h2>فلاتر التاريخ</h2>
+            <div className="grid-2" style={{ gap: '16px' }}>
+              <div>
+                <label className="form-label">من تاريخ</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={dateFilter.from}
+                  onChange={(e) => setDateFilter({...dateFilter, from: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="form-label">إلى تاريخ</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={dateFilter.to}
+                  onChange={(e) => setDateFilter({...dateFilter, to: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="tools">
+              <button className="btn" onClick={handleDateFilterChange}>
+                تطبيق الفلتر
+              </button>
+              <button className="btn secondary" onClick={() => setDateFilter({from: '', to: ''})}>
+                مسح الفلتر
+              </button>
+            </div>
+          </div>
+
+          {/* KPIs */}
+          <div className="panel">
+            <h2>المؤشرات الرئيسية</h2>
             {kpis && (
               <div className="kpis">
                 <div className="card slide-in">
@@ -203,8 +261,48 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Charts */}
+          {kpis && (
+            <div className="grid-2" style={{ gap: '16px' }}>
+              <DoughnutChart
+                data={{
+                  labels: ['متاحة', 'مباعة', 'محجوزة'],
+                  datasets: [{
+                    label: 'توزيع الوحدات',
+                    data: [kpis.unitCounts.available, kpis.unitCounts.sold, kpis.unitCounts.reserved],
+                    backgroundColor: ['#22c55e', '#2563eb', '#f59e0b'],
+                    borderColor: ['#16a34a', '#1d4ed8', '#d97706'],
+                    borderWidth: 2
+                  }]
+                }}
+                title="توزيع الوحدات"
+                height={250}
+              />
+              
+              <BarChart
+                data={{
+                  labels: ['المبيعات', 'المقبوضات', 'المصروفات', 'الربح'],
+                  datasets: [{
+                    label: 'المبالغ المالية',
+                    data: [kpis.totalSales, kpis.totalReceipts, kpis.totalExpenses, kpis.netProfit],
+                    backgroundColor: ['#2563eb', '#22c55e', '#ef4444', '#f59e0b'],
+                    borderColor: ['#1d4ed8', '#16a34a', '#dc2626', '#d97706'],
+                    borderWidth: 1
+                  }]
+                }}
+                title="المؤشرات المالية"
+                height={250}
+              />
+            </div>
+          )}
         </div>
       </div>
+      
+      <NotificationSystem 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   )
 }
