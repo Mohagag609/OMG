@@ -6,15 +6,21 @@ const { execSync } = require('child_process')
 
 const DATABASE_TYPE = process.argv[2] || 'sqlite'
 
-if (!['sqlite', 'postgresql'].includes(DATABASE_TYPE)) {
-  console.error('❌ نوع قاعدة البيانات غير صحيح. استخدم: sqlite أو postgresql')
+if (!['sqlite', 'postgresql-local', 'postgresql-cloud'].includes(DATABASE_TYPE)) {
+  console.error('❌ نوع قاعدة البيانات غير صحيح. استخدم: sqlite أو postgresql-local أو postgresql-cloud')
   process.exit(1)
 }
 
 console.log(`🔄 تبديل قاعدة البيانات إلى: ${DATABASE_TYPE}`)
 
 // Copy the appropriate schema
-const sourceSchema = path.join(__dirname, '..', 'prisma', `schema.${DATABASE_TYPE}.prisma`)
+let sourceSchema
+if (DATABASE_TYPE === 'sqlite') {
+  sourceSchema = path.join(__dirname, '..', 'prisma', 'schema.sqlite.prisma')
+} else if (DATABASE_TYPE === 'postgresql-local' || DATABASE_TYPE === 'postgresql-cloud') {
+  sourceSchema = path.join(__dirname, '..', 'prisma', 'schema.postgresql.prisma')
+}
+
 const targetSchema = path.join(__dirname, '..', 'prisma', 'schema.prisma')
 
 if (!fs.existsSync(sourceSchema)) {
@@ -25,27 +31,19 @@ if (!fs.existsSync(sourceSchema)) {
 fs.copyFileSync(sourceSchema, targetSchema)
 console.log(`✅ تم نسخ مخطط ${DATABASE_TYPE} إلى schema.prisma`)
 
-// Update .env.local
-const envPath = path.join(__dirname, '..', '.env.local')
+// Update .env
+const envPath = path.join(__dirname, '..', '.env')
 let envContent = ''
 
 if (fs.existsSync(envPath)) {
   envContent = fs.readFileSync(envPath, 'utf8')
 }
 
-// Remove existing database config
-envContent = envContent.replace(/DATABASE_TYPE=.*\n/g, '')
-envContent = envContent.replace(/DATABASE_URL=.*\n/g, '')
-
-// Add new database config
-if (DATABASE_TYPE === 'sqlite') {
-  envContent += `\nDATABASE_TYPE=sqlite\nDATABASE_URL="file:./dev.db"\n`
-} else {
-  envContent += `\nDATABASE_TYPE=postgresql\nDATABASE_URL="postgresql://postgres:password@localhost:5432/estate_management"\n`
-}
+// Update DATABASE_TYPE
+envContent = envContent.replace(/DATABASE_TYPE="[^"]*"/, `DATABASE_TYPE="${DATABASE_TYPE}"`)
 
 fs.writeFileSync(envPath, envContent)
-console.log(`✅ تم تحديث ملف .env.local`)
+console.log(`✅ تم تحديث ملف .env`)
 
 // Generate Prisma client
 try {

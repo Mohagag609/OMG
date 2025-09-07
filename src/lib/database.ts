@@ -1,26 +1,36 @@
 import { PrismaClient } from '@prisma/client'
 
-export type DatabaseType = 'sqlite' | 'postgresql'
+export type DatabaseType = 'sqlite' | 'postgresql-local' | 'postgresql-cloud'
 
 export interface DatabaseConfig {
   type: DatabaseType
   url: string
   name: string
   description: string
+  icon: string
 }
 
 export const DATABASE_CONFIGS: Record<DatabaseType, DatabaseConfig> = {
   sqlite: {
     type: 'sqlite',
-    url: 'file:./dev.db',
+    url: process.env.SQLITE_DATABASE_URL || 'file:./dev.db',
     name: 'SQLite (محلي)',
-    description: 'قاعدة بيانات محلية سريعة ومناسبة للتطوير'
+    description: 'قاعدة بيانات محلية سريعة ومناسبة للتطوير',
+    icon: '📁'
   },
-  postgresql: {
-    type: 'postgresql',
-    url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/estate_management',
+  'postgresql-local': {
+    type: 'postgresql-local',
+    url: process.env.POSTGRESQL_LOCAL_DATABASE_URL || 'postgresql://postgres:password@localhost:5432/estate_management',
     name: 'PostgreSQL (محلي)',
-    description: 'قاعدة بيانات قوية ومناسبة للإنتاج'
+    description: 'قاعدة بيانات محلية قوية للاختبار والتطوير',
+    icon: '🏠'
+  },
+  'postgresql-cloud': {
+    type: 'postgresql-cloud',
+    url: process.env.POSTGRESQL_CLOUD_DATABASE_URL || 'postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+    name: 'PostgreSQL (سحابي)',
+    description: 'قاعدة بيانات سحابية للإنتاج والنشر',
+    icon: '☁️'
   }
 }
 
@@ -31,6 +41,9 @@ export function getDatabaseConfig(): DatabaseConfig {
 
 export function createPrismaClient() {
   const config = getDatabaseConfig()
+  
+  // Set DATABASE_URL environment variable for Prisma
+  process.env.DATABASE_URL = config.url
   
   return new PrismaClient({
     datasources: {
