@@ -54,7 +54,7 @@ export async function testDatabaseConnection() {
     return { success: true, config }
   } catch (error) {
     console.error('❌ فشل الاتصال بقاعدة البيانات:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'خطأ غير معروف' }
   }
 }
 
@@ -73,7 +73,7 @@ export async function checkDatabaseHealth() {
   } catch (error) {
     return {
       status: 'unhealthy',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'خطأ غير معروف',
       config: getDatabaseConfig()
     }
   }

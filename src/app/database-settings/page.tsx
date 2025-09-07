@@ -43,7 +43,7 @@ export default function DatabaseSettingsPage() {
         setMessage(`❌ فشل التبديل: ${result.error}`)
       }
     } catch (error) {
-      setMessage(`❌ خطأ: ${error.message}`)
+      setMessage(`❌ خطأ: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`)
     } finally {
       setIsLoading(false)
     }
