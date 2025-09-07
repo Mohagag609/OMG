@@ -30,6 +30,7 @@ export default function PartnerGroups() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', notes: '' })
   const [selectedGroup, setSelectedGroup] = useState<PartnerGroup | null>(null)
+  const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -232,6 +233,7 @@ export default function PartnerGroups() {
           <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
           <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
           <button className="tab" onClick={() => router.push('/partners')}>الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-debts')}>ديون الشركاء</button>
           <button className="tab active">مجموعات الشركاء</button>
           <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
           <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>

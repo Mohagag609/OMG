@@ -1,59 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
+import { ApiResponse } from '@/types'
 
-const prisma = new PrismaClient()
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
+// POST /api/partner-debts/[id]/pay - Mark debt as paid
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'غير مصرح' }, { status: 401 })
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    if (!decoded.userId) {
-      return NextResponse.json({ success: false, error: 'رمز غير صالح' }, { status: 401 })
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
+    
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
     const debtId = params.id
 
     // Check if debt exists
-    const debt = await prisma.partnerDebt.findUnique({
-      where: { id: debtId },
-      include: { partner: true }
+    const existingDebt = await prisma.partnerDebt.findUnique({
+      where: { id: debtId }
     })
 
-    if (!debt) {
-      return NextResponse.json({ success: false, error: 'الدين غير موجود' }, { status: 404 })
+    if (!existingDebt) {
+      return NextResponse.json(
+        { success: false, error: 'دين الشريك غير موجود' },
+        { status: 404 }
+      )
     }
 
-    if (debt.status === 'مدفوع') {
-      return NextResponse.json({ success: false, error: 'هذا الدين مدفوع بالفعل' }, { status: 400 })
+    if (existingDebt.status === 'مدفوع') {
+      return NextResponse.json(
+        { success: false, error: 'هذا الدين مدفوع بالفعل' },
+        { status: 400 }
+      )
     }
 
     // Update debt status to paid
-    const updatedDebt = await prisma.partnerDebt.update({
+    await prisma.partnerDebt.update({
       where: { id: debtId },
-      data: {
+      data: { 
         status: 'مدفوع',
         updatedAt: new Date()
-      },
-      include: {
-        partner: true
       }
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      data: updatedDebt,
+    const response: ApiResponse = {
+      success: true,
       message: 'تم تسجيل سداد الدين بنجاح'
-    })
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error paying partner debt:', error)
-    return NextResponse.json({ success: false, error: 'خطأ في الخادم' }, { status: 500 })
+    console.error('Error paying debt:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }

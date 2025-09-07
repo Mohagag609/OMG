@@ -57,8 +57,17 @@ export interface Contract {
   totalPrice: number
   discountAmount: number
   brokerName?: string | null
-  commissionSafeId?: string | null
+  brokerPercent: number
   brokerAmount: number
+  commissionSafeId?: string | null
+  downPaymentSafeId?: string | null
+  maintenanceDeposit: number
+  installmentType: string
+  installmentCount: number
+  extraAnnual: number
+  annualPaymentValue: number
+  downPayment: number
+  paymentType: string
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null

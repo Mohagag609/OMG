@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'غير مصرح' }, { status: 401 })
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    if (!decoded.userId) {
-      return NextResponse.json({ success: false, error: 'رمز غير صالح' }, { status: 401 })
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
+    
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
     const { partnerId, percent } = await request.json()

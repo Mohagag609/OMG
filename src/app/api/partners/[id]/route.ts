@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
-import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Partner } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -32,8 +31,10 @@ export async function GET(
       )
     }
 
+    const partnerId = params.id
+
     const partner = await prisma.partner.findUnique({
-      where: { id: params.id },
+      where: { id: partnerId },
       include: {
         unitPartners: {
           where: { deletedAt: null },
@@ -42,8 +43,7 @@ export async function GET(
           }
         },
         partnerDebts: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
+          where: { deletedAt: null }
         }
       }
     })
@@ -95,6 +95,7 @@ export async function PUT(
       )
     }
 
+    const partnerId = params.id
     const body = await request.json()
     const { name, phone, notes } = body
 
@@ -108,7 +109,7 @@ export async function PUT(
 
     // Check if partner exists
     const existingPartner = await prisma.partner.findUnique({
-      where: { id: params.id }
+      where: { id: partnerId }
     })
 
     if (!existingPartner) {
@@ -120,7 +121,7 @@ export async function PUT(
 
     // Update partner
     const partner = await prisma.partner.update({
-      where: { id: params.id },
+      where: { id: partnerId },
       data: {
         name,
         phone,
@@ -131,7 +132,7 @@ export async function PUT(
     const response: ApiResponse<Partner> = {
       success: true,
       data: partner,
-      message: 'تم تحديث الشريك بنجاح'
+      message: 'تم تحديث بيانات الشريك بنجاح'
     }
 
     return NextResponse.json(response)
@@ -169,24 +170,37 @@ export async function DELETE(
       )
     }
 
-    // Check if partner can be deleted
-    const canDelete = await canDeleteEntity('partner', params.id)
-    if (!canDelete.canDelete) {
+    const partnerId = params.id
+
+    // Check if partner exists
+    const existingPartner = await prisma.partner.findUnique({
+      where: { id: partnerId }
+    })
+
+    if (!existingPartner) {
       return NextResponse.json(
-        { success: false, error: canDelete.reason },
+        { success: false, error: 'الشريك غير موجود' },
+        { status: 404 }
+      )
+    }
+
+    // Check if partner is linked to any units
+    const unitPartners = await prisma.unitPartner.findMany({
+      where: { partnerId, deletedAt: null }
+    })
+
+    if (unitPartners.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الشريك لأنه مرتبط بوحدات' },
         { status: 400 }
       )
     }
 
     // Soft delete partner
-    const result = await softDeleteEntity('partner', params.id, user.id.toString())
-    
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.message },
-        { status: 400 }
-      )
-    }
+    await prisma.partner.update({
+      where: { id: partnerId },
+      data: { deletedAt: new Date() }
+    })
 
     const response: ApiResponse = {
       success: true,

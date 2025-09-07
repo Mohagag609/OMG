@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
+import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
 
 export default function Partners() {
   const [partners, setPartners] = useState<Partner[]>([])
@@ -12,6 +13,7 @@ export default function Partners() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [deletingPartners, setDeletingPartners] = useState<Set<string>>(new Set())
   const [newPartner, setNewPartner] = useState({
     name: '',
     phone: '',
@@ -64,6 +66,24 @@ export default function Partners() {
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!newPartner.name) {
+      setError('الرجاء إدخال اسم الشريك')
+      return
+    }
+
+    // فحص تكرار الاسم
+    if (checkDuplicateName(newPartner.name, partners)) {
+      setError('اسم الشريك موجود بالفعل')
+      return
+    }
+
+    // فحص تكرار رقم الهاتف (إذا تم إدخاله)
+    if (newPartner.phone && checkDuplicatePhone(newPartner.phone, partners)) {
+      setError('رقم الهاتف موجود بالفعل')
+      return
+    }
+
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/partners', {
@@ -122,6 +142,12 @@ export default function Partners() {
           <button className="btn primary" onClick={() => setShowAddForm(true)}>
             إضافة شريك جديد
           </button>
+          <button className="btn secondary" onClick={() => router.push('/partner-debts')}>
+            ديون الشركاء
+          </button>
+          <button className="btn secondary" onClick={() => router.push('/partner-groups')}>
+            مجموعات الشركاء
+          </button>
           <button className="btn secondary" onClick={() => router.push('/')}>
             العودة للرئيسية
           </button>
@@ -138,6 +164,7 @@ export default function Partners() {
           <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
           <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
           <button className="tab active">الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-debts')}>ديون الشركاء</button>
           <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
           <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
           <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
@@ -233,6 +260,13 @@ export default function Partners() {
                       <td>{partner.notes || '-'}</td>
                       <td>{partner.createdAt ? formatDate(partner.createdAt) : '-'}</td>
                       <td>
+                        <button
+                          className="btn"
+                          style={{ padding: '5px 10px', fontSize: '12px', marginRight: '5px' }}
+                          onClick={() => router.push(`/partners/${partner.id}`)}
+                        >
+                          تفاصيل
+                        </button>
                         <button
                           className="btn warn"
                           style={{ padding: '5px 10px', fontSize: '12px' }}

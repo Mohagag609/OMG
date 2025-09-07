@@ -49,16 +49,14 @@ export default function Login() {
             placeholder="اسم المستخدم"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="login-input"
-            required
+            className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
           />
           <input
             type="password"
             placeholder="كلمة المرور"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
-            required
+            className="login-input text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
           />
           <button
             type="submit"
