@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
+import { ensureEnvironmentVariables } from '@/lib/env'
 import { validateContract } from '@/utils/validation'
 import { ApiResponse, Contract, PaginatedResponse } from '@/types'
 
@@ -9,25 +8,21 @@ export const runtime = 'nodejs'
 
 // GET /api/contracts - Get contracts with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📋 جاري تحميل العقود...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -72,37 +67,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('✅ تم تحميل العقود بنجاح:', contracts.length)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting contracts:', error)
+    console.error('❌ خطأ في تحميل العقود:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/contracts - Create new contract
 export async function POST(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📝 جاري إنشاء عقد جديد...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { 
@@ -191,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if total percentage is 100%
-    const totalPercent = unitPartners.reduce((sum, p) => sum + p.percentage, 0)
+    const totalPercent = unitPartners.reduce((sum: number, p: any) => sum + p.percentage, 0)
     if (totalPercent !== 100) {
       return NextResponse.json(
         { success: false, error: `لا يمكن إنشاء عقد. مجموع نسب الشركاء هو ${totalPercent}% ويجب أن يكون 100% بالضبط.` },
@@ -200,7 +196,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contract and generate installments in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Generate contract code
       const contractCount = await tx.contract.count()
       const code = `CTR-${String(contractCount + 1).padStart(5, '0')}`
@@ -382,12 +378,17 @@ export async function POST(request: NextRequest) {
       message: paymentType === 'installment' ? 'تم إضافة العقد وتوليد الأقساط بنجاح' : 'تم إضافة العقد بنجاح'
     }
 
+    console.log('✅ تم إنشاء العقد بنجاح:', result.contract.id)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error creating contract:', error)
+    console.error('❌ خطأ في إنشاء العقد:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

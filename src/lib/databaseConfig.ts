@@ -1,4 +1,4 @@
-// Database configuration management - Complete rewrite
+// Database configuration management - Complete rewrite for reliability
 import fs from 'fs'
 import path from 'path'
 
@@ -10,6 +10,8 @@ export interface DatabaseConfig {
   isConnected: boolean
   lastTested?: string
   details?: any
+  savedAt?: string
+  version?: string
 }
 
 // Default configuration - Always PostgreSQL
@@ -17,46 +19,74 @@ const DEFAULT_CONFIG: DatabaseConfig = {
   type: 'postgresql',
   connectionString: 'postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
   isConnected: false,
-  lastTested: new Date().toISOString()
+  lastTested: new Date().toISOString(),
+  savedAt: new Date().toISOString(),
+  version: '1.0'
 }
 
-// Load database configuration
+// Force create config file with default values
+function ensureConfigFile(): void {
+  try {
+    if (!fs.existsSync(CONFIG_FILE)) {
+      console.log('📁 إنشاء ملف الإعدادات الافتراضي...')
+      fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
+      console.log('✅ تم إنشاء ملف الإعدادات الافتراضي')
+    }
+  } catch (error: any) {
+    console.error('❌ خطأ في إنشاء ملف الإعدادات:', error?.message)
+  }
+}
+
+// Load database configuration with enhanced error handling
 export function loadDatabaseConfig(): DatabaseConfig {
   try {
     console.log('📋 بدء تحميل إعدادات قاعدة البيانات...')
     console.log('📁 مسار الملف:', CONFIG_FILE)
     
+    // Ensure config file exists
+    ensureConfigFile()
+    
     if (fs.existsSync(CONFIG_FILE)) {
       console.log('📁 الملف موجود، جاري القراءة...')
       const configData = fs.readFileSync(CONFIG_FILE, 'utf8')
-      console.log('📄 محتوى الملف:', configData.substring(0, 200) + '...')
       
-      const config = JSON.parse(configData)
-      console.log('✅ تم تحميل إعدادات قاعدة البيانات من الملف:', config.type)
-      console.log('🔗 رابط الاتصال:', config.connectionString ? config.connectionString.substring(0, 50) + '...' : 'غير محدد')
-      console.log('📅 وقت الحفظ:', config.savedAt || 'غير محدد')
-      
-      // Update environment variable
-      if (config.connectionString) {
-        process.env.DATABASE_URL = config.connectionString
-        console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+      if (configData.trim()) {
+        console.log('📄 محتوى الملف:', configData.substring(0, 200) + '...')
+        
+        const config = JSON.parse(configData)
+        
+        // Validate config structure
+        if (config.type && config.connectionString) {
+          console.log('✅ تم تحميل إعدادات قاعدة البيانات من الملف:', config.type)
+          console.log('🔗 رابط الاتصال:', config.connectionString.substring(0, 50) + '...')
+          console.log('📅 وقت الحفظ:', config.savedAt || 'غير محدد')
+          
+          // Update environment variable
+          process.env.DATABASE_URL = config.connectionString
+          console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+          
+          return config
+        } else {
+          console.log('⚠️ ملف الإعدادات تالف، استخدام الإعدادات الافتراضية')
+        }
+      } else {
+        console.log('⚠️ ملف الإعدادات فارغ، استخدام الإعدادات الافتراضية')
       }
-      
-      return config
     } else {
       console.log('📁 الملف غير موجود، استخدام الإعدادات الافتراضية')
     }
   } catch (error: any) {
-    console.error('❌ خطأ في تحميل إعدادات قاعدة البيانات:', error)
+    console.error('❌ خطأ في تحميل إعدادات قاعدة البيانات:', error?.message)
     console.error('📁 مسار الملف:', CONFIG_FILE)
-    console.error('🔍 تفاصيل الخطأ:', error?.message || 'خطأ غير معروف')
   }
   
   console.log('📋 استخدام الإعدادات الافتراضية - PostgreSQL')
+  // Update environment variable with default
+  process.env.DATABASE_URL = DEFAULT_CONFIG.connectionString
   return DEFAULT_CONFIG
 }
 
-// Save database configuration
+// Save database configuration with enhanced reliability
 export function saveDatabaseConfig(config: DatabaseConfig): boolean {
   try {
     console.log('💾 بدء حفظ إعدادات قاعدة البيانات...')
@@ -71,37 +101,43 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
       console.log('📁 تم إنشاء المجلد:', configDir)
     }
     
-    // Add timestamp to config
-    const configWithTimestamp = {
+    // Add metadata to config
+    const configWithMetadata = {
       ...config,
       savedAt: new Date().toISOString(),
-      version: '1.0'
+      version: '1.0',
+      lastModified: new Date().toISOString()
     }
     
     // Write config file with proper formatting
-    const configData = JSON.stringify(configWithTimestamp, null, 2)
+    const configData = JSON.stringify(configWithMetadata, null, 2)
     fs.writeFileSync(CONFIG_FILE, configData, 'utf8')
     
-    // Verify the file was written
+    // Verify the file was written correctly
     if (fs.existsSync(CONFIG_FILE)) {
       const savedData = fs.readFileSync(CONFIG_FILE, 'utf8')
       const savedConfig = JSON.parse(savedData)
-      console.log('✅ تم حفظ إعدادات قاعدة البيانات بنجاح:', savedConfig.type)
-      console.log('📅 وقت الحفظ:', savedConfig.savedAt)
+      
+      if (savedConfig.type === config.type && savedConfig.connectionString === config.connectionString) {
+        console.log('✅ تم حفظ إعدادات قاعدة البيانات بنجاح:', savedConfig.type)
+        console.log('📅 وقت الحفظ:', savedConfig.savedAt)
+        
+        // Update environment variable immediately
+        process.env.DATABASE_URL = config.connectionString
+        console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
+        
+        return true
+      } else {
+        console.log('❌ فشل في التحقق من صحة البيانات المحفوظة')
+        return false
+      }
     } else {
       console.log('❌ فشل في إنشاء الملف')
       return false
     }
-    
-    // Update environment variable immediately
-    process.env.DATABASE_URL = config.connectionString
-    console.log('🔧 تم تحديث متغير البيئة DATABASE_URL')
-    
-    return true
   } catch (error: any) {
-    console.error('❌ خطأ في حفظ إعدادات قاعدة البيانات:', error)
+    console.error('❌ خطأ في حفظ إعدادات قاعدة البيانات:', error?.message)
     console.error('📁 مسار الملف:', CONFIG_FILE)
-    console.error('🔍 تفاصيل الخطأ:', error?.message || 'خطأ غير معروف')
     return false
   }
 }
@@ -119,7 +155,7 @@ export function updateConnectionStatus(isConnected: boolean, details?: any): boo
     
     return saveDatabaseConfig(config)
   } catch (error: any) {
-    console.error('❌ خطأ في تحديث حالة الاتصال:', error)
+    console.error('❌ خطأ في تحديث حالة الاتصال:', error?.message)
     return false
   }
 }
@@ -140,4 +176,10 @@ export function resetToDefaultConfig(): boolean {
 export function hasDatabaseTypeChanged(newType: string): boolean {
   const config = loadDatabaseConfig()
   return config.type !== newType
+}
+
+// Force reload configuration
+export function forceReloadConfig(): DatabaseConfig {
+  console.log('🔄 إعادة تحميل إعدادات قاعدة البيانات...')
+  return loadDatabaseConfig()
 }

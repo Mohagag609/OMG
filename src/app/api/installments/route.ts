@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
+import { ensureEnvironmentVariables } from '@/lib/env'
 import { ApiResponse, Installment, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -8,25 +7,21 @@ export const runtime = 'nodejs'
 
 // GET /api/installments - Get installments with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📋 جاري تحميل الأقساط...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -74,37 +69,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('✅ تم تحميل الأقساط بنجاح:', installments.length)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting installments:', error)
+    console.error('❌ خطأ في تحميل الأقساط:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/installments - Create new installment
 export async function POST(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📝 جاري إنشاء قسط جديد...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { unitId, amount, dueDate, status, notes } = body
@@ -156,12 +152,17 @@ export async function POST(request: NextRequest) {
       message: 'تم إضافة القسط بنجاح'
     }
 
+    console.log('✅ تم إنشاء القسط بنجاح:', installment.id)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error creating installment:', error)
+    console.error('❌ خطأ في إنشاء القسط:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }

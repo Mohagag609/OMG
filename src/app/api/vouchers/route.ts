@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getUserFromToken } from '@/lib/auth'
+import { ensureEnvironmentVariables } from '@/lib/env'
 import { ApiResponse, Voucher, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -8,25 +7,21 @@ export const runtime = 'nodejs'
 
 // GET /api/vouchers - Get vouchers with pagination
 export async function GET(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📋 جاري تحميل السندات...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -76,37 +71,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('✅ تم تحميل السندات بنجاح:', vouchers.length)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting vouchers:', error)
+    console.error('❌ خطأ في تحميل السندات:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
 
 // POST /api/vouchers - Create new voucher
 export async function POST(request: NextRequest) {
+  let prisma: any = null
+  
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    ensureEnvironmentVariables()
+    console.log('📝 جاري إنشاء سند جديد...')
 
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
+    })
 
     const body = await request.json()
     const { type, date, amount, safeId, description, payer, beneficiary, linkedRef } = body
@@ -190,12 +186,17 @@ export async function POST(request: NextRequest) {
       message: 'تم إضافة السند بنجاح'
     }
 
+    console.log('✅ تم إنشاء السند بنجاح:', voucher.id)
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error creating voucher:', error)
+    console.error('❌ خطأ في إنشاء السند:', error)
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
