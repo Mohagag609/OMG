@@ -1,17 +1,26 @@
 // محول اتصال موحد لدعم PostgreSQL و SQLite
 import { Client } from 'pg'
-import Database from 'better-sqlite3'
 import { getCurrentDbUrl, getCurrentDbType, DatabaseInterface } from './config'
+
+// استيراد مشروط لـ better-sqlite3
+let Database: any = null
+if (typeof window === 'undefined') {
+  try {
+    Database = require('better-sqlite3')
+  } catch (error) {
+    console.warn('better-sqlite3 غير متوفر - سيتم استخدام PostgreSQL فقط')
+  }
+}
 
 // تصدير prisma للتوافق مع الكود الموجود
 export { prisma } from './prisma-compat'
 
 // واجهة موحدة لقاعدة البيانات
 class UnifiedDatabase implements DatabaseInterface {
-  private client: Client | Database.Database | null = null
+  private client: Client | any | null = null
   private dbType: string = 'postgresql'
 
-  constructor(client: Client | Database.Database, dbType: string) {
+  constructor(client: Client | any, dbType: string) {
     this.client = client
     this.dbType = dbType
   }
@@ -24,7 +33,7 @@ class UnifiedDatabase implements DatabaseInterface {
     try {
       if (this.dbType === 'sqlite') {
         // SQLite
-        const db = this.client as Database.Database
+        const db = this.client as any
         const stmt = db.prepare(sql)
         
         // تحويل PostgreSQL parameters ($1, $2) إلى SQLite parameters (?, ?)
@@ -59,7 +68,7 @@ class UnifiedDatabase implements DatabaseInterface {
 
     try {
       if (this.dbType === 'sqlite') {
-        const db = this.client as Database.Database
+        const db = this.client as any
         db.close()
         console.log('🔌 تم إغلاق اتصال SQLite')
       } else {
@@ -91,6 +100,10 @@ export async function getDb(): Promise<DatabaseInterface> {
 
     if (dbType === 'sqlite') {
       // SQLite
+      if (!Database) {
+        throw new Error('better-sqlite3 غير متوفر - يرجى تثبيته للتطوير المحلي')
+      }
+      
       const url = new URL(dbUrl)
       const dbPath = url.pathname.startsWith('./') ? url.pathname : `./${url.pathname}`
       
@@ -164,6 +177,10 @@ export async function createSqliteTables(): Promise<void> {
   
   try {
     console.log('📋 إنشاء جداول SQLite...')
+    
+    if (!Database) {
+      throw new Error('better-sqlite3 غير متوفر - يرجى تثبيته للتطوير المحلي')
+    }
     
     db = await getDb()
     const dbType = await getCurrentDbType()

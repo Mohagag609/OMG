@@ -1,6 +1,16 @@
 // ملف التوافق مع Prisma Client الموجود
 import { getDb } from './db'
 
+// فحص توفر better-sqlite3
+let Database: any = null
+if (typeof window === 'undefined') {
+  try {
+    Database = require('better-sqlite3')
+  } catch (error) {
+    // better-sqlite3 غير متوفر - سيتم استخدام PostgreSQL فقط
+  }
+}
+
 // إنشاء دالة عامة لإنشاء عمليات CRUD لأي جدول
 function createTableOperations(tableName: string) {
   return {
@@ -111,7 +121,8 @@ function createTableOperations(tableName: string) {
         const query = `INSERT INTO ${tableName} (${fields.join(', ')}) VALUES (${placeholders})`
         await db.query(query, values)
         
-        const result = await db.query(`SELECT * FROM ${tableName} WHERE id = last_insert_rowid()`)
+        // استخدام PostgreSQL syntax للتوافق
+        const result = await db.query(`SELECT * FROM ${tableName} ORDER BY id DESC LIMIT 1`)
         return result[0]
       } finally {
         await db.close()
