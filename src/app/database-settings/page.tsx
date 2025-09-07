@@ -77,6 +77,8 @@ export default function DatabaseSettings() {
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [isEditingConnectionString, setIsEditingConnectionString] = useState(false)
+  const [originalConnectionString, setOriginalConnectionString] = useState('')
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -88,13 +90,16 @@ export default function DatabaseSettings() {
       const data = await response.json()
       if (data.success) {
         setSettings(data.data)
+        setOriginalConnectionString(data.data.connectionString)
       } else {
         // إعدادات افتراضية
+        const defaultConnectionString = 'postgresql://username:password@host:port/database'
         setSettings({
           type: 'postgresql',
-          connectionString: 'postgresql://username:password@host:port/database',
+          connectionString: defaultConnectionString,
           isConnected: false
         })
+        setOriginalConnectionString(defaultConnectionString)
       }
     } catch (err) {
       console.error('Error loading database settings:', err)
@@ -268,14 +273,17 @@ export default function DatabaseSettings() {
   }
 
   const handleTypeChange = (type: 'sqlite' | 'postgresql') => {
+    const newConnectionString = type === 'sqlite' 
+      ? 'file:./prisma/dev.db'
+      : 'postgresql://username:password@host:port/database'
+    
     setSettings(prev => ({
       ...prev,
       type,
-      connectionString: type === 'sqlite' 
-        ? 'file:./prisma/dev.db'
-        : 'postgresql://username:password@host:port/database',
+      connectionString: newConnectionString,
       isConnected: false
     }))
+    setOriginalConnectionString(newConnectionString)
   }
 
   if (loading) {
@@ -358,16 +366,72 @@ export default function DatabaseSettings() {
             </div>
 
             {/* رابط الاتصال */}
-            <ModernInput
-              label="رابط الاتصال"
-              type="text"
-              value={settings.connectionString}
-              onChange={(e: any) => setSettings(prev => ({ ...prev, connectionString: e.target.value }))}
-              placeholder={settings.type === 'sqlite' 
-                ? 'file:./prisma/dev.db' 
-                : 'postgresql://username:password@host:port/database'
-              }
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                رابط الاتصال
+              </label>
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <input
+                  type="text"
+                  value={settings.connectionString}
+                  onChange={(e: any) => setSettings(prev => ({ ...prev, connectionString: e.target.value }))}
+                  placeholder={settings.type === 'sqlite' 
+                    ? 'file:./prisma/dev.db' 
+                    : 'postgresql://username:password@host:port/database'
+                  }
+                  disabled={!isEditingConnectionString}
+                  className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white ${
+                    isEditingConnectionString 
+                      ? 'border-gray-300 dark:border-gray-600' 
+                      : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400'
+                  }`}
+                  required
+                />
+                {isEditingConnectionString ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // حفظ التغييرات
+                        setIsEditingConnectionString(false)
+                        addNotification({
+                          type: 'success',
+                          title: 'تم الحفظ',
+                          message: 'تم حفظ رابط قاعدة البيانات بنجاح'
+                        })
+                      }}
+                      className="px-3 py-2 text-sm font-medium rounded-lg border bg-green-100 text-green-700 border-green-300 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700 transition-colors"
+                    >
+                      حفظ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // إلغاء التعديل واستعادة النسخة الأصلية
+                        setIsEditingConnectionString(false)
+                        setSettings(prev => ({ ...prev, connectionString: originalConnectionString }))
+                      }}
+                      className="px-3 py-2 text-sm font-medium rounded-lg border bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingConnectionString(true)}
+                    className="px-3 py-2 text-sm font-medium rounded-lg border bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700 transition-colors"
+                  >
+                    تعديل
+                  </button>
+                )}
+              </div>
+              {!isEditingConnectionString && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  اضغط على زر "تعديل" لتغيير رابط قاعدة البيانات
+                </p>
+              )}
+            </div>
 
             {/* أمثلة */}
             <div className="bg-blue-50 rounded-xl p-4">
