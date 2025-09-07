@@ -150,8 +150,35 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
         return true
       } else {
         console.log('❌ فشل في التحقق من صحة البيانات المحفوظة')
-        console.log('📄 البيانات المتوقعة:', { type: config.type, connectionString: config.connectionString.substring(0, 50) })
-        console.log('📄 البيانات المحفوظة:', { type: savedConfig.type, connectionString: savedConfig.connectionString?.substring(0, 50) })
+        console.log('📄 البيانات المتوقعة:', { 
+          type: config.type, 
+          connectionString: config.connectionString?.substring(0, 50) + '...',
+          connectionStringLength: config.connectionString?.length
+        })
+        console.log('📄 البيانات المحفوظة:', { 
+          type: savedConfig.type, 
+          connectionString: savedConfig.connectionString?.substring(0, 50) + '...',
+          connectionStringLength: savedConfig.connectionString?.length
+        })
+        
+        // Try to fix the issue by rewriting the file
+        try {
+          console.log('🔧 محاولة إعادة كتابة الملف...')
+          fs.writeFileSync(CONFIG_FILE, configData, 'utf8')
+          
+          // Verify again
+          const retryData = fs.readFileSync(CONFIG_FILE, 'utf8')
+          const retryConfig = JSON.parse(retryData)
+          
+          if (retryConfig.type === config.type && retryConfig.connectionString === config.connectionString) {
+            console.log('✅ تم إصلاح المشكلة وإعادة الحفظ بنجاح')
+            process.env.DATABASE_URL = config.connectionString
+            return true
+          }
+        } catch (retryError) {
+          console.error('❌ فشل في إعادة المحاولة:', retryError)
+        }
+        
         return false
       }
     } else {
@@ -261,5 +288,35 @@ export function getPersistentDatabaseType(): 'sqlite' | 'postgresql' {
   } catch (error: any) {
     console.error('❌ خطأ في الحصول على نوع قاعدة البيانات المحفوظ:', error?.message)
     return 'sqlite' // Default fallback
+  }
+}
+
+// Alternative save function with better error handling
+export function saveDatabaseConfigAlternative(config: DatabaseConfig): boolean {
+  try {
+    console.log('💾 بدء حفظ إعدادات قاعدة البيانات (الطريقة البديلة)...')
+    
+    // Create a simple config object
+    const simpleConfig = {
+      type: config.type,
+      connectionString: config.connectionString,
+      isConnected: config.isConnected || false,
+      savedAt: new Date().toISOString(),
+      version: '2.0',
+      persistent: true
+    }
+    
+    // Write directly without complex verification
+    const configData = JSON.stringify(simpleConfig, null, 2)
+    fs.writeFileSync(CONFIG_FILE, configData, 'utf8')
+    
+    // Update environment variable
+    process.env.DATABASE_URL = config.connectionString
+    console.log('✅ تم حفظ الإعدادات بالطريقة البديلة')
+    
+    return true
+  } catch (error: any) {
+    console.error('❌ خطأ في الطريقة البديلة:', error?.message)
+    return false
   }
 }

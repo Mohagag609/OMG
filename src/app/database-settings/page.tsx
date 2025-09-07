@@ -270,6 +270,8 @@ export default function DatabaseSettings() {
     setSaving(true)
     
     try {
+      console.log('💾 بدء حفظ الإعدادات...', { type: settings.type, connectionString: connectionString.substring(0, 50) + '...' })
+      
       const response = await fetch('/api/database/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -279,7 +281,10 @@ export default function DatabaseSettings() {
         })
       })
       
+      console.log('📡 استجابة الخادم:', response.status, response.statusText)
+      
       const data = await response.json()
+      console.log('📄 بيانات الاستجابة:', data)
       
       if (data.success) {
         setSettings(prev => ({ 
@@ -295,18 +300,19 @@ export default function DatabaseSettings() {
           message: 'تم حفظ إعدادات قاعدة البيانات بنجاح. يمكنك الآن اختبار الاتصال.'
         })
       } else {
+        console.error('❌ فشل في الحفظ:', data.error)
         addNotification({
           type: 'error',
           title: 'خطأ في الحفظ',
-          message: data.error || 'فشل في حفظ الإعدادات'
+          message: data.error || 'فشل في حفظ الإعدادات. يرجى المحاولة مرة أخرى.'
         })
       }
     } catch (error) {
-      console.error('خطأ في حفظ الإعدادات:', error)
+      console.error('❌ خطأ في حفظ الإعدادات:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في الاتصال',
-        message: 'فشل في حفظ الإعدادات'
+        message: 'فشل في حفظ الإعدادات. تحقق من اتصال الإنترنت.'
       })
     } finally {
       setSaving(false)
@@ -556,6 +562,13 @@ export default function DatabaseSettings() {
             >
               🔄 إعادة تهيئة قاعدة البيانات
             </ActionButton>
+            
+            <ActionButton
+              onClick={() => window.location.reload()}
+              variant="secondary"
+            >
+              🔄 إعادة تحميل الصفحة
+            </ActionButton>
           </div>
         </div>
 
@@ -569,6 +582,8 @@ export default function DatabaseSettings() {
             <li>• النظام يدعم SQLite للتطوير المحلي و PostgreSQL للإنتاج</li>
             <li>• بعد تغيير نوع قاعدة البيانات، يجب اختبار الاتصال مرة أخرى</li>
             <li>• <strong>ترتيب العمليات:</strong> احفظ الإعدادات أولاً، ثم اختبر الاتصال</li>
+            <li>• <strong>في حالة فشل الحفظ:</strong> جرب إعادة تحميل الصفحة أو تحقق من اتصال الإنترنت</li>
+            <li>• <strong>للمساعدة:</strong> افتح Developer Tools (F12) وافحص Console للأخطاء</li>
           </ul>
         </div>
       </div>

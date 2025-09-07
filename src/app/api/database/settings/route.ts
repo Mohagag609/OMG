@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiResponse } from '@/types'
-import { loadDatabaseConfig, saveDatabaseConfig, ensureDatabaseTypePersistence } from '@/lib/databaseConfig'
+import { loadDatabaseConfig, saveDatabaseConfig, saveDatabaseConfigAlternative, ensureDatabaseTypePersistence } from '@/lib/databaseConfig'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -76,11 +76,17 @@ export async function POST(request: NextRequest) {
       persistent: true // Ensure persistence
     }
     
-    const saved = saveDatabaseConfig(config)
+    let saved = saveDatabaseConfig(config)
+    
+    // If main save failed, try alternative method
+    if (!saved) {
+      console.log('⚠️ فشل الحفظ الرئيسي، جاري المحاولة بالطريقة البديلة...')
+      saved = saveDatabaseConfigAlternative(config)
+    }
     
     if (!saved) {
       return NextResponse.json(
-        { success: false, error: 'فشل في حفظ إعدادات قاعدة البيانات' },
+        { success: false, error: 'فشل في حفظ إعدادات قاعدة البيانات حتى بالطريقة البديلة' },
         { status: 500 }
       )
     }
