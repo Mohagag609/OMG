@@ -170,6 +170,8 @@ export default function Home() {
           <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
           <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
           <button className="tab" onClick={() => router.push('/partners')}>الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-groups')}>مجموعات الشركاء</button>
+          <button className="tab" onClick={() => router.push('/partner-debts')}>ديون الشركاء</button>
           <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
           <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
           <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>

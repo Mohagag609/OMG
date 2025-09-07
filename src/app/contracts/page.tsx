@@ -20,7 +20,15 @@ export default function Contracts() {
     discountAmount: '',
     brokerName: '',
     brokerAmount: '',
-    notes: ''
+    notes: '',
+    // Installment options
+    paymentType: 'installment',
+    installmentType: 'شهري',
+    installmentCount: '',
+    downPayment: '',
+    extraAnnual: '',
+    annualPaymentValue: '',
+    maintenanceDeposit: ''
   })
   const [customers, setCustomers] = useState([])
   const [units, setUnits] = useState([])
@@ -146,7 +154,14 @@ export default function Contracts() {
           discountAmount: '',
           brokerName: '',
           brokerAmount: '',
-          notes: ''
+          notes: '',
+          paymentType: 'installment',
+          installmentType: 'شهري',
+          installmentCount: '',
+          downPayment: '',
+          extraAnnual: '',
+          annualPaymentValue: '',
+          maintenanceDeposit: ''
         })
         fetchContracts()
       } else {
@@ -295,6 +310,88 @@ export default function Contracts() {
                       onChange={(e) => setNewContract({...newContract, brokerAmount: e.target.value})}
                     />
                   </div>
+
+                  <div className="form-group">
+                    <label className="form-label">نوع الدفع</label>
+                    <select
+                      className="form-select"
+                      value={newContract.paymentType}
+                      onChange={(e) => setNewContract({...newContract, paymentType: e.target.value})}
+                    >
+                      <option value="installment">تقسيط</option>
+                      <option value="cash">كاش</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">المقدم</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={newContract.downPayment}
+                      onChange={(e) => setNewContract({...newContract, downPayment: e.target.value})}
+                    />
+                  </div>
+
+                  {newContract.paymentType === 'installment' && (
+                    <>
+                      <div className="form-group">
+                        <label className="form-label">نوع الأقساط</label>
+                        <select
+                          className="form-select"
+                          value={newContract.installmentType}
+                          onChange={(e) => setNewContract({...newContract, installmentType: e.target.value})}
+                        >
+                          <option value="شهري">شهري</option>
+                          <option value="ربع سنوي">ربع سنوي</option>
+                          <option value="نصف سنوي">نصف سنوي</option>
+                          <option value="سنوي">سنوي</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">عدد الأقساط</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={newContract.installmentCount}
+                          onChange={(e) => setNewContract({...newContract, installmentCount: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">عدد الدفعات السنوية الإضافية (0-3)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="0"
+                          max="3"
+                          value={newContract.extraAnnual}
+                          onChange={(e) => setNewContract({...newContract, extraAnnual: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">قيمة الدفعة السنوية</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={newContract.annualPaymentValue}
+                          onChange={(e) => setNewContract({...newContract, annualPaymentValue: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">وديعة الصيانة</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={newContract.maintenanceDeposit}
+                          onChange={(e) => setNewContract({...newContract, maintenanceDeposit: e.target.value})}
+                        />
+                      </div>
+                    </>
+                  )}
                   
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label className="form-label">ملاحظات</label>

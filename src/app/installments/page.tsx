@@ -7,10 +7,12 @@ import { formatCurrency, formatDate } from '@/utils/formatting'
 
 export default function Installments() {
   const [installments, setInstallments] = useState<Installment[]>([])
+  const [units, setUnits] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [unitFilter, setUnitFilter] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -22,6 +24,7 @@ export default function Installments() {
     }
     
     fetchInstallments()
+    fetchUnits()
   }, [])
 
   const fetchInstallments = async () => {
@@ -30,6 +33,7 @@ export default function Installments() {
       const params = new URLSearchParams()
       if (search) params.append('search', search)
       if (statusFilter) params.append('status', statusFilter)
+      if (unitFilter) params.append('unitId', unitFilter)
 
       const response = await fetch(`/api/installments?${params}`, {
         headers: {
@@ -57,6 +61,26 @@ export default function Installments() {
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchUnits = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/units', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setUnits(data.data || [])
+        }
+      }
+    } catch (err) {
+      console.error('Units error:', err)
     }
   }
 
@@ -112,15 +136,28 @@ export default function Installments() {
             
             {error && <div className="error-message">{error}</div>}
             
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
                 placeholder="البحث في الأقساط..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="form-input"
-                style={{ width: '300px' }}
+                style={{ width: '250px' }}
               />
+              <select
+                value={unitFilter}
+                onChange={(e) => setUnitFilter(e.target.value)}
+                className="form-select"
+                style={{ width: '200px' }}
+              >
+                <option value="">جميع الوحدات</option>
+                {units.map((unit: any) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.code} - {unit.name}
+                  </option>
+                ))}
+              </select>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -128,12 +165,20 @@ export default function Installments() {
                 style={{ width: '150px' }}
               >
                 <option value="">جميع الحالات</option>
-                <option value="معلق">معلق</option>
+                <option value="غير مدفوع">غير مدفوع</option>
                 <option value="جزئي">جزئي</option>
                 <option value="مدفوع">مدفوع</option>
               </select>
               <button className="btn primary" onClick={handleSearch}>
                 بحث
+              </button>
+              <button className="btn secondary" onClick={() => {
+                setSearch('')
+                setUnitFilter('')
+                setStatusFilter('')
+                fetchInstallments()
+              }}>
+                مسح الفلاتر
               </button>
             </div>
 

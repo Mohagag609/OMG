@@ -101,16 +101,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { code, name, unitType, area, floor, building, totalPrice, status, notes } = body
+    const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body
 
-    // Validate unit data
-    const validation = validateUnit({ code, name, unitType, area, floor, building, totalPrice, status, notes })
-    if (!validation.isValid) {
+    // Validate required fields
+    if (!name || !floor || !building || !totalPrice || !partnerGroupId) {
       return NextResponse.json(
-        { success: false, error: validation.errors.join(', ') },
+        { success: false, error: 'جميع الحقول المطلوبة يجب أن تكون مملوءة' },
         { status: 400 }
       )
     }
+
+    // Generate code from building, floor, and name
+    const code = `${building.replace(/\s/g, '')}-${floor.replace(/\s/g, '')}-${name.replace(/\s/g, '')}`
 
     // Check if code already exists
     const existingUnit = await prisma.unit.findUnique({
@@ -119,30 +121,67 @@ export async function POST(request: NextRequest) {
 
     if (existingUnit) {
       return NextResponse.json(
-        { success: false, error: 'كود الوحدة مستخدم بالفعل' },
+        { success: false, error: 'وحدة بنفس الاسم والدور والبرج موجودة بالفعل' },
         { status: 400 }
       )
     }
 
-    // Create unit
-    const unit = await prisma.unit.create({
-      data: {
-        code,
-        name,
-        unitType: unitType || 'سكني',
-        area,
-        floor,
-        building,
-        totalPrice: totalPrice || 0,
-        status: status || 'متاحة',
-        notes
+    // Check if partner group exists and has 100% total
+    const partnerGroup = await prisma.partnerGroup.findUnique({
+      where: { id: partnerGroupId },
+      include: { partners: true }
+    })
+
+    if (!partnerGroup) {
+      return NextResponse.json(
+        { success: false, error: 'مجموعة الشركاء غير موجودة' },
+        { status: 400 }
+      )
+    }
+
+    const totalPercent = partnerGroup.partners.reduce((sum, p) => sum + p.percentage, 0)
+    if (totalPercent !== 100) {
+      return NextResponse.json(
+        { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
+        { status: 400 }
+      )
+    }
+
+    // Create unit and link partners in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create unit
+      const unit = await tx.unit.create({
+        data: {
+          code,
+          name,
+          unitType: unitType || 'سكني',
+          area,
+          floor,
+          building,
+          totalPrice: parseFloat(totalPrice),
+          status: status || 'متاحة',
+          notes
+        }
+      })
+
+      // Link partners from the group to the unit
+      for (const groupPartner of partnerGroup.partners) {
+        await tx.unitPartner.create({
+          data: {
+            unitId: unit.id,
+            partnerId: groupPartner.partnerId,
+            percentage: groupPartner.percentage
+          }
+        })
       }
+
+      return unit
     })
 
     const response: ApiResponse<Unit> = {
       success: true,
-      data: unit,
-      message: 'تم إضافة الوحدة بنجاح'
+      data: result,
+      message: 'تم إضافة الوحدة وربط الشركاء بنجاح'
     }
 
     return NextResponse.json(response)
