@@ -320,3 +320,28 @@ export function saveDatabaseConfigAlternative(config: DatabaseConfig): boolean {
     return false
   }
 }
+
+// Ultra simple save function - last resort
+export function saveDatabaseConfigUltraSimple(type: string, connectionString: string): boolean {
+  try {
+    console.log('💾 بدء حفظ الإعدادات (الطريقة البسيطة جداً)...')
+    
+    const config = {
+      type,
+      connectionString,
+      isConnected: false,
+      savedAt: new Date().toISOString(),
+      version: '2.0',
+      persistent: true
+    }
+    
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8')
+    process.env.DATABASE_URL = connectionString
+    
+    console.log('✅ تم الحفظ بالطريقة البسيطة جداً')
+    return true
+  } catch (error: any) {
+    console.error('❌ فشل حتى الطريقة البسيطة:', error?.message)
+    return false
+  }
+}

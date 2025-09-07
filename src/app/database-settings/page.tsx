@@ -569,6 +569,36 @@ export default function DatabaseSettings() {
             >
               🔄 إعادة تحميل الصفحة
             </ActionButton>
+            
+            <ActionButton
+              onClick={() => {
+                const config = {
+                  type: settings.type,
+                  connectionString: connectionString,
+                  isConnected: false,
+                  savedAt: new Date().toISOString(),
+                  version: '2.0',
+                  persistent: true
+                };
+                
+                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'database-config.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                addNotification({
+                  type: 'info',
+                  title: 'تم تحميل ملف الإعدادات',
+                  message: 'تم تحميل ملف الإعدادات. يمكنك حفظه يدوياً في مجلد المشروع.'
+                });
+              }}
+              variant="secondary"
+            >
+              📥 تحميل ملف الإعدادات
+            </ActionButton>
           </div>
         </div>
 
@@ -584,6 +614,8 @@ export default function DatabaseSettings() {
             <li>• <strong>ترتيب العمليات:</strong> احفظ الإعدادات أولاً، ثم اختبر الاتصال</li>
             <li>• <strong>في حالة فشل الحفظ:</strong> جرب إعادة تحميل الصفحة أو تحقق من اتصال الإنترنت</li>
             <li>• <strong>للمساعدة:</strong> افتح Developer Tools (F12) وافحص Console للأخطاء</li>
+            <li>• <strong>في حالة فشل الحفظ:</strong> تأكد من أن الخادم يعمل وأن لديك صلاحيات الكتابة</li>
+            <li>• <strong>حل بديل:</strong> يمكنك تعديل ملف database-config.json يدوياً</li>
           </ul>
         </div>
       </div>
