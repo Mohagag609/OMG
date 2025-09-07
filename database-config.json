@@ -1,13 +1,8 @@
 {
   "type": "postgresql",
   "connectionString": "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-  "isConnected": true,
-  "lastTested": "2025-09-07T14:33:50.608Z",
-  "details": {
-    "type": "postgresql",
-    "connectionString": "postgresql://neondb_owner:npg_ZBrYxkMEL91f@ep-mute-violet-ad0dmo9y-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-    "message": "تم اختبار الاتصال وإنشاء الجداول بنجاح",
-    "tablesCreated": true,
-    "lastTested": "2025-09-07T14:33:50.607Z"
-  }
+  "isConnected": false,
+  "lastTested": "2025-09-07T14:44:24.718Z",
+  "savedAt": "2025-09-07T14:44:24.718Z",
+  "version": "1.0"
 }
