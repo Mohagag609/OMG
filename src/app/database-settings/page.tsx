@@ -132,12 +132,15 @@ export default function DatabaseSettings() {
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [connectionString, setConnectionString] = useState('')
+  const [initialized, setInitialized] = useState(false)
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
-  // Load database settings
+  // Load database settings - simplified without notifications
   const loadSettings = useCallback(async () => {
+    if (loading === false) return // Prevent reloading if already loaded
+    
     try {
       setSettings(prev => ({ ...prev, status: 'loading' }))
       
@@ -151,12 +154,6 @@ export default function DatabaseSettings() {
           status: loadedSettings.isConnected ? 'connected' : 'disconnected'
         })
         setConnectionString(loadedSettings.connectionString)
-        
-        addNotification({
-          type: 'success',
-          title: 'تم تحميل الإعدادات',
-          message: `تم تحميل إعدادات ${loadedSettings.type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} بنجاح`
-        })
       } else {
         // Default to SQLite
         const defaultSettings = {
@@ -167,12 +164,6 @@ export default function DatabaseSettings() {
         }
         setSettings(defaultSettings)
         setConnectionString(defaultSettings.connectionString)
-        
-        addNotification({
-          type: 'info',
-          title: 'إعدادات افتراضية',
-          message: 'تم تحميل الإعدادات الافتراضية (SQLite)'
-        })
       }
     } catch (error) {
       console.error('خطأ في تحميل الإعدادات:', error)
@@ -185,19 +176,15 @@ export default function DatabaseSettings() {
       }
       setSettings(defaultSettings)
       setConnectionString(defaultSettings.connectionString)
-      
-      addNotification({
-        type: 'error',
-        title: 'خطأ في التحميل',
-        message: 'فشل في تحميل إعدادات قاعدة البيانات'
-      })
     } finally {
       setLoading(false)
     }
-  }, [addNotification])
+  }, [loading])
 
-  // Test database connection
+  // Test database connection - with protection against multiple calls
   const testConnection = async () => {
+    if (testing) return // Prevent multiple simultaneous tests
+    
     if (!connectionString.trim()) {
       addNotification({
         type: 'error',
@@ -266,8 +253,10 @@ export default function DatabaseSettings() {
     }
   }
 
-  // Save database settings
+  // Save database settings - with protection against multiple calls
   const saveSettings = async () => {
+    if (saving) return // Prevent multiple simultaneous saves
+    
     if (!connectionString.trim()) {
       addNotification({
         type: 'error',
@@ -323,8 +312,10 @@ export default function DatabaseSettings() {
     }
   }
 
-  // Reset database
+  // Reset database - with protection against multiple calls
   const resetDatabase = async () => {
+    if (resetting) return // Prevent multiple simultaneous resets
+    
     if (!confirm('هل أنت متأكد من إعادة تهيئة قاعدة البيانات؟ سيتم حذف جميع البيانات!')) {
       return
     }
@@ -370,8 +361,8 @@ export default function DatabaseSettings() {
     }
   }
 
-  // Handle database type change with persistence
-  const handleTypeChange = async (type: DatabaseType) => {
+  // Handle database type change - simplified
+  const handleTypeChange = (type: DatabaseType) => {
     const defaultConnectionString = type === 'sqlite' 
       ? 'file:./prisma/dev.db'
       : 'postgresql://username:password@host:port/database'
@@ -385,50 +376,26 @@ export default function DatabaseSettings() {
     }))
     setConnectionString(defaultConnectionString)
     
-    // Save the type change immediately to ensure persistence
-    try {
-      const response = await fetch('/api/database/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          connectionString: defaultConnectionString
-        })
-      })
-      
-      const data = await response.json()
-      if (data.success) {
-        addNotification({
-          type: 'success',
-          title: 'تم تغيير نوع قاعدة البيانات',
-          message: `تم التبديل إلى ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} وحفظ الإعدادات`
-        })
-      } else {
-        addNotification({
-          type: 'warning',
-          title: 'تم تغيير النوع',
-          message: `تم التبديل إلى ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} ولكن فشل في حفظ الإعدادات`
-        })
-      }
-    } catch (error) {
-      addNotification({
-        type: 'warning',
-        title: 'تم تغيير النوع',
-        message: `تم التبديل إلى ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'} ولكن فشل في حفظ الإعدادات`
-      })
-    }
+    addNotification({
+      type: 'info',
+      title: 'تم تغيير نوع قاعدة البيانات',
+      message: `تم التبديل إلى ${type === 'sqlite' ? 'SQLite' : 'PostgreSQL'}. احفظ الإعدادات قبل الاختبار.`
+    })
   }
 
-  // Initialize
+  // Initialize - only run once
   useEffect(() => {
+    if (initialized || loading === false) return // Prevent multiple initializations
+    
     const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
       return
     }
     
+    setInitialized(true)
     loadSettings()
-  }, [router, loadSettings])
+  }, [initialized, loading]) // Depend on both initialized and loading states
 
   if (loading) {
     return (
