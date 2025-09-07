@@ -99,8 +99,17 @@ model Contract {
   totalPrice      Float
   discountAmount  Float    @default(0)
   brokerName      String?
-  commissionSafeId String?
+  brokerPercent   Float    @default(0)
   brokerAmount    Float    @default(0)
+  commissionSafeId String?
+  downPaymentSafeId String?
+  maintenanceDeposit Float @default(0)
+  installmentType String   @default("شهري")
+  installmentCount Int     @default(0)
+  extraAnnual     Int      @default(0)
+  annualPaymentValue Float @default(0)
+  downPayment     Float    @default(0)
+  paymentType     String   @default("installment")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?

@@ -112,8 +112,10 @@ export async function POST(request: NextRequest) {
       totalPrice, 
       discountAmount, 
       brokerName, 
-      commissionSafeId, 
+      brokerPercent,
       brokerAmount,
+      commissionSafeId,
+      downPaymentSafeId,
       // Installment options
       paymentType,
       installmentType,
@@ -199,6 +201,10 @@ export async function POST(request: NextRequest) {
 
     // Create contract and generate installments in a transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Generate contract code
+      const contractCount = await tx.contract.count()
+      const code = `CTR-${String(contractCount + 1).padStart(5, '0')}`
+
       // Create contract
       const contract = await tx.contract.create({
         data: {
@@ -208,8 +214,17 @@ export async function POST(request: NextRequest) {
           totalPrice: totalPrice || 0,
           discountAmount: discountAmount || 0,
           brokerName,
+          brokerPercent: brokerPercent || 0,
+          brokerAmount: brokerAmount || 0,
           commissionSafeId,
-          brokerAmount: brokerAmount || 0
+          downPaymentSafeId,
+          maintenanceDeposit: maintenanceDeposit || 0,
+          installmentType: installmentType || 'شهري',
+          installmentCount: installmentCount || 0,
+          extraAnnual: extraAnnual || 0,
+          annualPaymentValue: annualPaymentValue || 0,
+          downPayment: downPayment || 0,
+          paymentType: paymentType || 'installment'
         },
         include: {
           unit: true,
@@ -223,20 +238,66 @@ export async function POST(request: NextRequest) {
         data: { status: 'مباعة' }
       })
 
+      // Create down payment voucher if down payment > 0
+      if (downPayment > 0 && downPaymentSafeId) {
+        const customer = await tx.customer.findUnique({ where: { id: customerId } })
+        const unit = await tx.unit.findUnique({ where: { id: unitId } })
+        
+        await tx.voucher.create({
+          data: {
+            type: 'receipt',
+            date: new Date(start),
+            amount: downPayment,
+            safeId: downPaymentSafeId,
+            description: `مقدم عقد للوحدة ${unit?.code}`,
+            payer: customer?.name,
+            linkedRef: contract.id
+          }
+        })
+
+        // Update safe balance
+        await tx.safe.update({
+          where: { id: downPaymentSafeId },
+          data: { balance: { increment: downPayment } }
+        })
+      }
+
+      // Create broker commission voucher if broker amount > 0
+      if (brokerAmount > 0 && commissionSafeId) {
+        await tx.voucher.create({
+          data: {
+            type: 'payment',
+            date: new Date(start),
+            amount: brokerAmount,
+            safeId: commissionSafeId,
+            description: `عمولة سمسار ${brokerName} للوحدة ${contract.unit?.code}`,
+            beneficiary: brokerName,
+            linkedRef: contract.id
+          }
+        })
+
+        // Update safe balance
+        await tx.safe.update({
+          where: { id: commissionSafeId },
+          data: { balance: { decrement: brokerAmount } }
+        })
+      }
+
       // Generate installments if payment type is installment
-      if (paymentType === 'installment') {
+      if (paymentType === 'installment' && installmentCount > 0) {
         const installmentBase = totalPrice - (maintenanceDeposit || 0)
         const totalAfterDown = installmentBase - (discountAmount || 0) - (downPayment || 0)
         const totalAnnualPayments = (extraAnnual || 0) * (annualPaymentValue || 0)
+        const remainingAfterAnnual = totalAfterDown - totalAnnualPayments
 
-        if (totalAfterDown < 0) {
-          throw new Error('المقدم والخصم أكبر من قيمة العقد الخاضعة للتقسيط')
+        if (remainingAfterAnnual < 0) {
+          throw new Error('المقدم والخصم والدفعات السنوية أكبر من قيمة العقد الخاضعة للتقسيط')
         }
         if (totalAnnualPayments > totalAfterDown) {
           throw new Error('مجموع الدفعات السنوية أكبر من المبلغ المتبقي للتقسيط')
         }
 
-        const amountForRegularInstallments = totalAfterDown - totalAnnualPayments
+        const amountForRegularInstallments = remainingAfterAnnual
         const installmentTypeMap: { [key: string]: number } = { 
           'شهري': 1, 
           'ربع سنوي': 3, 
