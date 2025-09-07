@@ -15,7 +15,7 @@
     "db:reset": "prisma db push --force-reset",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
-    "postinstall": "prisma generate && node scripts/setup-db.js",
+    "postinstall": "prisma generate && node scripts/setup-db.js && node scripts/create-users.js",
     "deploy:netlify": "npm run build && netlify deploy --prod",
     "deploy:vercel": "npm run build && vercel --prod",
     "deploy:render": "npm run build",
