@@ -69,10 +69,19 @@ export default function Login() {
           </button>
           {error && <div className="error-message">{error}</div>}
         </form>
-        <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '14px', color: 'var(--muted)' }}>
-          <p>بيانات الدخول الافتراضية:</p>
-          <p>اسم المستخدم: admin</p>
-          <p>كلمة المرور: admin123</p>
+        <div style={{ 
+          marginTop: '24px', 
+          textAlign: 'center', 
+          fontSize: '14px', 
+          color: 'rgb(100, 116, 139)',
+          background: 'rgba(248, 250, 252, 0.8)',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(226, 232, 240, 0.8)'
+        }}>
+          <p style={{ fontWeight: '600', marginBottom: '8px' }}>بيانات الدخول الافتراضية:</p>
+          <p style={{ margin: '4px 0' }}>اسم المستخدم: <strong>admin</strong></p>
+          <p style={{ margin: '4px 0' }}>كلمة المرور: <strong>admin123</strong></p>
         </div>
       </div>
     </div>

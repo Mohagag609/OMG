@@ -58,8 +58,24 @@ export default function Home() {
   if (loading) {
     return (
       <div className="container">
-        <div className="panel">
+        <div className="panel loading">
           <h2>جاري التحميل...</h2>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            marginTop: '20px',
+            fontSize: '24px'
+          }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid rgba(59, 130, 246, 0.3)',
+              borderTop: '4px solid rgb(59, 130, 246)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+          </div>
         </div>
       </div>
     )
@@ -80,8 +96,8 @@ export default function Home() {
   }
 
   return (
-    <div className="container">
-      <div className="header">
+    <div className="container fade-in">
+      <div className="header slide-in">
         <div className="brand">
           <div className="logo">🏛️</div>
           <h1>مدير الاستثمار العقاري — النسخة النهائية</h1>
@@ -109,7 +125,7 @@ export default function Home() {
       </div>
 
       <div className="main-layout">
-        <div className="sidebar">
+        <div className="sidebar slide-in">
           <button className="tab active">لوحة التحكم</button>
           <button className="tab" onClick={() => router.push('/customers')}>العملاء</button>
           <button className="tab" onClick={() => router.push('/units')}>الوحدات</button>
@@ -123,52 +139,52 @@ export default function Home() {
           <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
         </div>
 
-        <div className="content">
+        <div className="content slide-in">
           <div className="panel">
             <h2>لوحة التحكم</h2>
             {kpis && (
               <div className="kpis">
-                <div className="card">
+                <div className="card slide-in">
                   <h3>إجمالي المبيعات</h3>
                   <div className="big">{formatCurrency(kpis.totalSales)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>إجمالي المقبوضات</h3>
                   <div className="big">{formatCurrency(kpis.totalReceipts)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>إجمالي الديون</h3>
                   <div className="big">{formatCurrency(kpis.totalDebt)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>نسبة التحصيل</h3>
                   <div className="big">{formatPercentage(kpis.collectionPercentage)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>إجمالي المصروفات</h3>
                   <div className="big">{formatCurrency(kpis.totalExpenses)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>صافي الربح</h3>
                   <div className="big">{formatCurrency(kpis.netProfit)}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>إجمالي الوحدات</h3>
                   <div className="big">{kpis.unitCounts.total}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>الوحدات المتاحة</h3>
                   <div className="big">{kpis.unitCounts.available}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>الوحدات المباعة</h3>
                   <div className="big">{kpis.unitCounts.sold}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>الوحدات المحجوزة</h3>
                   <div className="big">{kpis.unitCounts.reserved}</div>
                 </div>
-                <div className="card">
+                <div className="card slide-in">
                   <h3>عدد المستثمرين</h3>
                   <div className="big">{kpis.investorCount}</div>
                 </div>
