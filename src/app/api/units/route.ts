@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { validateUnit } from '@/utils/validation'
 import { ApiResponse, Unit, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -9,6 +10,7 @@ export const runtime = 'nodejs'
 // GET /api/units - Get units with pagination
 export async function GET(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('🏠 جاري تحميل الوحدات...')
 
     const { searchParams } = new URL(request.url)
@@ -63,6 +65,7 @@ export async function GET(request: NextRequest) {
 // POST /api/units - Create new unit
 export async function POST(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء وحدة جديدة...')
 
     const body = await request.json()

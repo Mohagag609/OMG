@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ApiResponse, Safe, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -8,6 +9,7 @@ export const runtime = 'nodejs'
 // GET /api/safes - Get safes with pagination
 export async function GET(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('💰 جاري تحميل الخزن...')
 
     const { searchParams } = new URL(request.url)
@@ -75,6 +77,7 @@ export async function GET(request: NextRequest) {
 // POST /api/safes - Create new safe
 export async function POST(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء خزنة جديدة...')
 
     const body = await request.json()

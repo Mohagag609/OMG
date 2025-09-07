@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ApiResponse, Broker, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -8,6 +9,7 @@ export const runtime = 'nodejs'
 // GET /api/brokers - Get brokers with pagination
 export async function GET(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('🏢 جاري تحميل الوسطاء...')
 
     const { searchParams } = new URL(request.url)
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
 // POST /api/brokers - Create new broker
 export async function POST(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء وسيط جديد...')
 
     const body = await request.json()

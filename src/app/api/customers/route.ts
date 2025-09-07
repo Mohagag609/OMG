@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
+import { ensureEnvironmentVariables } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -9,7 +9,12 @@ export const runtime = 'nodejs'
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('📋 جاري تحميل العملاء...')
+
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -57,13 +62,20 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
   try {
+    ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء عميل جديد...')
+
+    // Create Prisma client with environment variables
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
     const body = await request.json()
     const { name, phone, nationalId, address, status, notes } = body
@@ -117,5 +129,7 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
