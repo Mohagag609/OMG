@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { PrismaClient } from '@prisma/client'
 import { ApiResponse, Partner, PaginatedResponse } from '@/types'
-import { ensureEnvironmentVariables } from '@/lib/env'
+
+const prisma = new PrismaClient()
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -9,7 +10,6 @@ export const runtime = 'nodejs'
 // GET /api/partners - Get partners with pagination
 export async function GET(request: NextRequest) {
   try {
-    ensureEnvironmentVariables()
     console.log('🤝 جاري تحميل الشركاء...')
 
     const { searchParams } = new URL(request.url)
@@ -68,13 +68,14 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 // POST /api/partners - Create new partner
 export async function POST(request: NextRequest) {
   try {
-    ensureEnvironmentVariables()
     console.log('➕ جاري إنشاء شريك جديد...')
 
     const body = await request.json()
@@ -110,5 +111,7 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
