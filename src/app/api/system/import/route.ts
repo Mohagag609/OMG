@@ -72,9 +72,10 @@ export async function POST(request: NextRequest) {
       databaseType: jsonData.metadata.databaseType
     })
 
-    // Clear existing data
+    // Clear existing data in correct order (respecting foreign keys)
     console.log('Clearing existing data...')
     try {
+      // Delete in reverse order of dependencies
       await prisma.auditLog.deleteMany()
       await prisma.partnerGroupPartner.deleteMany()
       await prisma.partnerGroup.deleteMany()
@@ -83,16 +84,19 @@ export async function POST(request: NextRequest) {
       await prisma.unitPartner.deleteMany()
       await prisma.transfer.deleteMany()
       await prisma.voucher.deleteMany()
-      await prisma.partner.deleteMany()
-      await prisma.safe.deleteMany()
       await prisma.installment.deleteMany()
       await prisma.contract.deleteMany()
+      await prisma.partner.deleteMany()
+      await prisma.safe.deleteMany()
       await prisma.broker.deleteMany()
       await prisma.customer.deleteMany()
       await prisma.unit.deleteMany()
       await prisma.user.deleteMany()
+      
+      console.log('Data cleared successfully')
     } catch (error) {
-      console.log('Some tables may not exist, continuing...', error)
+      console.error('Error clearing data:', error)
+      // Continue with import even if clearing fails
     }
 
     // Import data
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
     // Import users
     if (data.users && data.users.length > 0) {
       console.log(`Importing ${data.users.length} users...`)
+      let importedUsers = 0
       for (const user of data.users) {
         try {
           await prisma.user.create({
@@ -117,15 +122,19 @@ export async function POST(request: NextRequest) {
               updatedAt: new Date(user.updatedAt)
             }
           })
+          importedUsers++
+          console.log(`User imported: ${user.username}`)
         } catch (error) {
-          console.log('Error importing user:', user.username, error)
+          console.error('Error importing user:', user.username, error)
         }
       }
+      console.log(`Successfully imported ${importedUsers}/${data.users.length} users`)
     }
 
     // Import units
     if (data.units && data.units.length > 0) {
       console.log(`Importing ${data.units.length} units...`)
+      let importedUnits = 0
       for (const unit of data.units) {
         try {
           await prisma.unit.create({
@@ -145,10 +154,13 @@ export async function POST(request: NextRequest) {
               deletedAt: unit.deletedAt ? new Date(unit.deletedAt) : null
             }
           })
+          importedUnits++
+          console.log(`Unit imported: ${unit.code}`)
         } catch (error) {
-          console.log('Error importing unit:', unit.code, error)
+          console.error('Error importing unit:', unit.code, error)
         }
       }
+      console.log(`Successfully imported ${importedUnits}/${data.units.length} units`)
     }
 
     // Import customers
@@ -491,6 +503,29 @@ export async function POST(request: NextRequest) {
 
     console.log('System import completed successfully')
 
+    // Verify data was actually saved
+    console.log('Verifying imported data...')
+    const verificationResults = {
+      users: await prisma.user.count(),
+      units: await prisma.unit.count(),
+      customers: await prisma.customer.count(),
+      brokers: await prisma.broker.count(),
+      contracts: await prisma.contract.count(),
+      installments: await prisma.installment.count(),
+      safes: await prisma.safe.count(),
+      partners: await prisma.partner.count(),
+      vouchers: await prisma.voucher.count(),
+      transfers: await prisma.transfer.count(),
+      unitPartners: await prisma.unitPartner.count(),
+      brokerDues: await prisma.brokerDue.count(),
+      partnerDebts: await prisma.partnerDebt.count(),
+      partnerGroups: await prisma.partnerGroup.count(),
+      partnerGroupPartners: await prisma.partnerGroupPartner.count(),
+      auditLogs: await prisma.auditLog.count()
+    }
+
+    console.log('Verification results:', verificationResults)
+
     return NextResponse.json({
       success: true,
       message: 'تم استيراد البيانات بنجاح',
@@ -511,15 +546,44 @@ export async function POST(request: NextRequest) {
         partnerGroups: data.partnerGroups?.length || 0,
         partnerGroupPartners: data.partnerGroupPartners?.length || 0,
         auditLogs: data.auditLogs?.length || 0
-      }
+      },
+      verificationResults
     })
 
   } catch (error) {
     console.error('System import error:', error)
+    
+    // Try to get current data count for debugging
+    let currentDataCount = {}
+    try {
+      currentDataCount = {
+        users: await prisma.user.count(),
+        units: await prisma.unit.count(),
+        customers: await prisma.customer.count(),
+        brokers: await prisma.broker.count(),
+        contracts: await prisma.contract.count(),
+        installments: await prisma.installment.count(),
+        safes: await prisma.safe.count(),
+        partners: await prisma.partner.count(),
+        vouchers: await prisma.voucher.count(),
+        transfers: await prisma.transfer.count(),
+        unitPartners: await prisma.unitPartner.count(),
+        brokerDues: await prisma.brokerDue.count(),
+        partnerDebts: await prisma.partnerDebt.count(),
+        partnerGroups: await prisma.partnerGroup.count(),
+        partnerGroupPartners: await prisma.partnerGroupPartner.count(),
+        auditLogs: await prisma.auditLog.count()
+      }
+    } catch (countError) {
+      console.error('Error getting current data count:', countError)
+    }
+    
     return NextResponse.json(
       { 
         error: 'فشل في استيراد البيانات',
-        details: error instanceof Error ? error.message : 'خطأ غير معروف'
+        details: error instanceof Error ? error.message : 'خطأ غير معروف',
+        currentDataCount,
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     )
