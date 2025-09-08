@@ -299,6 +299,19 @@ export async function handleInitOrSwitch(payload: InitOrSwitchPayload): Promise<
         }
       }
       
+      // Update database config file
+      const { saveDatabaseConfig } = await import('./databaseConfig')
+      const configSaved = saveDatabaseConfig({
+        type: type as any,
+        connectionString: targetUrl,
+        isConnected: true,
+        lastTested: new Date().toISOString()
+      })
+      
+      if (configSaved) {
+        logs.push('✅ تم تحديث ملف إعدادات قاعدة البيانات')
+      }
+      
       logs.push('✅ تم تحديث متغيرات البيئة على Netlify')
       logs.push('🚀 تم تشغيل إعادة النشر')
       
@@ -317,6 +330,19 @@ export async function handleInitOrSwitch(payload: InitOrSwitchPayload): Promise<
       
       await editEnvFileDev(envChanges)
       logs.push('✅ تم تحديث ملف .env.local')
+      
+      // Update database config file
+      const { saveDatabaseConfig } = await import('./databaseConfig')
+      const configSaved = saveDatabaseConfig({
+        type: type as any,
+        connectionString: targetUrl,
+        isConnected: true,
+        lastTested: new Date().toISOString()
+      })
+      
+      if (configSaved) {
+        logs.push('✅ تم تحديث ملف إعدادات قاعدة البيانات')
+      }
       
       // Run Prisma commands
       const generateResult = await runPrisma('npx prisma generate', { DATABASE_URL: targetUrl })
