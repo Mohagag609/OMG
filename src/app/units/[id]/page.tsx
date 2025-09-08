@@ -167,39 +167,39 @@ export default function UnitManagement() {
             <h3 className="text-xl font-bold text-gray-900 mb-4">تفاصيل الوحدة</h3>
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">كود الوحدة:</span>
-                <span className="font-semibold">{unit.code}</span>
+                <span className="text-gray-700 font-medium">كود الوحدة:</span>
+                <span className="font-bold text-gray-900 text-lg">{unit.code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">الاسم:</span>
-                <span className="font-semibold">{unit.name || '-'}</span>
+                <span className="text-gray-700 font-medium">الاسم:</span>
+                <span className="font-semibold text-gray-900">{unit.name || '-'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">النوع:</span>
-                <span className="font-semibold">{unit.unitType}</span>
+                <span className="text-gray-700 font-medium">النوع:</span>
+                <span className="font-semibold text-gray-900">{unit.unitType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">المساحة:</span>
-                <span className="font-semibold">{unit.area || '-'}</span>
+                <span className="text-gray-700 font-medium">المساحة:</span>
+                <span className="font-semibold text-gray-900">{unit.area || '-'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">الطابق:</span>
-                <span className="font-semibold">{unit.floor || '-'}</span>
+                <span className="text-gray-700 font-medium">الطابق:</span>
+                <span className="font-semibold text-gray-900">{unit.floor || '-'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">المبنى:</span>
-                <span className="font-semibold">{unit.building || '-'}</span>
+                <span className="text-gray-700 font-medium">المبنى:</span>
+                <span className="font-semibold text-gray-900">{unit.building || '-'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">السعر الإجمالي:</span>
+                <span className="text-gray-700 font-medium">السعر الإجمالي:</span>
                 <span className="font-bold text-green-800">{formatCurrency(unit.totalPrice)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">المتبقي:</span>
+                <span className="text-gray-700 font-medium">المتبقي:</span>
                 <span className="font-bold text-blue-800">{formatCurrency(calculateRemainingAmount(unit))}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">الحالة:</span>
+                <span className="text-gray-700 font-medium">الحالة:</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   unit.status === 'متاحة' 
                     ? 'bg-green-100 text-green-800' 
@@ -219,7 +219,7 @@ export default function UnitManagement() {
               <div className="space-y-3">
                 {unitPartners.map((unitPartner) => (
                   <div key={unitPartner.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-semibold">{getPartnerName(unitPartner.partnerId)}</span>
+                    <span className="font-semibold text-gray-900">{getPartnerName(unitPartner.partnerId)}</span>
                     <span className="text-blue-600 font-bold">{unitPartner.percentage}%</span>
                   </div>
                 ))}
@@ -235,7 +235,7 @@ export default function UnitManagement() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-4xl mb-2">👥</div>
-                <p className="text-gray-500">لا يوجد شركاء لهذه الوحدة</p>
+                <p className="text-gray-600">لا يوجد شركاء لهذه الوحدة</p>
               </div>
             )}
           </ModernCard>
@@ -245,21 +245,70 @@ export default function UnitManagement() {
         <ModernCard>
           <h3 className="text-xl font-bold text-gray-900 mb-4">الإجراءات</h3>
           <div className="flex flex-wrap gap-4">
-            <ModernButton variant="warning">
+            <ModernButton 
+              variant="warning"
+              onClick={() => {
+                addNotification({
+                  type: 'info',
+                  title: 'قيد التطوير',
+                  message: 'ميزة تعديل الوحدة قيد التطوير'
+                })
+              }}
+            >
               ✏️ تعديل الوحدة
             </ModernButton>
-            <ModernButton variant="info">
+            <ModernButton 
+              variant="info"
+              onClick={() => {
+                addNotification({
+                  type: 'info',
+                  title: 'قيد التطوير',
+                  message: 'ميزة إدارة الشركاء قيد التطوير'
+                })
+              }}
+            >
               👥 إدارة الشركاء
             </ModernButton>
-            <ModernButton variant="success">
+            <ModernButton 
+              variant="success"
+              onClick={() => {
+                addNotification({
+                  type: 'info',
+                  title: 'قيد التطوير',
+                  message: 'ميزة تقرير الوحدة قيد التطوير'
+                })
+              }}
+            >
               📊 تقرير الوحدة
             </ModernButton>
             {unit.status === 'مباعة' && (
-              <ModernButton variant="secondary">
+              <ModernButton 
+                variant="secondary"
+                onClick={() => {
+                  if (confirm('هل أنت متأكد من إرجاع هذه الوحدة؟')) {
+                    addNotification({
+                      type: 'info',
+                      title: 'قيد التطوير',
+                      message: 'ميزة إرجاع الوحدة قيد التطوير'
+                    })
+                  }
+                }}
+              >
                 ↩️ إرجاع الوحدة
               </ModernButton>
             )}
-            <ModernButton variant="danger">
+            <ModernButton 
+              variant="danger"
+              onClick={() => {
+                if (confirm('هل أنت متأكد من حذف هذه الوحدة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+                  addNotification({
+                    type: 'info',
+                    title: 'قيد التطوير',
+                    message: 'ميزة حذف الوحدة قيد التطوير'
+                  })
+                }
+              }}
+            >
               🗑️ حذف الوحدة
             </ModernButton>
           </div>
