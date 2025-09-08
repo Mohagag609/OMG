@@ -189,45 +189,23 @@ const BackupPage = () => {
 
   const downloadBackup = async (backup: Backup) => {
     try {
-      addNotification('info', 'جاري تحميل النسخة الاحتياطية الشاملة', 'يرجى الانتظار...')
+      addNotification('info', 'جاري تحميل النسخة الاحتياطية مع البيانات الحقيقية', 'يرجى الانتظار...')
       
-      // Create comprehensive ZIP using JSZip
-      const zip = new JSZip()
+      // Download real data backup from API
+      const response = await fetch('/api/backup/real-data')
       
-      // Create comprehensive database backup
-      const databaseContent = await createComprehensiveDatabaseBackup(backup)
-      zip.file('database.sql', databaseContent)
+      if (!response.ok) {
+        throw new Error('فشل في تحميل البيانات الحقيقية')
+      }
 
-      // Add all tables data
-      const tablesData = await createTablesDataBackup()
-      zip.file('tables_data.json', JSON.stringify(tablesData, null, 2))
-
-      // Add system configuration
-      const systemConfig = await createSystemConfigBackup(backup)
-      zip.file('system_config.json', JSON.stringify(systemConfig, null, 2))
-
-      // Add restoration scripts
-      const restorationScripts = createRestorationScripts()
-      zip.file('restore_database.sql', restorationScripts.sql)
-      zip.file('restore_data.sql', restorationScripts.data)
-      zip.file('reset_database.sql', restorationScripts.reset)
-
-      // Add comprehensive README
-      const readme = createComprehensiveReadme(backup)
-      zip.file('README.txt', readme)
-
-      // Add backup log
-      const backupLog = createBackupLog(backup)
-      zip.file('backup_log.txt', backupLog)
-
-      // Generate ZIP file
-      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      // Get the ZIP file blob
+      const zipBlob = await response.blob()
       
       // Create download link
       const url = window.URL.createObjectURL(zipBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = backup.filename
+      a.download = `real-data-backup-${new Date().toISOString().split('T')[0]}.zip`
       a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
@@ -238,7 +216,7 @@ const BackupPage = () => {
         document.body.removeChild(a)
       }, 100)
       
-      addNotification('success', 'تم تحميل النسخة الاحتياطية الشاملة', 'تم تحميل النسخة الاحتياطية بنجاح')
+      addNotification('success', 'تم تحميل النسخة الاحتياطية مع البيانات الحقيقية', 'تم تحميل النسخة الاحتياطية بنجاح')
 
     } catch (error) {
       console.error('Download backup error:', error)
@@ -920,14 +898,26 @@ Backup completed successfully at ${new Date().toLocaleString('en-GB')}`
       setResetting(true)
       addNotification('info', 'جاري إعادة ضبط قاعدة البيانات', 'يرجى الانتظار...')
 
-      // Simulate reset process
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      // Call the reset API
+      const response = await fetch('/api/database/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetType })
+      })
 
-      addNotification('success', 'تم إعادة ضبط قاعدة البيانات', 'تم إعادة ضبط قاعدة البيانات بنجاح')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'فشل في إعادة ضبط قاعدة البيانات')
+      }
+
+      const result = await response.json()
+      addNotification('success', 'تم إعادة ضبط قاعدة البيانات', result.message)
 
     } catch (error) {
       console.error('Reset error:', error)
-      addNotification('error', 'خطأ في إعادة الضبط', 'فشل في إعادة ضبط قاعدة البيانات')
+      addNotification('error', 'خطأ في إعادة الضبط', error instanceof Error ? error.message : 'فشل في إعادة ضبط قاعدة البيانات')
     } finally {
       setResetting(false)
     }
@@ -1325,6 +1315,14 @@ Backup completed successfully at ${new Date().toLocaleString('en-GB')}`
                     className="w-full"
                   >
                     {creating ? 'جاري الإنشاء...' : 'إنشاء نسخة احتياطية جديدة'}
+                  </ModernButton>
+
+                  <ModernButton
+                    onClick={() => window.open('/api/backup/real-data', '_blank')}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    تحميل البيانات الحقيقية
                   </ModernButton>
 
                   <ModernButton
