@@ -257,13 +257,8 @@ export default function UnitManagement() {
             <ModernButton 
               variant="info"
               onClick={() => {
-                // فتح modal إدارة الشركاء
-                addNotification({
-                  type: 'success',
-                  title: 'إدارة الشركاء',
-                  message: 'تم فتح صفحة إدارة الشركاء'
-                })
-                // يمكن إضافة modal أو صفحة منفصلة هنا
+                // الانتقال لصفحة إدارة الشركاء
+                router.push(`/units/${unit.id}/partners`)
               }}
             >
               👥 إدارة الشركاء

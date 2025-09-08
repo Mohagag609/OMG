@@ -770,8 +770,8 @@ export default function Units() {
                         }
                       `}
                     >
-                      <td className="py-4 px-6">
-                        <div className="text-gray-900 font-bold text-xl">{unit.code}</div>
+                      <td className="py-4 px-6 w-48">
+                        <div className="text-gray-900 font-bold text-base">{unit.code}</div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="text-gray-800 font-semibold">{unit.name || '-'}</div>
