@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SidebarToggle from './SidebarToggle'
 
 interface HeaderProps {
   title: string
@@ -26,12 +27,7 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
           {/* Left side - Menu button and title */}
           <div className="flex items-center space-x-4 space-x-reverse">
             {/* Menu Toggle Button */}
-            <button
-              onClick={onMenuToggle}
-              className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <span className="text-gray-600 text-lg">☰</span>
-            </button>
+            <SidebarToggle onToggle={onMenuToggle} />
             
             {/* Title */}
             <div className="flex items-center space-x-4 space-x-reverse">

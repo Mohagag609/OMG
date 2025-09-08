@@ -6,6 +6,8 @@ import { Broker } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -103,6 +105,7 @@ export default function Brokers() {
     paymentDate: new Date().toISOString().split('T')[0],
     notes: ''
   })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -112,6 +115,10 @@ export default function Brokers() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
           case 'n':
             e.preventDefault()
             setShowAddForm(true)
@@ -132,7 +139,7 @@ export default function Brokers() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [sidebarOpen])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -643,30 +650,36 @@ export default function Brokers() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">🤝</span>
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">🤝</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">إدارة السماسرة</h1>
+                  <p className="text-gray-600">نظام متطور لإدارة السماسرة والعمولات</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة السماسرة</h1>
-                <p className="text-gray-600">نظام متطور لإدارة السماسرة والعمولات</p>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <ModernButton variant="secondary" onClick={() => router.push('/contracts')}>
+                  📋 العقود المرتبطة
+                </ModernButton>
+                <ModernButton variant="secondary" onClick={() => router.push('/')}>
+                  🏠 العودة للرئيسية
+                </ModernButton>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton variant="secondary" onClick={() => router.push('/contracts')}>
-                📋 العقود المرتبطة
-              </ModernButton>
-              <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                🏠 العودة للرئيسية
-              </ModernButton>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -1196,6 +1209,7 @@ export default function Brokers() {
         notifications={notifications} 
         onRemove={removeNotification} 
       />
+      </div>
     </div>
   )
 }
