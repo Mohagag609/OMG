@@ -5,7 +5,7 @@ import path from 'path'
 const CONFIG_FILE = path.join(process.cwd(), 'database-config.json')
 
 export interface DatabaseConfig {
-  type: 'sqlite' | 'postgresql'
+  type: 'sqlite' | 'postgresql' | 'postgresql-local' | 'postgresql-cloud'
   connectionString: string
   isConnected: boolean
   lastTested?: string
@@ -96,6 +96,7 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
     console.log('📁 مسار الملف:', CONFIG_FILE)
     console.log('🔧 نوع قاعدة البيانات:', config.type)
     console.log('🔗 رابط الاتصال:', config.connectionString.substring(0, 50) + '...')
+    console.log('📊 البيانات الكاملة:', JSON.stringify(config, null, 2))
     
     // Ensure directory exists
     const configDir = path.dirname(CONFIG_FILE)
@@ -118,8 +119,20 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
     
     // Verify the file was written correctly
     if (fs.existsSync(CONFIG_FILE)) {
+      console.log('✅ الملف تم إنشاؤه بنجاح')
       const savedData = fs.readFileSync(CONFIG_FILE, 'utf8')
+      console.log('📄 محتوى الملف المحفوظ:', savedData.substring(0, 200) + '...')
+      
       const savedConfig = JSON.parse(savedData)
+      console.log('📊 البيانات المحفوظة:', JSON.stringify(savedConfig, null, 2))
+      
+      console.log('🔍 مقارنة البيانات:')
+      console.log('  - النوع:', { original: config.type, saved: savedConfig.type, match: savedConfig.type === config.type })
+      console.log('  - الرابط:', { 
+        original: config.connectionString.substring(0, 50), 
+        saved: savedConfig.connectionString.substring(0, 50), 
+        match: savedConfig.connectionString === config.connectionString 
+      })
       
       if (savedConfig.type === config.type && savedConfig.connectionString === config.connectionString) {
         console.log('✅ تم حفظ إعدادات قاعدة البيانات بنجاح:', savedConfig.type)
@@ -132,6 +145,8 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
         return true
       } else {
         console.log('❌ فشل في التحقق من صحة البيانات المحفوظة')
+        console.log('❌ النوع المطابق:', savedConfig.type === config.type)
+        console.log('❌ الرابط المطابق:', savedConfig.connectionString === config.connectionString)
         return false
       }
     } else {

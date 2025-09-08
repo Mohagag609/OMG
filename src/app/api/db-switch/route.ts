@@ -68,17 +68,29 @@ export async function POST(request: NextRequest) {
     
     // Save configuration to database-config.json
     console.log('💾 حفظ إعدادات قاعدة البيانات...')
-    const configSaved = saveDatabaseConfig({
+    console.log('📦 البيانات المراد حفظها:', {
+      type,
+      connectionString: connectionString.substring(0, 50) + '...',
+      isConnected: true
+    })
+    
+    const configToSave = {
       type: type as any,
       connectionString,
       isConnected: true,
       lastTested: new Date().toISOString()
-    })
+    }
+    
+    console.log('🔧 محاولة حفظ الإعدادات...')
+    const configSaved = saveDatabaseConfig(configToSave)
+    
+    console.log('📊 نتيجة الحفظ:', configSaved)
     
     if (!configSaved) {
+      console.error('❌ فشل في حفظ الإعدادات')
       return NextResponse.json({
         success: false,
-        message: 'فشل في حفظ إعدادات قاعدة البيانات'
+        message: 'فشل في حفظ إعدادات قاعدة البيانات - تحقق من السجلات'
       }, { status: 500 })
     }
     
