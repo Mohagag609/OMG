@@ -67,11 +67,6 @@ export default function Treasury() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-
-  // Debug: Log safes state changes
-  useEffect(() => {
-    console.log('🔍 Safes state updated:', safes.length, 'items')
-  }, [safes])
   const [showAddSafeModal, setShowAddSafeModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
@@ -130,38 +125,28 @@ export default function Treasury() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      console.log('🔍 Treasury fetchData - Token exists:', !!token)
       
       const [safesResponse, transfersResponse] = await Promise.all([
         fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/transfers', { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       
-      console.log('🔍 Safes response status:', safesResponse.status)
-      console.log('🔍 Transfers response status:', transfersResponse.status)
-      
       const [safesData, transfersData] = await Promise.all([
         safesResponse.json(),
         transfersResponse.json()
       ])
       
-      console.log('🔍 Safes data:', safesData)
-      console.log('🔍 Transfers data:', transfersData)
-      
       if (safesData.success) {
-        console.log('✅ Setting safes:', safesData.data)
         setSafes(safesData.data)
       } else {
-        console.error('❌ Safes error:', safesData.error)
         setError(safesData.error || 'خطأ في تحميل الخزائن')
       }
 
       if (transfersData.success) {
-        console.log('✅ Setting transfers:', transfersData.data)
         setTransfers(transfersData.data)
       }
     } catch (err) {
-      console.error('❌ Error fetching data:', err)
+      console.error('Error fetching data:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -196,7 +181,6 @@ export default function Treasury() {
 
       const data = await response.json()
       if (data.success) {
-        console.log('✅ Safe added successfully:', data.data)
         setShowAddSafeModal(false)
         setSuccess('تم إضافة الخزنة بنجاح!')
         setError(null)
@@ -204,7 +188,6 @@ export default function Treasury() {
           name: '',
           balance: ''
         })
-        console.log('🔄 Refreshing data...')
         fetchData()
         addNotification({
           type: 'success',
@@ -212,7 +195,6 @@ export default function Treasury() {
           message: 'تم إضافة الخزنة بنجاح'
         })
       } else {
-        console.error('❌ Safe add error:', data.error)
         setError(data.error || 'خطأ في إضافة الخزنة')
         setSuccess(null)
         addNotification({
