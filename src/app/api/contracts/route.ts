@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
             safeId: downPaymentSafeId,
             description: `مقدم عقد للوحدة ${unit?.code}`,
             payer: customer?.name,
-            linkedRef: contract.id
+            linkedRef: unitId
           }
         })
 
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
             safeId: commissionSafeId,
             description: `عمولة سمسار ${brokerName} للوحدة ${contract.unit?.code}`,
             beneficiary: brokerName,
-            linkedRef: contract.id
+            linkedRef: unitId
           }
         })
 
