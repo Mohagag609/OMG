@@ -61,6 +61,12 @@ export async function POST(request: NextRequest) {
           dataFile = zipContent.file('backup_data.json')
         }
         if (!dataFile) {
+          dataFile = zipContent.file('real_data.json')
+        }
+        if (!dataFile) {
+          dataFile = zipContent.file('database.sql')
+        }
+        if (!dataFile) {
           console.error('ZIP file does not contain expected data file')
           console.log('Available files in ZIP:', Object.keys(zipContent.files))
           return NextResponse.json(
@@ -72,9 +78,35 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        console.log('Extracting data.json from ZIP...')
+        console.log(`Extracting ${dataFile.name} from ZIP...`)
         const jsonContent = await dataFile.async('text')
-        jsonData = JSON.parse(jsonContent)
+        
+        // Handle different file types
+        if (dataFile.name === 'real_data.json') {
+          console.log('Processing real_data.json format...')
+          // real_data.json has a different structure, wrap it
+          jsonData = {
+            metadata: {
+              version: '1.0.0',
+              exportDate: new Date().toISOString(),
+              databaseType: isSQLite ? 'SQLite' : isPostgreSQL ? 'PostgreSQL' : 'Unknown'
+            },
+            data: JSON.parse(jsonContent)
+          }
+        } else if (dataFile.name === 'database.sql') {
+          console.log('Processing database.sql format...')
+          // For SQL files, we can't import directly, return error
+          return NextResponse.json(
+            { 
+              error: 'ملف SQL غير مدعوم للاستيراد المباشر',
+              details: 'يرجى استخدام ملف JSON للاستيراد'
+            },
+            { status: 400 }
+          )
+        } else {
+          jsonData = JSON.parse(jsonContent)
+        }
+        
         console.log('ZIP file processed successfully')
       } else {
         // Handle direct JSON file
