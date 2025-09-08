@@ -15,6 +15,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, seed = false, pg, cloudUrl } = body
     
+    console.log('🔍 API Switch - البيانات المستلمة:', {
+      type,
+      seed,
+      pg: pg ? 'موجود' : 'غير موجود',
+      cloudUrl: cloudUrl ? `موجود (${cloudUrl.substring(0, 30)}...)` : 'غير موجود'
+    })
+    
     // Validate required fields
     if (!type) {
       return NextResponse.json(
@@ -44,9 +51,16 @@ export async function POST(request: NextRequest) {
     
     // Validate PostgreSQL cloud configuration
     if (type === 'postgresql-cloud') {
-      if (!cloudUrl) {
+      if (!cloudUrl || cloudUrl.trim() === '') {
         return NextResponse.json(
-          { ok: false, message: 'رابط قاعدة البيانات السحابية مطلوب' },
+          { ok: false, message: 'رابط قاعدة البيانات السحابية مطلوب - يرجى إدخال رابط PostgreSQL الصحيح' },
+          { status: 400 }
+        )
+      }
+      
+      if (!cloudUrl.startsWith('postgresql://')) {
+        return NextResponse.json(
+          { ok: false, message: 'رابط قاعدة البيانات يجب أن يبدأ بـ postgresql://' },
           { status: 400 }
         )
       }
