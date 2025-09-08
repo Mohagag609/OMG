@@ -30,7 +30,7 @@ export default function SimpleDbSwitch() {
     try {
       console.log('🔄 إرسال البيانات:', formData)
       
-      const response = await fetch('/api/database/switch', {
+      const response = await fetch('/api/db-switch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
