@@ -165,7 +165,7 @@ export default function Customers() {
     }
 
     // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers)) {
+    if (newCustomer.phone && newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -175,7 +175,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers)) {
+    if (newCustomer.nationalId && newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -283,7 +283,7 @@ export default function Customers() {
     }
 
     // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers, editingCustomer.id)) {
+    if (newCustomer.phone && newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -293,7 +293,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers, editingCustomer.id)) {
+    if (newCustomer.nationalId && newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',

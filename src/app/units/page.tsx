@@ -173,37 +173,19 @@ export default function Units() {
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // التحقق من البيانات المطلوبة
-    if (!newUnit.name.trim() || !newUnit.floor.trim() || !newUnit.building.trim()) {
+    // التحقق من البيانات المطلوبة - الاسم فقط مطلوب
+    if (!newUnit.name.trim()) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال اسم الوحدة والدور والبرج'
-      })
-      return
-    }
-
-    if (!newUnit.totalPrice || parseFloat(newUnit.totalPrice) <= 0) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال سعر الوحدة'
-      })
-      return
-    }
-
-    if (!newUnit.partnerGroupId) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرجاء اختيار مجموعة شركاء'
+        message: 'الرجاء إدخال اسم الوحدة'
       })
       return
     }
 
     // إنشاء كود الوحدة التلقائي
-    const sanitizedBuilding = newUnit.building.replace(/\s/g, '')
-    const sanitizedFloor = newUnit.floor.replace(/\s/g, '')
+    const sanitizedBuilding = (newUnit.building || 'غير محدد').replace(/\s/g, '')
+    const sanitizedFloor = (newUnit.floor || 'غير محدد').replace(/\s/g, '')
     const sanitizedName = newUnit.name.replace(/\s/g, '')
     const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
 
@@ -217,27 +199,29 @@ export default function Units() {
       return
     }
 
-    // التحقق من مجموعة الشركاء
-    const selectedGroup = partnerGroups.find(g => g.id === newUnit.partnerGroupId)
-    if (!selectedGroup) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'لم يتم العثور على مجموعة الشركاء المحددة'
-      })
-      return
-    }
+    // التحقق من مجموعة الشركاء (اختيارية)
+    if (newUnit.partnerGroupId) {
+      const selectedGroup = partnerGroups.find(g => g.id === newUnit.partnerGroupId)
+      if (!selectedGroup) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في البيانات',
+          message: 'لم يتم العثور على مجموعة الشركاء المحددة'
+        })
+        return
+      }
 
-    // Get partners for this group from the partners array
-    const groupPartners = partners.filter(p => p.partnerGroupId === selectedGroup.id)
-    const totalPercent = groupPartners.reduce((sum, p) => sum + p.percent, 0)
-    if (totalPercent !== 100) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: `لا يمكن استخدام هذه المجموعة. إجمالي النسب فيها هو ${totalPercent}% ويجب أن يكون 100%`
-      })
-      return
+      // Get partners for this group from the partners array
+      const groupPartners = partners.filter(p => p.partnerGroupId === selectedGroup.id)
+      const totalPercent = groupPartners.reduce((sum, p) => sum + p.percent, 0)
+      if (totalPercent !== 100) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في البيانات',
+          message: `لا يمكن استخدام هذه المجموعة. إجمالي النسب فيها هو ${totalPercent}% ويجب أن يكون 100%`
+        })
+        return
+      }
     }
 
     // إغلاق النافذة فوراً وإظهار النجاح
@@ -328,28 +312,19 @@ export default function Units() {
     
     if (!editingUnit) return
 
-    // التحقق من البيانات المطلوبة
-    if (!newUnit.name.trim() || !newUnit.floor.trim() || !newUnit.building.trim()) {
+    // التحقق من البيانات المطلوبة - الاسم فقط مطلوب
+    if (!newUnit.name.trim()) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال اسم الوحدة والدور والبرج'
-      })
-      return
-    }
-
-    if (!newUnit.totalPrice || parseFloat(newUnit.totalPrice) <= 0) {
-      addNotification({
-        type: 'error',
-        title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال سعر الوحدة'
+        message: 'الرجاء إدخال اسم الوحدة'
       })
       return
     }
 
     // إنشاء كود الوحدة التلقائي
-    const sanitizedBuilding = newUnit.building.replace(/\s/g, '')
-    const sanitizedFloor = newUnit.floor.replace(/\s/g, '')
+    const sanitizedBuilding = (newUnit.building || 'غير محدد').replace(/\s/g, '')
+    const sanitizedFloor = (newUnit.floor || 'غير محدد').replace(/\s/g, '')
     const sanitizedName = newUnit.name.replace(/\s/g, '')
     const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
 
@@ -905,7 +880,7 @@ export default function Units() {
                 <div className="flex items-center">
                   <span className="text-blue-500 mr-2">ℹ️</span>
                   <span className="text-blue-700 text-sm font-medium">
-                    الاسم والدور والبرج والسعر ومجموعة الشركاء مطلوبة
+                    الاسم فقط مطلوب، باقي الحقول اختيارية
                   </span>
                 </div>
               </div>
@@ -921,30 +896,27 @@ export default function Units() {
                 />
                 
                 <ModernInput
-                  label="الطابق * (مطلوب)"
+                  label="الطابق (اختياري)"
                   type="text"
                   value={newUnit.floor}
                   onChange={(e: any) => setNewUnit({...newUnit, floor: e.target.value})}
                   placeholder="رقم الطابق"
-                  required
                 />
                 
                 <ModernInput
-                  label="المبنى * (مطلوب)"
+                  label="المبنى (اختياري)"
                   type="text"
                   value={newUnit.building}
                   onChange={(e: any) => setNewUnit({...newUnit, building: e.target.value})}
                   placeholder="اسم المبنى"
-                  required
                 />
                 
                 <ModernInput
-                  label="السعر الإجمالي * (مطلوب)"
+                  label="السعر الإجمالي (اختياري)"
                   type="number"
                   value={newUnit.totalPrice}
                   onChange={(e: any) => setNewUnit({...newUnit, totalPrice: e.target.value})}
                   placeholder="السعر الإجمالي"
-                  required
                 />
                 
                 <ModernSelect
@@ -967,7 +939,7 @@ export default function Units() {
                 />
                 
                 <ModernSelect
-                  label="مجموعة الشركاء * (مطلوبة)"
+                  label="مجموعة الشركاء (اختيارية)"
                   value={newUnit.partnerGroupId}
                   onChange={(e: any) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
                 >
