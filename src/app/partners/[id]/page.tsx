@@ -157,6 +157,8 @@ export default function PartnerDetails() {
       description: string
       income: number
       expense: number
+      balance: number
+      isClosingEntry?: boolean
     }> = []
 
     // Process vouchers
@@ -174,7 +176,8 @@ export default function PartnerDetails() {
             date: voucher.date.toString(),
             description: voucher.description,
             income,
-            expense: 0
+            expense: 0,
+            balance: 0 // Will be calculated later
           })
           totalIncome += income
         } else if (voucher.description.includes('عمولة سمسار')) {
@@ -183,7 +186,8 @@ export default function PartnerDetails() {
             date: voucher.date.toString(),
             description: voucher.description,
             income: 0,
-            expense
+            expense,
+            balance: 0 // Will be calculated later
           })
           totalExpense += expense
         }
@@ -197,16 +201,73 @@ export default function PartnerDetails() {
           date: debt.dueDate.toString(),
           description: `دين شريك - ${debt.notes || 'بدون ملاحظات'}`,
           income: debt.amount,
-          expense: 0
+          expense: 0,
+          balance: 0 // Will be calculated later
         })
         totalIncome += debt.amount
       }
     })
 
+    // Sort transactions by date
     transactions.sort((a, b) => a.date.localeCompare(b.date))
 
+    // Group transactions by date and add daily closing entries
+    const dailyTransactions: Array<{
+      date: string
+      description: string
+      income: number
+      expense: number
+      balance: number
+      isClosingEntry?: boolean
+    }> = []
+
+    const transactionsByDate = new Map<string, typeof transactions>()
+    
+    // Group transactions by date
+    transactions.forEach(transaction => {
+      const dateKey = transaction.date.split('T')[0] // Get only the date part
+      if (!transactionsByDate.has(dateKey)) {
+        transactionsByDate.set(dateKey, [])
+      }
+      transactionsByDate.get(dateKey)!.push(transaction)
+    })
+
+    // Process each day
+    let runningBalance = 0
+    const sortedDates = Array.from(transactionsByDate.keys()).sort()
+
+    sortedDates.forEach((dateKey, dayIndex) => {
+      const dayTransactions = transactionsByDate.get(dateKey)!
+      let dayIncome = 0
+      let dayExpense = 0
+
+      // Process all transactions for this day
+      dayTransactions.forEach(transaction => {
+        dayIncome += transaction.income
+        dayExpense += transaction.expense
+        runningBalance += transaction.income - transaction.expense
+        
+        dailyTransactions.push({
+          ...transaction,
+          balance: runningBalance
+        })
+      })
+
+      // Add daily closing entry (except for the last day)
+      if (dayIndex < sortedDates.length - 1) {
+        dailyTransactions.push({
+          date: dateKey,
+          description: `إقفال يوم ${new Date(dateKey).toLocaleDateString('ar-SA')}`,
+          income: 0,
+          expense: 0,
+          balance: runningBalance,
+          isClosingEntry: true
+        })
+      }
+    })
+
     return {
-      transactions,
+      transactions: dailyTransactions,
       totalIncome,
       totalExpense,
       netPosition: totalIncome - totalExpense
@@ -395,45 +456,55 @@ export default function PartnerDetails() {
                         </tr>
                       </thead>
                       <tbody>
-                        {ledger.transactions.map((tx, index) => {
-                          let balance = 0
-                          for (let i = 0; i <= index; i++) {
-                            balance += ledger.transactions[i].income - ledger.transactions[i].expense
-                          }
-                          return (
-                            <tr key={index} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150">
-                              <td className="py-3 px-4">
-                                <div className="text-sm text-gray-600">{formatDate(tx.date)}</div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="text-sm font-medium text-gray-900">{tx.description}</div>
-                              </td>
-                              <td className="py-3 px-4">
-                                {tx.income > 0 ? (
-                                  <span className="text-sm font-semibold text-green-600">
-                                    {formatCurrency(tx.income)}
+                        {ledger.transactions.map((tx, index) => (
+                          <tr 
+                            key={index} 
+                            className={`border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150 ${
+                              tx.isClosingEntry ? 'bg-gray-50 font-semibold' : ''
+                            }`}
+                          >
+                            <td className="py-3 px-4">
+                              <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-700 font-semibold' : 'text-gray-600'}`}>
+                                {formatDate(tx.date)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-800 font-semibold' : 'font-medium text-gray-900'}`}>
+                                {tx.isClosingEntry ? (
+                                  <span className="flex items-center">
+                                    <span className="mr-2">📊</span>
+                                    {tx.description}
                                   </span>
                                 ) : (
-                                  <span className="text-sm text-gray-400">—</span>
+                                  tx.description
                                 )}
-                              </td>
-                              <td className="py-3 px-4">
-                                {tx.expense > 0 ? (
-                                  <span className="text-sm font-semibold text-red-600">
-                                    {formatCurrency(tx.expense)}
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-gray-400">—</span>
-                                )}
-                              </td>
-                              <td className="py-3 px-4">
-                                <strong className="text-sm font-bold text-blue-600">
-                                  {formatCurrency(balance)}
-                                </strong>
-                              </td>
-                            </tr>
-                          )
-                        })}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {tx.income > 0 ? (
+                                <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-green-600'}`}>
+                                  {formatCurrency(tx.income)}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              {tx.expense > 0 ? (
+                                <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-red-600'}`}>
+                                  {formatCurrency(tx.expense)}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <strong className={`text-sm font-bold ${tx.isClosingEntry ? 'text-gray-800' : 'text-blue-600'}`}>
+                                {formatCurrency(tx.balance)}
+                              </strong>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
