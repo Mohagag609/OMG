@@ -132,6 +132,10 @@ export default function Contracts() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [deletingContracts, setDeletingContracts] = useState<Set<string>>(new Set())
+  const [editingContract, setEditingContract] = useState<Contract | null>(null)
+  const [viewingContract, setViewingContract] = useState<Contract | null>(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
   const [newContract, setNewContract] = useState({
     unitId: '',
     customerId: '',
@@ -394,6 +398,189 @@ export default function Contracts() {
     setShowAddModal(true)
   }
 
+  const handleEditContract = (contract: Contract) => {
+    setEditingContract(contract)
+    setNewContract({
+      unitId: contract.unitId,
+      customerId: contract.customerId,
+      start: new Date(contract.start).toISOString().split('T')[0],
+      totalPrice: contract.totalPrice.toString(),
+      discountAmount: contract.discountAmount.toString(),
+      brokerName: contract.brokerName || '',
+      brokerPercent: contract.brokerPercent.toString(),
+      brokerAmount: contract.brokerAmount.toString(),
+      commissionSafeId: contract.commissionSafeId || '',
+      downPaymentSafeId: contract.downPaymentSafeId || '',
+      paymentType: contract.paymentType,
+      installmentType: contract.installmentType,
+      installmentCount: contract.installmentCount.toString(),
+      downPayment: contract.downPayment.toString(),
+      extraAnnual: contract.extraAnnual.toString(),
+      annualPaymentValue: contract.annualPaymentValue.toString(),
+      maintenanceDeposit: contract.maintenanceDeposit.toString()
+    })
+    setShowAddModal(true)
+  }
+
+  const handleViewContract = (contract: Contract) => {
+    setViewingContract(contract)
+  }
+
+  const handleDeleteContract = async (contractId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا العقد؟')) return
+
+    setDeletingContracts(prev => new Set(prev).add(contractId))
+    
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/contracts/${contractId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setContracts(prev => prev.filter(c => c.id !== contractId))
+        addNotification({
+          type: 'success',
+          title: 'تم الحذف بنجاح',
+          message: 'تم حذف العقد بنجاح'
+        })
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الحذف',
+          message: data.error || 'فشل في حذف العقد'
+        })
+      }
+    } catch (err) {
+      console.error('Delete contract error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الحذف',
+        message: 'فشل في حذف العقد'
+      })
+    } finally {
+      setDeletingContracts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(contractId)
+        return newSet
+      })
+    }
+  }
+
+  const exportToCSV = () => {
+    const headers = ['كود العقد', 'الوحدة', 'العميل', 'السمسار', 'السعر الكلي', 'المقدم', 'تاريخ البدء', 'نوع الدفع', 'عدد الأقساط']
+    const csvContent = [
+      headers.join(','),
+      ...contracts.map(contract => [
+        contract.id,
+        getUnitName(contract.unitId),
+        getCustomerName(contract.customerId),
+        contract.brokerName || '',
+        contract.totalPrice,
+        contract.downPayment,
+        formatDate(contract.start),
+        contract.paymentType === 'installment' ? 'تقسيط' : 'كاش',
+        contract.installmentCount
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `contracts_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const printContracts = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8">
+          <title>تقرير العقود</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f2f2f2; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .date { text-align: left; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>تقرير العقود</h1>
+            <p class="date">تاريخ الطباعة: ${new Date().toLocaleString('ar-SA')}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>كود العقد</th>
+                <th>الوحدة</th>
+                <th>العميل</th>
+                <th>السمسار</th>
+                <th>السعر الكلي</th>
+                <th>المقدم</th>
+                <th>تاريخ البدء</th>
+                <th>نوع الدفع</th>
+                <th>عدد الأقساط</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${contracts.map(contract => `
+                <tr>
+                  <td>${contract.id}</td>
+                  <td>${getUnitName(contract.unitId)}</td>
+                  <td>${getCustomerName(contract.customerId)}</td>
+                  <td>${contract.brokerName || '-'}</td>
+                  <td>${formatCurrency(contract.totalPrice)}</td>
+                  <td>${formatCurrency(contract.downPayment)}</td>
+                  <td>${formatDate(contract.start)}</td>
+                  <td>${contract.paymentType === 'installment' ? 'تقسيط' : 'كاش'}</td>
+                  <td>${contract.installmentCount}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
+  const getContractStatus = (contract: Contract) => {
+    // Logic to determine contract status based on installments
+    return 'نشط' // Placeholder
+  }
+
+  const filteredContracts = contracts.filter(contract => {
+    const matchesSearch = search === '' || 
+      contract.id.toLowerCase().includes(search.toLowerCase()) ||
+      getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase()) ||
+      getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+      (contract.brokerName && contract.brokerName.toLowerCase().includes(search.toLowerCase()))
+    
+    const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+    
+    const matchesDate = !dateFilter.from || !dateFilter.to || 
+      (new Date(contract.start) >= new Date(dateFilter.from) && 
+       new Date(contract.start) <= new Date(dateFilter.to))
+    
+    return matchesSearch && matchesStatus && matchesDate
+  })
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -438,27 +625,58 @@ export default function Contracts() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Search and Filters */}
         <ModernCard className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="relative">
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="🔍 ابحث في العقود... (Ctrl+F)"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
-                />
+          <div className="space-y-6">
+            {/* Search and Actions */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <div className="relative">
+                  <input
+                    id="search-input"
+                    type="text"
+                    placeholder="🔍 ابحث في العقود... (Ctrl+F)"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
+                  />
+                </div>
+                <ModernButton variant="secondary" size="sm" onClick={exportToCSV}>
+                  📊 تصدير CSV
+                </ModernButton>
+                <ModernButton variant="secondary" size="sm" onClick={printContracts}>
+                  🖨️ طباعة PDF
+                </ModernButton>
               </div>
-              <ModernButton variant="secondary" size="sm">
-                📊 تصدير CSV
-              </ModernButton>
-              <ModernButton variant="secondary" size="sm">
-                🖨️ طباعة PDF
-              </ModernButton>
+              <div className="text-sm text-gray-500">
+                {filteredContracts.length} من {contracts.length} عقد
+              </div>
             </div>
-            <div className="text-sm text-gray-500">
-              {contracts.length} عقد
+
+            {/* Advanced Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <ModernSelect
+                label="فلتر الحالة"
+                value={statusFilter}
+                onChange={(e: any) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">جميع الحالات</option>
+                <option value="نشط">نشط</option>
+                <option value="مكتمل">مكتمل</option>
+                <option value="ملغي">ملغي</option>
+              </ModernSelect>
+
+              <ModernInput
+                label="من تاريخ"
+                type="date"
+                value={dateFilter.from}
+                onChange={(e: any) => setDateFilter({...dateFilter, from: e.target.value})}
+              />
+
+              <ModernInput
+                label="إلى تاريخ"
+                type="date"
+                value={dateFilter.to}
+                onChange={(e: any) => setDateFilter({...dateFilter, to: e.target.value})}
+              />
             </div>
           </div>
         </ModernCard>
@@ -490,18 +708,17 @@ export default function Contracts() {
                   <th className="text-right py-4 px-6 font-semibold text-gray-700">الوحدة</th>
                   <th className="text-right py-4 px-6 font-semibold text-gray-700">العميل</th>
                   <th className="text-right py-4 px-6 font-semibold text-gray-700">السمسار</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">السعر</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">السعر الكلي</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المقدم</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">نوع الدفع</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">عدد الأقساط</th>
                   <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ البدء</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
                   <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
-                {contracts.filter(contract => 
-                  search === '' || 
-                  contract.unit?.code.toLowerCase().includes(search.toLowerCase()) ||
-                  contract.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-                  (contract.brokerName && contract.brokerName.toLowerCase().includes(search.toLowerCase()))
-                ).map((contract) => (
+                {filteredContracts.map((contract) => (
                   <tr key={contract.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
                     <td className="py-4 px-6">
                       <div className="font-medium text-gray-900">{contract.id}</div>
@@ -519,21 +736,60 @@ export default function Contracts() {
                       <div className="font-semibold text-green-600">{formatCurrency(contract.totalPrice)}</div>
                     </td>
                     <td className="py-4 px-6">
+                      <div className="font-semibold text-blue-600">{formatCurrency(contract.downPayment)}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-600">
+                        {contract.paymentType === 'installment' ? 'تقسيط' : 'كاش'}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-600">{contract.installmentCount}</div>
+                    </td>
+                    <td className="py-4 px-6">
                       <div className="text-gray-600">{formatDate(contract.start)}</div>
                     </td>
                     <td className="py-4 px-6">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        getContractStatus(contract) === 'نشط' 
+                          ? 'bg-green-100 text-green-800' 
+                          : getContractStatus(contract) === 'مكتمل'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {getContractStatus(contract)}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <ModernButton size="sm" variant="secondary">
+                        <ModernButton 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={() => handleViewContract(contract)}
+                        >
                           👁️ عرض
                         </ModernButton>
-                        <ModernButton size="sm" variant="secondary">
+                        <ModernButton 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={() => handleEditContract(contract)}
+                        >
                           ✏️ تعديل
                         </ModernButton>
-                        <ModernButton size="sm" variant="secondary" onClick={() => copyFromContract(contract)}>
+                        <ModernButton 
+                          size="sm" 
+                          variant="secondary" 
+                          onClick={() => copyFromContract(contract)}
+                        >
                           📋 نسخ
                         </ModernButton>
-                        <ModernButton size="sm" variant="danger">
-                          🗑️ حذف
+                        <ModernButton 
+                          size="sm" 
+                          variant="danger"
+                          onClick={() => handleDeleteContract(contract.id)}
+                          disabled={deletingContracts.has(contract.id)}
+                        >
+                          {deletingContracts.has(contract.id) ? '⏳' : '🗑️'} حذف
                         </ModernButton>
                       </div>
                     </td>
@@ -745,6 +1001,153 @@ export default function Contracts() {
                 </ModernButton>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Contract Modal */}
+      {viewingContract && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">تفاصيل العقد</h2>
+                <button
+                  onClick={() => setViewingContract(null)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">معلومات أساسية</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">كود العقد:</span>
+                      <p className="text-gray-900 font-semibold">{viewingContract.id}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">الوحدة:</span>
+                      <p className="text-gray-900">{getUnitName(viewingContract.unitId)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">العميل:</span>
+                      <p className="text-gray-900">{getCustomerName(viewingContract.customerId)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">السمسار:</span>
+                      <p className="text-gray-900">{viewingContract.brokerName || 'غير محدد'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">تاريخ البدء:</span>
+                      <p className="text-gray-900">{formatDate(viewingContract.start)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">المعلومات المالية</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">السعر الكلي:</span>
+                      <p className="text-green-600 font-bold text-lg">{formatCurrency(viewingContract.totalPrice)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">المقدم:</span>
+                      <p className="text-blue-600 font-semibold">{formatCurrency(viewingContract.downPayment)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">مبلغ الخصم:</span>
+                      <p className="text-gray-900">{formatCurrency(viewingContract.discountAmount)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">وديعة الصيانة:</span>
+                      <p className="text-gray-900">{formatCurrency(viewingContract.maintenanceDeposit)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">نسبة العمولة:</span>
+                      <p className="text-gray-900">{viewingContract.brokerPercent}%</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">مبلغ العمولة:</span>
+                      <p className="text-gray-900">{formatCurrency(viewingContract.brokerAmount)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">تفاصيل الأقساط</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">نوع الدفع:</span>
+                      <p className="text-gray-900">{viewingContract.paymentType === 'installment' ? 'تقسيط' : 'كاش'}</p>
+                    </div>
+                    {viewingContract.paymentType === 'installment' && (
+                      <>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">نوع الأقساط:</span>
+                          <p className="text-gray-900">{viewingContract.installmentType}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">عدد الأقساط:</span>
+                          <p className="text-gray-900">{viewingContract.installmentCount}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">الدفعات السنوية الإضافية:</span>
+                          <p className="text-gray-900">{viewingContract.extraAnnual}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">قيمة الدفعة السنوية:</span>
+                          <p className="text-gray-900">{formatCurrency(viewingContract.annualPaymentValue)}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">معلومات إضافية</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">الحالة:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        getContractStatus(viewingContract) === 'نشط' 
+                          ? 'bg-green-100 text-green-800' 
+                          : getContractStatus(viewingContract) === 'مكتمل'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {getContractStatus(viewingContract)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">تاريخ الإنشاء:</span>
+                      <p className="text-gray-900">{formatDate(viewingContract.createdAt || '')}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">آخر تحديث:</span>
+                      <p className="text-gray-900">{formatDate(viewingContract.updatedAt || '')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 space-x-reverse mt-8 pt-6 border-t border-gray-200">
+                <ModernButton variant="secondary" onClick={() => setViewingContract(null)}>
+                  إغلاق
+                </ModernButton>
+                <ModernButton onClick={() => {
+                  setViewingContract(null)
+                  handleEditContract(viewingContract)
+                }}>
+                  ✏️ تعديل العقد
+                </ModernButton>
+              </div>
+            </div>
           </div>
         </div>
       )}
