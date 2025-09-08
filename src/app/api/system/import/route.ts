@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
         // Look for data.json in the ZIP, or try other possible names
         let dataFile = zipContent.file('data.json')
         if (!dataFile) {
+          dataFile = zipContent.file('real_data.json')
+        }
+        if (!dataFile) {
           dataFile = zipContent.file('tables_data.json')
         }
         if (!dataFile) {
           dataFile = zipContent.file('backup_data.json')
-        }
-        if (!dataFile) {
-          dataFile = zipContent.file('real_data.json')
         }
         if (!dataFile) {
           dataFile = zipContent.file('database.sql')
@@ -104,6 +104,8 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         } else {
+          // Handle data.json and other JSON files
+          console.log(`Processing ${dataFile.name} format...`)
           jsonData = JSON.parse(jsonContent)
         }
         
