@@ -148,6 +148,8 @@ export interface Broker {
   name: string
   phone?: string | null
   notes?: string | null
+  commissionRate?: number
+  status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
