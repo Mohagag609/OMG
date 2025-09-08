@@ -100,16 +100,11 @@ export default function Reports() {
   const generateReport = async (reportType: string) => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/export/excel', {
-        method: 'POST',
+      const response = await fetch(`/api/export/excel?type=${reportType}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          type: reportType,
-          dateRange: dateRange
-        })
+        }
       })
 
       if (response.ok) {
