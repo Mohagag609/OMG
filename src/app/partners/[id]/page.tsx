@@ -263,7 +263,7 @@ export default function PartnerDetails() {
       if (dayIndex < sortedDates.length - 1) {
         dailyTransactions.push({
           date: dateKey,
-          description: `إقفال يوم ${new Date(dateKey).toLocaleDateString('ar-SA')}`,
+          description: `إقفال يوم ${new Date(dateKey).toLocaleDateString('en-GB')}`,
           income: 0,
           expense: 0,
           balance: runningBalance,
@@ -504,7 +504,7 @@ export default function PartnerDetails() {
                               </div>
                               <div>
                                 <div className="font-semibold text-gray-900">
-                                  {new Date(dateKey).toLocaleDateString('ar-SA', { 
+                                  {new Date(dateKey).toLocaleDateString('en-GB', { 
                                     weekday: 'long', 
                                     year: 'numeric', 
                                     month: 'long', 
@@ -560,7 +560,7 @@ export default function PartnerDetails() {
                 <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-gray-900">
-                      تفاصيل يوم {new Date(selectedDay).toLocaleDateString('ar-SA')}
+                      تفاصيل يوم {new Date(selectedDay).toLocaleDateString('en-GB')}
                     </h2>
                     <button
                       onClick={() => setShowDetailPanel(false)}

@@ -53,7 +53,7 @@ export default function TestConnection() {
                                     <p><strong>عدد الجداول:</strong> {result.data.tables}</p>
                                     <p><strong>البيئة:</strong> {result.data.environment}</p>
                                     <p><strong>المتغير المستخدم:</strong> {result.data.databaseUrl}</p>
-                                    <p><strong>الوقت:</strong> {new Date(result.data.timestamp).toLocaleString('ar-SA')}</p>
+                                    <p><strong>الوقت:</strong> {new Date(result.data.timestamp).toLocaleString('en-GB')}</p>
                                 </div>
                             </div>
                         ) : (

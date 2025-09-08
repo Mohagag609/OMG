@@ -356,7 +356,7 @@ export default function Installments() {
         <body>
           <div class="header">
             <h1>تقرير الأقساط</h1>
-            <p class="date">تاريخ الطباعة: ${new Date().toLocaleString('ar-SA')}</p>
+            <p class="date">تاريخ الطباعة: ${new Date().toLocaleString('en-GB')}</p>
           </div>
           <table>
             <thead>
@@ -591,7 +591,7 @@ export default function Installments() {
             <h2 className="text-xl font-bold text-gray-900">قائمة الأقساط</h2>
             <div className="flex items-center space-x-2 space-x-reverse">
               <span className="text-sm text-gray-500">آخر تحديث:</span>
-              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('en-GB')}</span>
             </div>
           </div>
 

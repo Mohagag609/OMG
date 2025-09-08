@@ -264,7 +264,7 @@ export default function Reports() {
               </ModernButton>
             </div>
             <div className="text-sm text-gray-500">
-              آخر تحديث: {new Date().toLocaleString('ar-SA')}
+              آخر تحديث: {new Date().toLocaleString('en-GB')}
             </div>
           </div>
         </ModernCard>
