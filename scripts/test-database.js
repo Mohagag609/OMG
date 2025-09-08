@@ -1,61 +1,35 @@
-#!/usr/bin/env node
-
 const { PrismaClient } = require('@prisma/client')
 
+const prisma = new PrismaClient()
+
 async function testDatabase() {
-  // Load environment variables
-  require('dotenv').config()
-  
-  // Set DATABASE_URL based on DATABASE_TYPE
-  const dbType = process.env.DATABASE_TYPE || 'sqlite'
-  let databaseUrl
-  
-  if (dbType === 'sqlite') {
-    databaseUrl = process.env.SQLITE_DATABASE_URL || 'file:./dev.db'
-  } else if (dbType === 'postgresql-local') {
-    databaseUrl = process.env.POSTGRESQL_LOCAL_DATABASE_URL || 'postgresql://postgres:password@localhost:5432/estate_management'
-  } else if (dbType === 'postgresql-cloud') {
-    databaseUrl = process.env.POSTGRESQL_CLOUD_DATABASE_URL || 'postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-  }
-  
-  // Set DATABASE_URL for Prisma
-  process.env.DATABASE_URL = databaseUrl
-  
-  const prisma = new PrismaClient()
+  console.log('🔄 اختبار الاتصال بقاعدة البيانات...')
   
   try {
-    console.log('🔄 اختبار الاتصال بقاعدة البيانات...')
-    
     // Test connection
     await prisma.$connect()
     console.log('✅ تم الاتصال بنجاح')
     
-    // Test query
+    // Test users count
     const userCount = await prisma.user.count()
     console.log(`👥 عدد المستخدمين: ${userCount}`)
     
+    // Test customers count
     const customerCount = await prisma.customer.count()
     console.log(`🏢 عدد العملاء: ${customerCount}`)
     
-    // Get database info
-    try {
-      // Try PostgreSQL version first
-      const dbInfo = await prisma.$queryRaw`SELECT version() as version`
-      console.log(`📊 إصدار قاعدة البيانات:`, dbInfo)
-    } catch (error) {
-      // Fallback to SQLite version
-      try {
-        const dbInfo = await prisma.$queryRaw`SELECT sqlite_version() as version`
-        console.log(`📊 إصدار قاعدة البيانات:`, dbInfo)
-      } catch (sqliteError) {
-        console.log(`📊 نوع قاعدة البيانات: غير محدد`)
-      }
-    }
+    // Test units count
+    const unitCount = await prisma.unit.count()
+    console.log(`🏠 عدد الوحدات: ${unitCount}`)
+    
+    // Test database version
+    const version = await prisma.$queryRaw`SELECT sqlite_version() as version`
+    console.log(`📊 إصدار قاعدة البيانات:`, version)
     
     console.log('🎉 جميع الاختبارات نجحت!')
     
   } catch (error) {
-    console.error('❌ فشل الاختبار:', error.message)
+    console.error('❌ فشل في اختبار قاعدة البيانات:', error)
     process.exit(1)
   } finally {
     await prisma.$disconnect()

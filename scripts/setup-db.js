@@ -1,22 +1,21 @@
-const { PrismaClient } = require('@prisma/client')
+const { execSync } = require('child_process')
 
-async function setupDatabase() {
-  const prisma = new PrismaClient()
+console.log('🔧 إعداد قاعدة البيانات...')
 
-  try {
-    console.log('Setting up database...')
-
-    // Push the schema to create tables
-    const { execSync } = require('child_process')
-    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
-
-    console.log('Database setup completed successfully!')
-  } catch (error) {
-    console.error('Error setting up database:', error)
-    process.exit(1)
-  } finally {
-    await prisma.$disconnect()
-  }
+try {
+  // Generate Prisma client
+  console.log('🔄 توليد Prisma Client...')
+  execSync('npx prisma generate', { stdio: 'inherit' })
+  console.log('✅ تم توليد Prisma Client بنجاح')
+  
+  // Push schema to database
+  console.log('🔄 تطبيق المخطط على قاعدة البيانات...')
+  execSync('npx prisma db push', { stdio: 'inherit' })
+  console.log('✅ تم تطبيق المخطط بنجاح')
+  
+  console.log('🎉 تم إعداد قاعدة البيانات بنجاح!')
+  
+} catch (error) {
+  console.error('❌ فشل في إعداد قاعدة البيانات:', error.message)
+  process.exit(1)
 }
-
-setupDatabase()

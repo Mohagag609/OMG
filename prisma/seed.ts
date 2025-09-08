@@ -1,135 +1,179 @@
 import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '../src/lib/auth'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 بدء إضافة البيانات التجريبية...')
+  console.log('🌱 بدء إدراج البيانات التجريبية...')
 
-  // إنشاء المستخدمين الافتراضيين
-  const bcrypt = require('bcryptjs')
+  // Create default users
+  console.log('👤 إنشاء المستخدمين...')
   
-  // إنشاء مستخدم admin
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { username: 'admin' },
-    update: { password: await bcrypt.hash('admin123', 12) },
+    update: {},
     create: {
       username: 'admin',
-      password: await bcrypt.hash('admin123', 12),
+      password: await hashPassword('admin123'),
       email: 'admin@example.com',
       fullName: 'مدير النظام',
       role: 'admin'
     }
   })
-  console.log('✅ تم إنشاء مستخدم admin')
 
-  // إنشاء مستخدم عادي
-  await prisma.user.upsert({
+  const regularUser = await prisma.user.upsert({
     where: { username: 'user' },
-    update: { password: await bcrypt.hash('user123', 12) },
+    update: {},
     create: {
       username: 'user',
-      password: await bcrypt.hash('user123', 12),
+      password: await hashPassword('user123'),
       email: 'user@example.com',
       fullName: 'مستخدم عادي',
       role: 'user'
     }
   })
-  console.log('✅ تم إنشاء مستخدم user')
 
-  // إنشاء خزنة افتراضية (إذا لم تكن موجودة)
-  let defaultSafe = await prisma.safe.findFirst({
-    where: { name: 'الخزنة الرئيسية' }
-  })
+  console.log('✅ تم إنشاء المستخدمين:', { adminUser: adminUser.username, regularUser: regularUser.username })
+
+  // Create sample customers
+  console.log('👥 إنشاء العملاء...')
   
-  if (!defaultSafe) {
-    defaultSafe = await prisma.safe.create({
-      data: {
-        name: 'الخزنة الرئيسية',
-        balance: 0
-      }
-    })
-  }
-
-  // إنشاء عميل تجريبي (إذا لم يكن موجوداً)
-  let testCustomer = await prisma.customer.findFirst({
-    where: { nationalId: '12345678901234' }
+  const customer1 = await prisma.customer.upsert({
+    where: { phone: '01234567890' },
+    update: {},
+    create: {
+      name: 'أحمد محمد',
+      phone: '01234567890',
+      nationalId: '12345678901234',
+      address: 'القاهرة، مصر',
+      status: 'نشط'
+    }
   })
-  
-  if (!testCustomer) {
-    testCustomer = await prisma.customer.create({
-      data: {
-        name: 'أحمد محمد علي',
-        phone: '01012345678',
-        nationalId: '12345678901234',
-        address: 'القاهرة، مصر',
-        status: 'نشط',
-        notes: 'عميل تجريبي'
-      }
-    })
-  }
 
-  // إنشاء وحدة تجريبية (إذا لم تكن موجودة)
-  let testUnit = await prisma.unit.findFirst({
-    where: { code: 'A-101' }
+  const customer2 = await prisma.customer.upsert({
+    where: { phone: '01234567891' },
+    update: {},
+    create: {
+      name: 'فاطمة علي',
+      phone: '01234567891',
+      nationalId: '12345678901235',
+      address: 'الإسكندرية، مصر',
+      status: 'نشط'
+    }
   })
-  
-  if (!testUnit) {
-    testUnit = await prisma.unit.create({
-      data: {
-        code: 'A-101',
-        name: 'شقة 101',
-        unitType: 'سكني',
-        area: '120 متر مربع',
-        floor: 'الطابق الأول',
-        building: 'المبنى أ',
-        totalPrice: 500000,
-        status: 'متاحة',
-        notes: 'وحدة تجريبية'
-      }
-    })
-  }
 
-  // إنشاء شريك تجريبي (إذا لم يكن موجوداً)
-  let testPartner = await prisma.partner.findFirst({
-    where: { name: 'محمد أحمد' }
+  console.log('✅ تم إنشاء العملاء:', { customer1: customer1.name, customer2: customer2.name })
+
+  // Create sample units
+  console.log('🏢 إنشاء الوحدات...')
+  
+  const unit1 = await prisma.unit.upsert({
+    where: { code: 'A101' },
+    update: {},
+    create: {
+      code: 'A101',
+      name: 'شقة 101 - الطابق الأول',
+      unitType: 'سكني',
+      area: '120 متر مربع',
+      floor: '1',
+      building: 'المبنى أ',
+      totalPrice: 500000,
+      status: 'متاحة'
+    }
   })
-  
-  if (!testPartner) {
-    testPartner = await prisma.partner.create({
-      data: {
-        name: 'محمد أحمد',
-        phone: '01087654321',
-        notes: 'شريك تجريبي'
-      }
-    })
-  }
 
-  // إنشاء وسيط تجريبي (إذا لم يكن موجوداً)
-  let testBroker = await prisma.broker.findFirst({
-    where: { name: 'علي حسن' }
+  const unit2 = await prisma.unit.upsert({
+    where: { code: 'A102' },
+    update: {},
+    create: {
+      code: 'A102',
+      name: 'شقة 102 - الطابق الأول',
+      unitType: 'سكني',
+      area: '100 متر مربع',
+      floor: '1',
+      building: 'المبنى أ',
+      totalPrice: 450000,
+      status: 'متاحة'
+    }
   })
-  
-  if (!testBroker) {
-    testBroker = await prisma.broker.create({
-      data: {
-        name: 'علي حسن',
-        phone: '01011111111',
-        notes: 'وسيط تجريبي'
-      }
-    })
-  }
 
-  console.log('✅ تم إنشاء البيانات التجريبية بنجاح!')
-  console.log(`- الخزنة: ${defaultSafe.name}`)
-  console.log(`- العميل: ${testCustomer.name}`)
-  console.log(`- الوحدة: ${testUnit.code}`)
-  console.log(`- الشريك: ${testPartner.name}`)
-  console.log(`- الوسيط: ${testBroker.name}`)
+  console.log('✅ تم إنشاء الوحدات:', { unit1: unit1.code, unit2: unit2.code })
+
+  // Create sample safes
+  console.log('💰 إنشاء الخزائن...')
+  
+  const safe1 = await prisma.safe.upsert({
+    where: { name: 'الخزينة الرئيسية' },
+    update: {},
+    create: {
+      name: 'الخزينة الرئيسية',
+      balance: 100000
+    }
+  })
+
+  const safe2 = await prisma.safe.upsert({
+    where: { name: 'خزينة الطوارئ' },
+    update: {},
+    create: {
+      name: 'خزينة الطوارئ',
+      balance: 50000
+    }
+  })
+
+  console.log('✅ تم إنشاء الخزائن:', { safe1: safe1.name, safe2: safe2.name })
+
+  // Create sample brokers
+  console.log('🤝 إنشاء الوسطاء...')
+  
+  const broker1 = await prisma.broker.upsert({
+    where: { name: 'محمد الوكيل' },
+    update: {},
+    create: {
+      name: 'محمد الوكيل',
+      phone: '01234567892',
+      notes: 'وسيط موثوق'
+    }
+  })
+
+  const broker2 = await prisma.broker.upsert({
+    where: { name: 'سارة الوسيط' },
+    update: {},
+    create: {
+      name: 'سارة الوسيط',
+      phone: '01234567893',
+      notes: 'خبرة 10 سنوات'
+    }
+  })
+
+  console.log('✅ تم إنشاء الوسطاء:', { broker1: broker1.name, broker2: broker2.name })
+
+  // Create sample partners
+  console.log('🤝 إنشاء الشركاء...')
+  
+  const partner1 = await prisma.partner.create({
+    data: {
+      name: 'شركة الاستثمار الأولى',
+      phone: '01234567894',
+      notes: 'شريك رئيسي'
+    }
+  })
+
+  const partner2 = await prisma.partner.create({
+    data: {
+      name: 'مجموعة التطوير العقاري',
+      phone: '01234567895',
+      notes: 'شريك ثانوي'
+    }
+  })
+
+  console.log('✅ تم إنشاء الشركاء:', { partner1: partner1.name, partner2: partner2.name })
+
+  console.log('🎉 تم الانتهاء من إدراج البيانات التجريبية بنجاح!')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ خطأ في إضافة البيانات التجريبية:', e)
+    console.error('❌ خطأ في إدراج البيانات:', e)
     process.exit(1)
   })
   .finally(async () => {

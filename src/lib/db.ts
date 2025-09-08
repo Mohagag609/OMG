@@ -1,11 +1,7 @@
 // Database connection and utilities
+import { prisma } from './database'
 
-import { createPrismaClient, testDatabaseConnection } from './database'
-
-// Test database connection on startup
-testDatabaseConnection()
-
-export const prisma = createPrismaClient()
+export { prisma }
 
 // Helper function to handle database errors
 export function handleDatabaseError(error: any): string {
@@ -76,81 +72,6 @@ export async function deleteRecord(model: any, id: string): Promise<any> {
     })
   } catch (error) {
     console.error('Error deleting record:', error)
-    throw error
-  }
-}
-
-// Helper function to get all records with pagination
-export async function getRecordsWithPagination(
-  model: any, 
-  page: number = 1, 
-  limit: number = 10,
-  where: any = {},
-  include: any = {}
-): Promise<{ data: any[]; total: number; totalPages: number }> {
-  try {
-    const skip = (page - 1) * limit
-    const whereClause = { ...where, deletedAt: null }
-    
-    const [data, total] = await Promise.all([
-      model.findMany({
-        where: whereClause,
-        include,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' }
-      }),
-      model.count({ where: whereClause })
-    ])
-    
-    const totalPages = Math.ceil(total / limit)
-    
-    return { data, total, totalPages }
-  } catch (error) {
-    console.error('Error getting records with pagination:', error)
-    throw error
-  }
-}
-
-// Helper function to search records
-export async function searchRecords(
-  model: any,
-  searchTerm: string,
-  searchFields: string[],
-  page: number = 1,
-  limit: number = 10
-): Promise<{ data: any[]; total: number; totalPages: number }> {
-  try {
-    const skip = (page - 1) * limit
-    
-    // Create search conditions
-    const searchConditions = searchFields.map(field => ({
-      [field]: {
-        contains: searchTerm,
-        mode: 'insensitive'
-      }
-    }))
-    
-    const whereClause = {
-      deletedAt: null,
-      OR: searchConditions
-    }
-    
-    const [data, total] = await Promise.all([
-      model.findMany({
-        where: whereClause,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' }
-      }),
-      model.count({ where: whereClause })
-    ])
-    
-    const totalPages = Math.ceil(total / limit)
-    
-    return { data, total, totalPages }
-  } catch (error) {
-    console.error('Error searching records:', error)
     throw error
   }
 }

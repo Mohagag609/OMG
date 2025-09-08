@@ -1,5 +1,4 @@
 // Authentication utilities
-
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { NextRequest } from 'next/server'
@@ -92,29 +91,6 @@ export function hasPermission(user: any, requiredRole: string): boolean {
   const requiredLevel = roleHierarchy[requiredRole as keyof typeof roleHierarchy] || 0
   
   return userLevel >= requiredLevel
-}
-
-// Middleware for protected routes
-export function requireAuth(requiredRole: string = 'user') {
-  return async (request: NextRequest) => {
-    const user = getUserFromRequest(request)
-    
-    if (!user) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'غير مخول للوصول' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-    
-    if (!hasPermission(user, requiredRole)) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'غير مخول للوصول' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-    
-    return null
-  }
 }
 
 // Create default users
