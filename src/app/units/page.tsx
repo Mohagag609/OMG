@@ -228,7 +228,9 @@ export default function Units() {
       return
     }
 
-    const totalPercent = selectedGroup.partners.reduce((sum, p) => sum + p.percent, 0)
+    // Get partners for this group from the partners array
+    const groupPartners = partners.filter(p => p.partnerGroupId === selectedGroup.id)
+    const totalPercent = groupPartners.reduce((sum, p) => sum + p.percent, 0)
     if (totalPercent !== 100) {
       addNotification({
         type: 'error',
@@ -632,9 +634,11 @@ export default function Units() {
     `
     
     const printWindow = window.open('', '_blank')
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-    printWindow.print()
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
   }
 
   if (loading) {
@@ -968,11 +972,15 @@ export default function Units() {
                   onChange={(e: any) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
                 >
                   <option value="">اختر مجموعة شركاء...</option>
-                  {partnerGroups.map(group => (
-                    <option key={group.id} value={group.id}>
-                      {group.name} ({group.partners.reduce((sum, p) => sum + p.percent, 0)}%)
-                    </option>
-                  ))}
+                  {partnerGroups.map(group => {
+                    const groupPartners = partners.filter(p => p.partnerGroupId === group.id)
+                    const totalPercent = groupPartners.reduce((sum, p) => sum + p.percent, 0)
+                    return (
+                      <option key={group.id} value={group.id}>
+                        {group.name} ({totalPercent}%)
+                      </option>
+                    )
+                  })}
                 </ModernSelect>
                 
                 <ModernSelect
@@ -1028,11 +1036,10 @@ export default function Units() {
         </div>
       )}
       
-        <NotificationSystem 
-          notifications={notifications} 
-          onRemove={removeNotification} 
-        />
-      </div>
+      <NotificationSystem 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   )
 }
