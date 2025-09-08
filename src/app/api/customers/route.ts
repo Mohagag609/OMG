@@ -112,27 +112,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if phone already exists
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { phone }
-    })
+    // Check if phone already exists (only if phone is provided)
+    if (phone && phone.trim()) {
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { phone }
+      })
 
-    if (existingCustomer) {
-      return NextResponse.json(
-        { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
-        { status: 400 }
-      )
+      if (existingCustomer) {
+        return NextResponse.json(
+          { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Check if nationalId already exists (only if nationalId is provided)
+    if (nationalId && nationalId.trim()) {
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { nationalId }
+      })
+
+      if (existingCustomer) {
+        return NextResponse.json(
+          { success: false, error: 'الرقم القومي مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
     }
 
     // Create customer
     const customer = await prisma.customer.create({
       data: {
         name,
-        phone,
-        nationalId,
-        address,
+        phone: phone || null,
+        nationalId: nationalId || null,
+        address: address || null,
         status: status || 'نشط',
-        notes
+        notes: notes || null
       }
     })
 

@@ -103,16 +103,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body
 
-    // Validate required fields
-    if (!name || !floor || !building || !totalPrice || !partnerGroupId) {
+    // Validate required fields - الاسم فقط مطلوب
+    if (!name) {
       return NextResponse.json(
-        { success: false, error: 'جميع الحقول المطلوبة يجب أن تكون مملوءة' },
+        { success: false, error: 'اسم الوحدة مطلوب' },
         { status: 400 }
       )
     }
 
     // Generate code from building, floor, and name
-    const code = `${building.replace(/\s/g, '')}-${floor.replace(/\s/g, '')}-${name.replace(/\s/g, '')}`
+    const sanitizedBuilding = (building || 'غير محدد').replace(/\s/g, '')
+    const sanitizedFloor = (floor || 'غير محدد').replace(/\s/g, '')
+    const sanitizedName = name.replace(/\s/g, '')
+    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
 
     // Check if code already exists
     const existingUnit = await prisma.unit.findUnique({
@@ -126,25 +129,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if partner group exists and has 100% total
-    const partnerGroup = await prisma.partnerGroup.findUnique({
-      where: { id: partnerGroupId },
-      include: { partners: true }
-    })
+    // Check if partner group exists and has 100% total (only if partnerGroupId is provided)
+    let partnerGroup = null
+    if (partnerGroupId && partnerGroupId.trim()) {
+      partnerGroup = await prisma.partnerGroup.findUnique({
+        where: { id: partnerGroupId },
+        include: { partners: true }
+      })
 
-    if (!partnerGroup) {
-      return NextResponse.json(
-        { success: false, error: 'مجموعة الشركاء غير موجودة' },
-        { status: 400 }
-      )
-    }
+      if (!partnerGroup) {
+        return NextResponse.json(
+          { success: false, error: 'مجموعة الشركاء غير موجودة' },
+          { status: 400 }
+        )
+      }
 
-    const totalPercent = partnerGroup.partners.reduce((sum, p) => sum + p.percentage, 0)
-    if (totalPercent !== 100) {
-      return NextResponse.json(
-        { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
-        { status: 400 }
-      )
+      const totalPercent = partnerGroup.partners.reduce((sum, p) => sum + p.percentage, 0)
+      if (totalPercent !== 100) {
+        return NextResponse.json(
+          { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
+          { status: 400 }
+        )
+      }
     }
 
     // Create unit and link partners in a transaction
@@ -155,24 +161,26 @@ export async function POST(request: NextRequest) {
           code,
           name,
           unitType: unitType || 'سكني',
-          area,
-          floor,
-          building,
-          totalPrice: parseFloat(totalPrice),
+          area: area || null,
+          floor: floor || null,
+          building: building || null,
+          totalPrice: totalPrice ? parseFloat(totalPrice) : 0,
           status: status || 'متاحة',
-          notes
+          notes: notes || null
         }
       })
 
-      // Link partners from the group to the unit
-      for (const groupPartner of partnerGroup.partners) {
-        await tx.unitPartner.create({
-          data: {
-            unitId: unit.id,
-            partnerId: groupPartner.partnerId,
-            percentage: groupPartner.percentage
-          }
-        })
+      // Link partners from the group to the unit (only if partnerGroup exists)
+      if (partnerGroup) {
+        for (const groupPartner of partnerGroup.partners) {
+          await tx.unitPartner.create({
+            data: {
+              unitId: unit.id,
+              partnerId: groupPartner.partnerId,
+              percentage: groupPartner.percentage
+            }
+          })
+        }
       }
 
       return unit
