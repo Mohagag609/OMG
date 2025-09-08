@@ -66,6 +66,11 @@ export default function PartnerDetails() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // Master-Detail Layout states
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [showDetailPanel, setShowDetailPanel] = useState(false)
+  
   const router = useRouter()
   const params = useParams()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -274,6 +279,40 @@ export default function PartnerDetails() {
     }
   }
 
+  const getTransactionsByDay = () => {
+    const transactionsByDay = new Map<string, any[]>()
+    
+    ledger.transactions.forEach(transaction => {
+      const dateKey = transaction.date.split('T')[0]
+      if (!transactionsByDay.has(dateKey)) {
+        transactionsByDay.set(dateKey, [])
+      }
+      transactionsByDay.get(dateKey)!.push(transaction)
+    })
+    
+    return transactionsByDay
+  }
+
+  const getDaySummary = (dateKey: string) => {
+    const dayTransactions = getTransactionsByDay().get(dateKey) || []
+    const dayIncome = dayTransactions.reduce((sum, tx) => sum + tx.income, 0)
+    const dayExpense = dayTransactions.reduce((sum, tx) => sum + tx.expense, 0)
+    const dayBalance = dayTransactions.length > 0 ? dayTransactions[dayTransactions.length - 1].balance : 0
+    
+    return {
+      date: dateKey,
+      income: dayIncome,
+      expense: dayExpense,
+      balance: dayBalance,
+      transactionCount: dayTransactions.filter(tx => !tx.isClosingEntry).length
+    }
+  }
+
+  const handleDayClick = (dateKey: string) => {
+    setSelectedDay(dateKey)
+    setShowDetailPanel(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -444,74 +483,199 @@ export default function PartnerDetails() {
                     <p className="text-gray-500">لا توجد معاملات</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-right py-3 px-4 font-semibold text-gray-700">التاريخ</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-700">البيان</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-700">دخل</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-700">صرف</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-700">الرصيد</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ledger.transactions.map((tx, index) => (
-                          <tr 
-                            key={index} 
-                            className={`border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150 ${
-                              tx.isClosingEntry ? 'bg-gray-50 font-semibold' : ''
-                            }`}
-                          >
-                            <td className="py-3 px-4">
-                              <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-700 font-semibold' : 'text-gray-600'}`}>
-                                {formatDate(tx.date)}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-800 font-semibold' : 'font-medium text-gray-900'}`}>
-                                {tx.isClosingEntry ? (
-                                  <span className="flex items-center">
-                                    <span className="mr-2">📊</span>
-                                    {tx.description}
-                                  </span>
-                                ) : (
-                                  tx.description
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              {tx.income > 0 ? (
-                                <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-green-600'}`}>
-                                  {formatCurrency(tx.income)}
+                  <div className="space-y-2">
+                    {Array.from(getTransactionsByDay().keys()).sort().map((dateKey) => {
+                      const daySummary = getDaySummary(dateKey)
+                      return (
+                        <div
+                          key={dateKey}
+                          onClick={() => handleDayClick(dateKey)}
+                          className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
+                            selectedDay === dateKey 
+                              ? 'bg-blue-50 border-blue-200 shadow-md' 
+                              : 'bg-white border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4 space-x-reverse">
+                              <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                                <span className="text-blue-600 font-bold text-sm">
+                                  {new Date(dateKey).getDate()}
                                 </span>
-                              ) : (
-                                <span className="text-sm text-gray-400">—</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4">
-                              {tx.expense > 0 ? (
-                                <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-red-600'}`}>
-                                  {formatCurrency(tx.expense)}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-900">
+                                  {new Date(dateKey).toLocaleDateString('ar-SA', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {daySummary.transactionCount} معاملة
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-left">
+                              <div className="text-sm font-semibold text-gray-900">
+                                {formatCurrency(daySummary.balance)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                رصيد اليوم
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between text-sm">
+                            <div className="flex items-center space-x-4 space-x-reverse">
+                              <div className="flex items-center space-x-1 space-x-reverse">
+                                <span className="text-green-600">+</span>
+                                <span className="font-medium text-green-600">
+                                  {formatCurrency(daySummary.income)}
                                 </span>
-                              ) : (
-                                <span className="text-sm text-gray-400">—</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4">
-                              <strong className={`text-sm font-bold ${tx.isClosingEntry ? 'text-gray-800' : 'text-blue-600'}`}>
-                                {formatCurrency(tx.balance)}
-                              </strong>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              </div>
+                              <div className="flex items-center space-x-1 space-x-reverse">
+                                <span className="text-red-600">-</span>
+                                <span className="font-medium text-red-600">
+                                  {formatCurrency(daySummary.expense)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-gray-500">
+                              {daySummary.income > 0 || daySummary.expense > 0 ? 'معاملات' : 'لا توجد معاملات'}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
             </ModernCard>
           </div>
+
+          {/* Detail Panel */}
+          {showDetailPanel && selectedDay && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      تفاصيل يوم {new Date(selectedDay).toLocaleDateString('ar-SA')}
+                    </h2>
+                    <button
+                      onClick={() => setShowDetailPanel(false)}
+                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {(() => {
+                    const dayTransactions = getTransactionsByDay().get(selectedDay) || []
+                    const daySummary = getDaySummary(selectedDay)
+                    
+                    return (
+                      <div>
+                        {/* Day Summary */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="bg-green-50 rounded-xl p-4">
+                            <div className="text-sm font-medium text-green-600 mb-1">إجمالي الدخل</div>
+                            <div className="text-xl font-bold text-green-700">
+                              {formatCurrency(daySummary.income)}
+                            </div>
+                          </div>
+                          <div className="bg-red-50 rounded-xl p-4">
+                            <div className="text-sm font-medium text-red-600 mb-1">إجمالي المصروفات</div>
+                            <div className="text-xl font-bold text-red-700">
+                              {formatCurrency(daySummary.expense)}
+                            </div>
+                          </div>
+                          <div className="bg-blue-50 rounded-xl p-4">
+                            <div className="text-sm font-medium text-blue-600 mb-1">رصيد اليوم</div>
+                            <div className="text-xl font-bold text-blue-700">
+                              {formatCurrency(daySummary.balance)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Transactions Table */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="text-right py-3 px-4 font-semibold text-gray-700">الوقت</th>
+                                <th className="text-right py-3 px-4 font-semibold text-gray-700">البيان</th>
+                                <th className="text-right py-3 px-4 font-semibold text-gray-700">دخل</th>
+                                <th className="text-right py-3 px-4 font-semibold text-gray-700">صرف</th>
+                                <th className="text-right py-3 px-4 font-semibold text-gray-700">الرصيد</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {dayTransactions.map((tx, index) => (
+                                <tr 
+                                  key={index} 
+                                  className={`border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150 ${
+                                    tx.isClosingEntry ? 'bg-gray-50 font-semibold' : ''
+                                  }`}
+                                >
+                                  <td className="py-3 px-4">
+                                    <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-700 font-semibold' : 'text-gray-600'}`}>
+                                      {tx.isClosingEntry ? 'إقفال' : new Date(tx.date).toLocaleTimeString('ar-SA', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      })}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-800 font-semibold' : 'font-medium text-gray-900'}`}>
+                                      {tx.isClosingEntry ? (
+                                        <span className="flex items-center">
+                                          <span className="mr-2">📊</span>
+                                          {tx.description}
+                                        </span>
+                                      ) : (
+                                        tx.description
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    {tx.income > 0 ? (
+                                      <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-green-600'}`}>
+                                        {formatCurrency(tx.income)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-sm text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    {tx.expense > 0 ? (
+                                      <span className={`text-sm font-semibold ${tx.isClosingEntry ? 'text-gray-600' : 'text-red-600'}`}>
+                                        {formatCurrency(tx.expense)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-sm text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <strong className={`text-sm font-bold ${tx.isClosingEntry ? 'text-gray-800' : 'text-blue-600'}`}>
+                                      {formatCurrency(tx.balance)}
+                                    </strong>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
