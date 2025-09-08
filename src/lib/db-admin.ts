@@ -239,8 +239,11 @@ export async function handleInitOrSwitch(payload: InitOrSwitchPayload): Promise<
       targetUrl = `postgresql://${pg.user}:${pg.password}@${pg.host}:${pg.port}/${pg.database}`
     } else if (type === 'postgresql-cloud' && cloudUrl) {
       targetUrl = cloudUrl
-    } else {
+    } else if (type === 'sqlite') {
       targetUrl = resolveUrlByType(type)
+    } else {
+      // Fallback to environment variable or default
+      targetUrl = process.env.DATABASE_URL || resolveUrlByType(type)
     }
     
     logs.push(`🎯 نوع القاعدة المستهدفة: ${type}`)

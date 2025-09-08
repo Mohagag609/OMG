@@ -3,10 +3,8 @@ import { getEnvVars, resolveUrlByType, DbType } from './env'
 
 // Create Prisma client with runtime URL override
 export function createPrismaClient(customUrl?: string) {
-  const env = getEnvVars()
-  
-  // Use custom URL if provided, otherwise resolve from current type
-  const databaseUrl = customUrl || resolveUrlByType(env.DATABASE_TYPE as DbType)
+  // Use custom URL if provided, otherwise use environment variable
+  const databaseUrl = customUrl || process.env.DATABASE_URL || 'file:./prisma/dev.db'
   
   return new PrismaClient({
     datasources: {
@@ -27,9 +25,8 @@ export async function testDatabaseConnection(customUrl?: string) {
   
   try {
     await client.$connect()
-    const env = getEnvVars()
-    console.log(`✅ تم الاتصال بقاعدة البيانات: ${env.DATABASE_TYPE}`)
-    return { success: true, type: env.DATABASE_TYPE }
+    console.log(`✅ تم الاتصال بقاعدة البيانات`)
+    return { success: true }
   } catch (error) {
     console.error('❌ فشل الاتصال بقاعدة البيانات:', error)
     return { 
