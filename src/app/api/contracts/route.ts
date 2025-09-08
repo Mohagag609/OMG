@@ -257,25 +257,24 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Create broker commission voucher if broker amount > 0
-      if (brokerAmount > 0 && commissionSafeId) {
-        await tx.voucher.create({
-          data: {
-            type: 'payment',
-            date: new Date(start),
-            amount: brokerAmount,
-            safeId: commissionSafeId,
-            description: `عمولة سمسار ${brokerName} للوحدة ${contract.unit?.code}`,
-            beneficiary: brokerName,
-            linkedRef: unitId
-          }
+      // Create broker due if broker amount > 0 (instead of immediate payment)
+      if (brokerAmount > 0 && brokerName) {
+        // Find broker by name
+        const broker = await tx.broker.findFirst({
+          where: { name: brokerName }
         })
 
-        // Update safe balance
-        await tx.safe.update({
-          where: { id: commissionSafeId },
-          data: { balance: { decrement: brokerAmount } }
-        })
+        if (broker) {
+          await tx.brokerDue.create({
+            data: {
+              brokerId: broker.id,
+              amount: brokerAmount,
+              dueDate: new Date(start), // Due date is contract start date
+              status: 'معلق', // Pending payment
+              notes: `عمولة عقد للوحدة ${contract.unit?.code}`
+            }
+          })
+        }
       }
 
       // Generate installments if payment type is installment

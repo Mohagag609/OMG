@@ -74,6 +74,8 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
 
 export default function Brokers() {
   const [brokers, setBrokers] = useState<Broker[]>([])
+  const [brokerDues, setBrokerDues] = useState<any[]>([])
+  const [safes, setSafes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -92,6 +94,15 @@ export default function Brokers() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [showDuesModal, setShowDuesModal] = useState(false)
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
+  const [showPayModal, setShowPayModal] = useState(false)
+  const [selectedDue, setSelectedDue] = useState<any>(null)
+  const [paymentData, setPaymentData] = useState({
+    safeId: '',
+    paymentDate: new Date().toISOString().split('T')[0],
+    notes: ''
+  })
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -131,6 +142,8 @@ export default function Brokers() {
     }
     
     fetchBrokers()
+    fetchBrokerDues()
+    fetchSafes()
   }, [])
 
   const fetchBrokers = async () => {
@@ -162,6 +175,38 @@ export default function Brokers() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchBrokerDues = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/broker-due', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setBrokerDues(data.data || [])
+      }
+    } catch (err) {
+      console.error('Error fetching broker dues:', err)
+    }
+  }
+
+  const fetchSafes = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/safes', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setSafes(data.data || [])
+      }
+    } catch (err) {
+      console.error('Error fetching safes:', err)
     }
   }
 
@@ -373,6 +418,89 @@ export default function Brokers() {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const getDueStatusColor = (status: string) => {
+    switch (status) {
+      case 'مدفوع':
+        return 'bg-green-100 text-green-800'
+      case 'معلق':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'متأخر':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const handlePayDue = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!selectedDue || !paymentData.safeId) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء تحديد الخزنة'
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/broker-due/${selectedDue.id}/pay`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(paymentData)
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setShowPayModal(false)
+        setSuccess('تم دفع العمولة بنجاح!')
+        setError(null)
+        setPaymentData({
+          safeId: '',
+          paymentDate: new Date().toISOString().split('T')[0],
+          notes: ''
+        })
+        fetchBrokerDues()
+        addNotification({
+          type: 'success',
+          title: 'تم الدفع بنجاح',
+          message: 'تم دفع العمولة بنجاح'
+        })
+      } else {
+        setError(data.error || 'خطأ في دفع العمولة')
+        setSuccess(null)
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الدفع',
+          message: data.error || 'فشل في دفع العمولة'
+        })
+      }
+    } catch (err) {
+      console.error('Pay due error:', err)
+      setError('خطأ في دفع العمولة')
+      setSuccess(null)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الدفع',
+        message: 'فشل في دفع العمولة'
+      })
+    }
+  }
+
+  const openDuesModal = (broker: Broker) => {
+    setSelectedBroker(broker)
+    setShowDuesModal(true)
+  }
+
+  const openPayModal = (due: any) => {
+    setSelectedDue(due)
+    setShowPayModal(true)
   }
 
   const exportToCSV = () => {
@@ -890,9 +1018,9 @@ export default function Brokers() {
                           <ModernButton 
                             size="sm" 
                             variant="info" 
-                            onClick={() => router.push(`/brokers/${broker.id}`)}
+                            onClick={() => openDuesModal(broker)}
                           >
-                            👁️ تفاصيل
+                            💰 العمولات
                           </ModernButton>
                           <ModernButton 
                             size="sm" 
@@ -919,6 +1047,150 @@ export default function Brokers() {
           )}
         </ModernCard>
       </div>
+
+      {/* Broker Dues Modal */}
+      {showDuesModal && selectedBroker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  عمولات السمسار: {selectedBroker.name}
+                </h2>
+                <button
+                  onClick={() => setShowDuesModal(false)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">تاريخ الاستحقاق</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">الحالة</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">الملاحظات</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {brokerDues
+                      .filter(due => due.brokerId === selectedBroker.id)
+                      .map((due) => (
+                        <tr key={due.id} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150">
+                          <td className="py-4 px-6">
+                            <div className="font-semibold text-green-600">
+                              {due.amount.toLocaleString()} ج.م
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="text-gray-600">{formatDate(due.dueDate)}</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDueStatusColor(due.status)}`}>
+                              {due.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="text-gray-600 max-w-xs truncate">{due.notes || '-'}</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center space-x-2 space-x-reverse">
+                              {due.status === 'معلق' && (
+                                <ModernButton 
+                                  size="sm" 
+                                  variant="success" 
+                                  onClick={() => openPayModal(due)}
+                                >
+                                  💳 دفع
+                                </ModernButton>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pay Due Modal */}
+      {showPayModal && selectedDue && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  دفع عمولة السمسار
+                </h2>
+                <button
+                  onClick={() => setShowPayModal(false)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handlePayDue} className="p-6">
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-blue-900 mb-2">تفاصيل العمولة</h3>
+                  <p className="text-blue-800">المبلغ: {selectedDue.amount.toLocaleString()} ج.م</p>
+                  <p className="text-blue-800">السمسار: {selectedDue.broker?.name}</p>
+                </div>
+
+                <ModernSelect
+                  label="الخزنة *"
+                  value={paymentData.safeId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPaymentData({...paymentData, safeId: e.target.value})}
+                  required
+                >
+                  <option value="">اختر الخزنة</option>
+                  {safes.map((safe) => (
+                    <option key={safe.id} value={safe.id}>
+                      {safe.name} - الرصيد: {safe.balance.toLocaleString()} ج.م
+                    </option>
+                  ))}
+                </ModernSelect>
+
+                <ModernInput
+                  label="تاريخ الدفع"
+                  type="date"
+                  value={paymentData.paymentDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentData({...paymentData, paymentDate: e.target.value})}
+                />
+                
+                <ModernTextarea
+                  label="ملاحظات إضافية"
+                  value={paymentData.notes}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPaymentData({...paymentData, notes: e.target.value})}
+                  placeholder="أدخل أي ملاحظات إضافية"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200 mt-6">
+                <ModernButton variant="secondary" onClick={() => setShowPayModal(false)}>
+                  إلغاء
+                </ModernButton>
+                <ModernButton type="submit">
+                  <span className="mr-2">💳</span>
+                  دفع العمولة
+                </ModernButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
       <NotificationSystem 
         notifications={notifications} 
