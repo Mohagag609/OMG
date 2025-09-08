@@ -4,17 +4,33 @@ import JSZip from 'jszip'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Starting system import...')
+    
     const formData = await request.formData()
     const file = formData.get('file') as File
 
     if (!file) {
+      console.error('No file provided for import')
       return NextResponse.json(
         { error: 'لم يتم العثور على ملف للاستيراد' },
         { status: 400 }
       )
     }
 
-    console.log('Starting system import...')
+    console.log('File received:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })
+
+    // Validate file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      console.error('File too large:', file.size)
+      return NextResponse.json(
+        { error: 'الملف كبير جداً. الحد الأقصى 100 ميجابايت' },
+        { status: 400 }
+      )
+    }
 
     // Detect database type
     const dbUrl = process.env.DATABASE_URL || ''
@@ -25,6 +41,7 @@ export async function POST(request: NextRequest) {
     console.log('Database type detected:', { isSQLite, isPostgreSQL, isNeon })
 
     // Read file content
+    console.log('Reading file content...')
     const fileContent = await file.arrayBuffer()
     let jsonData
 
@@ -34,27 +51,35 @@ export async function POST(request: NextRequest) {
         console.log('Processing ZIP file...')
         const zip = new JSZip()
         const zipContent = await zip.loadAsync(fileContent)
-        
+
         // Look for data.json in the ZIP
         const dataFile = zipContent.file('data.json')
         if (!dataFile) {
+          console.error('ZIP file does not contain data.json')
           return NextResponse.json(
             { error: 'ملف ZIP لا يحتوي على data.json' },
             { status: 400 }
           )
         }
-        
+
+        console.log('Extracting data.json from ZIP...')
         const jsonContent = await dataFile.async('text')
         jsonData = JSON.parse(jsonContent)
+        console.log('ZIP file processed successfully')
       } else {
         // Handle direct JSON file
+        console.log('Processing JSON file...')
         const textContent = new TextDecoder().decode(fileContent)
         jsonData = JSON.parse(textContent)
+        console.log('JSON file processed successfully')
       }
     } catch (error) {
       console.error('File parsing error:', error)
       return NextResponse.json(
-        { error: 'ملف غير صالح. يجب أن يكون ملف JSON أو ZIP صحيح' },
+        { 
+          error: 'ملف غير صالح. يجب أن يكون ملف JSON أو ZIP صحيح',
+          details: error instanceof Error ? error.message : 'خطأ في معالجة الملف'
+        },
         { status: 400 }
       )
     }
@@ -578,12 +603,18 @@ export async function POST(request: NextRequest) {
       console.error('Error getting current data count:', countError)
     }
     
+    // Return a more user-friendly error message
+    const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
+    const isDatabaseError = errorMessage.includes('database') || errorMessage.includes('connection') || errorMessage.includes('timeout')
+    
     return NextResponse.json(
       { 
-        error: 'فشل في استيراد البيانات',
-        details: error instanceof Error ? error.message : 'خطأ غير معروف',
+        error: isDatabaseError ? 'خطأ في الاتصال بقاعدة البيانات' : 'فشل في استيراد البيانات',
+        details: errorMessage,
         currentDataCount,
-        stack: error instanceof Error ? error.stack : undefined
+        timestamp: new Date().toISOString(),
+        // Don't include stack trace in production
+        ...(process.env.NODE_ENV === 'development' && { stack: error instanceof Error ? error.stack : undefined })
       },
       { status: 500 }
     )

@@ -115,26 +115,62 @@ export default function BackupNewPage() {
     }
 
     setIsLoading(true)
+    addNotification('بدء عملية الاستيراد...', 'info')
+    
     try {
       const formData = new FormData()
       formData.append('file', selectedFile)
+
+      console.log('Starting import with file:', selectedFile.name, 'Size:', selectedFile.size)
 
       const response = await fetch('/api/system/import', {
         method: 'POST',
         body: formData
       })
 
+      console.log('Import response status:', response.status)
+
       if (response.ok) {
         const result = await response.json()
-        addNotification(`تم استيراد البيانات بنجاح: ${JSON.stringify(result.importedData)}`, 'success')
+        console.log('Import result:', result)
+        
+        // Create a more readable success message
+        const importedData = result.importedData || {}
+        const verificationResults = result.verificationResults || {}
+        
+        let successMessage = 'تم استيراد البيانات بنجاح!\n'
+        successMessage += `المستخدمين: ${importedData.users || 0}\n`
+        successMessage += `الوحدات: ${importedData.units || 0}\n`
+        successMessage += `العملاء: ${importedData.customers || 0}\n`
+        successMessage += `السماسرة: ${importedData.brokers || 0}\n`
+        successMessage += `العقود: ${importedData.contracts || 0}\n`
+        successMessage += `الأقساط: ${importedData.installments || 0}\n`
+        successMessage += `الخزائن: ${importedData.safes || 0}\n`
+        successMessage += `الشركاء: ${importedData.partners || 0}\n`
+        
+        if (verificationResults.users > 0) {
+          successMessage += `\nتم التحقق: ${verificationResults.users} مستخدم في قاعدة البيانات`
+        }
+        
+        addNotification(successMessage, 'success')
         fetchBackupFiles()
       } else {
         const error = await response.json()
-        addNotification(error.error || 'فشل في استيراد البيانات', 'error')
+        console.error('Import error response:', error)
+        
+        let errorMessage = error.error || 'فشل في استيراد البيانات'
+        if (error.details) {
+          errorMessage += `\nالتفاصيل: ${error.details}`
+        }
+        if (error.currentDataCount) {
+          errorMessage += `\nالبيانات الحالية: ${JSON.stringify(error.currentDataCount)}`
+        }
+        
+        addNotification(errorMessage, 'error')
       }
     } catch (error) {
       console.error('Import error:', error)
-      addNotification('حدث خطأ أثناء استيراد البيانات', 'error')
+      addNotification(`حدث خطأ أثناء استيراد البيانات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`, 'error')
     } finally {
       setIsLoading(false)
     }
