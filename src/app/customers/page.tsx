@@ -144,7 +144,8 @@ export default function Customers() {
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newCustomer.name) {
+    // التحقق من الاسم فقط (مطلوب)
+    if (!newCustomer.name.trim()) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -154,7 +155,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الاسم
-    if (checkDuplicateName(newCustomer.name, customers)) {
+    if (checkDuplicateName(newCustomer.name.trim(), customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -164,7 +165,7 @@ export default function Customers() {
     }
 
     // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone && checkDuplicatePhone(newCustomer.phone, customers)) {
+    if (newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -174,7 +175,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId && checkDuplicateNationalId(newCustomer.nationalId, customers)) {
+    if (newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -261,7 +262,8 @@ export default function Customers() {
     
     if (!editingCustomer) return
 
-    if (!newCustomer.name) {
+    // التحقق من الاسم فقط (مطلوب)
+    if (!newCustomer.name.trim()) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -271,7 +273,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الاسم (باستثناء العميل الحالي)
-    if (checkDuplicateName(newCustomer.name, customers, editingCustomer.id)) {
+    if (checkDuplicateName(newCustomer.name.trim(), customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -281,7 +283,7 @@ export default function Customers() {
     }
 
     // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newCustomer.phone && checkDuplicatePhone(newCustomer.phone, customers, editingCustomer.id)) {
+    if (newCustomer.phone.trim() && checkDuplicatePhone(newCustomer.phone.trim(), customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -291,7 +293,7 @@ export default function Customers() {
     }
 
     // فحص تكرار الرقم القومي (إذا تم إدخاله)
-    if (newCustomer.nationalId && checkDuplicateNationalId(newCustomer.nationalId, customers, editingCustomer.id)) {
+    if (newCustomer.nationalId.trim() && checkDuplicateNationalId(newCustomer.nationalId.trim(), customers, editingCustomer.id)) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
@@ -542,7 +544,7 @@ export default function Customers() {
               {customers.filter(customer => 
                 search === '' || 
                 customer.name.toLowerCase().includes(search.toLowerCase()) ||
-                customer.phone.toLowerCase().includes(search.toLowerCase()) ||
+                (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
                 (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
               ).map((customer) => (
                 <tr 
@@ -559,7 +561,7 @@ export default function Customers() {
                     <div className="text-gray-900 font-bold text-base">{customer.name}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{customer.phone}</div>
+                    <div className="text-gray-800 font-semibold">{customer.phone || '-'}</div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
@@ -626,29 +628,39 @@ export default function Customers() {
             </div>
 
             <form onSubmit={editingCustomer ? handleEditCustomer : handleAddCustomer} className="p-6">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center">
+                  <span className="text-blue-500 mr-2">ℹ️</span>
+                  <span className="text-blue-700 text-sm font-medium">
+                    الاسم فقط مطلوب، باقي الحقول اختيارية
+                  </span>
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ModernInput
-                  label="الاسم *"
+                  label="الاسم * (مطلوب)"
                   type="text"
                   value={newCustomer.name}
                   onChange={(e: any) => setNewCustomer({...newCustomer, name: e.target.value})}
                   placeholder="اسم العميل"
+                  required
                 />
                 
                 <ModernInput
-                  label="رقم الهاتف"
+                  label="رقم الهاتف (اختياري)"
                   type="tel"
                   value={newCustomer.phone}
                   onChange={(e: any) => setNewCustomer({...newCustomer, phone: e.target.value})}
-                  placeholder="رقم الهاتف (اختياري)"
+                  placeholder="رقم الهاتف"
                 />
                 
                 <ModernInput
-                  label="الرقم القومي"
+                  label="الرقم القومي (اختياري)"
                   type="text"
                   value={newCustomer.nationalId}
                   onChange={(e: any) => setNewCustomer({...newCustomer, nationalId: e.target.value})}
-                  placeholder="الرقم القومي (اختياري)"
+                  placeholder="الرقم القومي"
                 />
                 
                 <ModernSelect
