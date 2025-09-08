@@ -19,13 +19,23 @@ export async function POST(request: NextRequest) {
       type,
       seed,
       pg: pg ? 'موجود' : 'غير موجود',
-      cloudUrl: cloudUrl ? `موجود (${cloudUrl.substring(0, 30)}...)` : 'غير موجود'
+      cloudUrl: cloudUrl ? `موجود (${cloudUrl.substring(0, 30)}...)` : 'غير موجود',
+      bodyKeys: Object.keys(body),
+      fullBody: JSON.stringify(body, null, 2)
     })
     
     // Validate required fields
     if (!type) {
+      console.log('❌ خطأ: نوع قاعدة البيانات مفقود')
       return NextResponse.json(
-        { ok: false, message: 'نوع قاعدة البيانات مطلوب' },
+        { 
+          ok: false, 
+          message: 'نوع قاعدة البيانات مطلوب',
+          details: {
+            receivedType: type,
+            receivedData: body
+          }
+        },
         { status: 400 }
       )
     }
@@ -33,8 +43,17 @@ export async function POST(request: NextRequest) {
     // Validate type
     const validTypes = ['sqlite', 'postgresql-local', 'postgresql-cloud']
     if (!validTypes.includes(type)) {
+      console.log('❌ خطأ: نوع قاعدة البيانات غير صحيح:', type)
       return NextResponse.json(
-        { ok: false, message: 'نوع قاعدة البيانات غير صحيح' },
+        { 
+          ok: false, 
+          message: 'نوع قاعدة البيانات غير صحيح',
+          details: {
+            receivedType: type,
+            validTypes: validTypes,
+            receivedData: body
+          }
+        },
         { status: 400 }
       )
     }
@@ -51,16 +70,40 @@ export async function POST(request: NextRequest) {
     
     // Validate PostgreSQL cloud configuration
     if (type === 'postgresql-cloud') {
+      console.log('🔍 التحقق من إعدادات PostgreSQL السحابي:', {
+        cloudUrl: cloudUrl ? `موجود (${cloudUrl.length} حرف)` : 'غير موجود',
+        cloudUrlEmpty: cloudUrl ? cloudUrl.trim() === '' : true,
+        cloudUrlStartsWithPostgresql: cloudUrl ? cloudUrl.startsWith('postgresql://') : false
+      })
+      
       if (!cloudUrl || cloudUrl.trim() === '') {
+        console.log('❌ خطأ: رابط قاعدة البيانات السحابية مفقود أو فارغ')
         return NextResponse.json(
-          { ok: false, message: 'رابط قاعدة البيانات السحابية مطلوب - يرجى إدخال رابط PostgreSQL الصحيح' },
+          { 
+            ok: false, 
+            message: 'رابط قاعدة البيانات السحابية مطلوب - يرجى إدخال رابط PostgreSQL الصحيح',
+            details: {
+              receivedCloudUrl: cloudUrl,
+              cloudUrlEmpty: cloudUrl ? cloudUrl.trim() === '' : true,
+              receivedData: body
+            }
+          },
           { status: 400 }
         )
       }
       
       if (!cloudUrl.startsWith('postgresql://')) {
+        console.log('❌ خطأ: رابط قاعدة البيانات لا يبدأ بـ postgresql://')
         return NextResponse.json(
-          { ok: false, message: 'رابط قاعدة البيانات يجب أن يبدأ بـ postgresql://' },
+          { 
+            ok: false, 
+            message: 'رابط قاعدة البيانات يجب أن يبدأ بـ postgresql://',
+            details: {
+              receivedCloudUrl: cloudUrl,
+              expectedFormat: 'postgresql://username:password@host:port/database',
+              receivedData: body
+            }
+          },
           { status: 400 }
         )
       }
@@ -84,10 +127,24 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ خطأ في API switch:', error)
+    console.error('❌ تفاصيل الخطأ:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      errorType: typeof error,
+      errorString: String(error)
+    })
+    
     return NextResponse.json(
       { 
         ok: false, 
-        message: error instanceof Error ? error.message : 'خطأ غير معروف' 
+        message: error instanceof Error ? error.message : 'خطأ غير معروف',
+        details: {
+          errorName: error instanceof Error ? error.name : 'Unknown',
+          errorType: typeof error,
+          errorString: String(error),
+          timestamp: new Date().toISOString()
+        }
       },
       { status: 500 }
     )
