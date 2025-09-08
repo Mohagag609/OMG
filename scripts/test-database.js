@@ -6,20 +6,23 @@ async function testDatabase() {
   // Load environment variables
   require('dotenv').config()
   
-  // Set DATABASE_URL based on DATABASE_TYPE
-  const dbType = process.env.DATABASE_TYPE || 'sqlite'
-  let databaseUrl
+  // Use DATABASE_URL directly if available, otherwise set based on DATABASE_TYPE
+  let databaseUrl = process.env.DATABASE_URL
   
-  if (dbType === 'sqlite') {
-    databaseUrl = process.env.SQLITE_DATABASE_URL || 'file:./dev.db'
-  } else if (dbType === 'postgresql-local') {
-    databaseUrl = process.env.POSTGRESQL_LOCAL_DATABASE_URL || 'postgresql://postgres:password@localhost:5432/estate_management'
-  } else if (dbType === 'postgresql-cloud') {
-    databaseUrl = process.env.POSTGRESQL_CLOUD_DATABASE_URL || 'postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+  if (!databaseUrl) {
+    const dbType = process.env.DATABASE_TYPE || 'sqlite'
+    
+    if (dbType === 'sqlite') {
+      databaseUrl = process.env.SQLITE_DATABASE_URL || 'file:./dev.db'
+    } else if (dbType === 'postgresql-local') {
+      databaseUrl = process.env.POSTGRESQL_LOCAL_DATABASE_URL || 'postgresql://postgres:password@localhost:5432/estate_management'
+    } else if (dbType === 'postgresql-cloud') {
+      databaseUrl = process.env.POSTGRESQL_CLOUD_DATABASE_URL || 'postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+    }
+    
+    // Set DATABASE_URL for Prisma
+    process.env.DATABASE_URL = databaseUrl
   }
-  
-  // Set DATABASE_URL for Prisma
-  process.env.DATABASE_URL = databaseUrl
   
   const prisma = new PrismaClient()
   
