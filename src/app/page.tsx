@@ -84,21 +84,12 @@ export default function Dashboard() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
     fetchKPIs()
-  }, [router])
+  }, [])
 
   const fetchKPIs = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const response = await fetch('/api/dashboard')
       
       const data = await response.json()
       if (data.success) {
