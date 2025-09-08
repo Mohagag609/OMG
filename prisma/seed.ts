@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+// Use environment variable for database URL if available
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+})
 
 async function main() {
   console.log('🌱 بدء إضافة البيانات التجريبية...')

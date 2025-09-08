@@ -19,6 +19,7 @@
     "exactOptionalPropertyTypes": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "types": ["node"],
     "plugins": [
       {
         "name": "next"
