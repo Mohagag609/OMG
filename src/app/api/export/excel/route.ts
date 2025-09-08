@@ -61,10 +61,6 @@ export async function GET(request: NextRequest) {
       case 'contracts':
         data = await prisma.contract.findMany({
           where: { deletedAt: null },
-          include: {
-            unit: true,
-            customer: true
-          },
           orderBy: { createdAt: 'desc' }
         })
         filename = 'contracts.xlsx'
@@ -72,10 +68,6 @@ export async function GET(request: NextRequest) {
       case 'vouchers':
         data = await prisma.voucher.findMany({
           where: { deletedAt: null },
-          include: {
-            safe: true,
-            unit: true
-          },
           orderBy: { createdAt: 'desc' }
         })
         filename = 'vouchers.xlsx'

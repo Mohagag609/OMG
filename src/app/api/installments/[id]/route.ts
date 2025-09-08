@@ -33,10 +33,7 @@ export async function GET(
     }
 
     const installment = await prisma.installment.findUnique({
-      where: { id: params.id },
-      include: {
-        unit: true
-      }
+      where: { id: params.id }
     })
 
     if (!installment) {
@@ -137,9 +134,6 @@ export async function PUT(
         dueDate: new Date(dueDate),
         status,
         notes
-      },
-      include: {
-        unit: true
       }
     })
 

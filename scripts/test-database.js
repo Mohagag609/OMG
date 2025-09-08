@@ -23,7 +23,7 @@ async function testDatabase() {
     console.log(`🏠 عدد الوحدات: ${unitCount}`)
     
     // Test database version
-    const version = await prisma.$queryRaw`SELECT sqlite_version() as version`
+    const version = await prisma.$queryRaw`SELECT version() as version`
     console.log(`📊 إصدار قاعدة البيانات:`, version)
     
     console.log('🎉 جميع الاختبارات نجحت!')

@@ -43,10 +43,6 @@ export async function GET(request: NextRequest) {
     const [unitPartners, total] = await Promise.all([
       prisma.unitPartner.findMany({
         where: whereClause,
-        include: {
-          unit: true,
-          partner: true
-        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }
@@ -173,10 +169,6 @@ export async function POST(request: NextRequest) {
         unitId,
         partnerId,
         percentage
-      },
-      include: {
-        unit: true,
-        partner: true
       }
     })
 

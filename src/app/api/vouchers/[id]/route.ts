@@ -33,11 +33,7 @@ export async function GET(
     }
 
     const voucher = await prisma.voucher.findUnique({
-      where: { id: params.id },
-      include: {
-        safe: true,
-        unit: true
-      }
+      where: { id: params.id }
     })
 
     if (!voucher) {
@@ -162,10 +158,6 @@ export async function PUT(
         payer,
         beneficiary,
         linkedRef
-      },
-      include: {
-        safe: true,
-        unit: true
       }
     })
 

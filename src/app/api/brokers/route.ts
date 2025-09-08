@@ -30,11 +30,6 @@ export async function GET(request: NextRequest) {
     const [brokers, total] = await Promise.all([
       prisma.broker.findMany({
         where: whereClause,
-        include: {
-          brokerDues: {
-            where: { deletedAt: null }
-          }
-        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }

@@ -19,9 +19,7 @@ export async function createNotification(data: NotificationData): Promise<void> 
         type: data.type,
         title: data.title,
         message: data.message,
-        category: data.category,
-        data: data.data ? JSON.stringify(data.data) : null,
-        expiresAt: data.expiresAt
+        userId: null
       }
     })
   } catch (error) {
@@ -97,9 +95,7 @@ export async function acknowledgeNotification(
     await prisma.notification.update({
       where: { id: notificationId },
       data: {
-        acknowledged: true,
-        acknowledgedAt: new Date(),
-        acknowledgedBy
+        isRead: true
       }
     })
     
@@ -121,11 +117,7 @@ export async function getUnacknowledgedCount(): Promise<number> {
   try {
     return await prisma.notification.count({
       where: {
-        acknowledged: false,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gte: new Date() } }
-        ]
+        isRead: false
       }
     })
   } catch (error) {
@@ -137,9 +129,13 @@ export async function getUnacknowledgedCount(): Promise<number> {
 // Clean expired notifications
 export async function cleanExpiredNotifications(): Promise<void> {
   try {
+    // Delete old notifications (older than 30 days)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
     await prisma.notification.deleteMany({
       where: {
-        expiresAt: { lt: new Date() }
+        createdAt: { lt: thirtyDaysAgo }
       }
     })
   } catch (error) {

@@ -33,13 +33,7 @@ export async function GET(
     }
 
     const broker = await prisma.broker.findUnique({
-      where: { id: params.id },
-      include: {
-        brokerDues: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+      where: { id: params.id }
     })
 
     if (!broker) {

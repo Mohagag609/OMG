@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -60,6 +60,20 @@ model Unit {
   @@map("units")
 }
 
+// Unit Partners
+model UnitPartner {
+  id        String  @id @default(cuid())
+  unitId    String
+  partnerId String
+  percentage Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@unique([unitId, partnerId])
+  @@map("unit_partners")
+}
+
 // Contracts
 model Contract {
   id              String   @id @default(cuid())
@@ -110,6 +124,20 @@ model Safe {
   @@map("safes")
 }
 
+// Transfers
+model Transfer {
+  id          String   @id @default(cuid())
+  fromSafeId  String
+  toSafeId    String
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  
+  @@map("transfers")
+}
+
 // Vouchers
 model Voucher {
   id          String   @id @default(cuid())
@@ -141,6 +169,21 @@ model Broker {
   @@map("brokers")
 }
 
+// Broker Dues
+model BrokerDue {
+  id        String   @id @default(cuid())
+  brokerId  String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@map("broker_dues")
+}
+
 // Partners
 model Partner {
   id        String  @id @default(cuid())
@@ -154,6 +197,47 @@ model Partner {
   @@map("partners")
 }
 
+// Partner Debts
+model PartnerDebt {
+  id        String   @id @default(cuid())
+  partnerId String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@map("partner_debts")
+}
+
+// Partner Groups
+model PartnerGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@map("partner_groups")
+}
+
+// Partner Group Partners
+model PartnerGroupPartner {
+  id              String   @id @default(cuid())
+  partnerGroupId  String
+  partnerId       String
+  percentage      Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  @@unique([partnerGroupId, partnerId])
+  @@map("partner_group_partners")
+}
+
 // Settings
 model Settings {
   id    String @id @default(cuid())
@@ -161,4 +245,45 @@ model Settings {
   value String
   
   @@map("settings")
+}
+
+// Audit Log
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  oldValues   String?  // JSON string
+  newValues   String?  // JSON string
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
+}
+
+// Key Value Store
+model KeyVal {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("key_vals")
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  userId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("notifications")
 }

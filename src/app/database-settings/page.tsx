@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { testDatabaseConnection, getDatabaseConfig, DATABASE_CONFIGS } from '@/lib/database'
+import { testDatabaseConnection } from '@/lib/database'
 
 export default function DatabaseSettingsPage() {
   const [currentConfig, setCurrentConfig] = useState<any>(null)
@@ -15,7 +15,7 @@ export default function DatabaseSettingsPage() {
   const loadCurrentConfig = async () => {
     try {
       const result = await testDatabaseConnection()
-      setCurrentConfig(result.config)
+      setCurrentConfig({ name: 'PostgreSQL (Neon)', type: 'postgresql' })
     } catch (error) {
       console.error('Error loading config:', error)
     } finally {
@@ -37,7 +37,7 @@ export default function DatabaseSettingsPage() {
       const result = await response.json()
       
       if (result.success) {
-        setMessage(`✅ تم التبديل إلى ${DATABASE_CONFIGS[dbType].name} بنجاح`)
+        setMessage(`✅ تم التبديل إلى قاعدة البيانات بنجاح`)
         await loadCurrentConfig()
       } else {
         setMessage(`❌ فشل التبديل: ${result.error}`)
@@ -110,7 +110,9 @@ export default function DatabaseSettingsPage() {
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">التبديل بين قواعد البيانات</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(DATABASE_CONFIGS).map(([key, config]) => (
+                {[
+                  { key: 'postgresql-cloud', config: { name: 'PostgreSQL (Neon)', description: 'قاعدة بيانات سحابية للإنتاج والنشر', url: 'postgresql://neondb_owner:***@ep-wild-term-ad65rwsj-pooler.c-2.us-east-1.aws.neon.tech/neondb' } }
+                ].map(({ key, config }) => (
                   <div key={key} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div>

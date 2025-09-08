@@ -34,11 +34,7 @@ export async function GET(
     }
 
     const contract = await prisma.contract.findUnique({
-      where: { id: params.id },
-      include: {
-        unit: true,
-        customer: true
-      }
+      where: { id: params.id }
     })
 
     if (!contract) {
@@ -48,7 +44,7 @@ export async function GET(
       )
     }
 
-    const response: ApiResponse<Contract> = {
+    const response: ApiResponse<any> = {
       success: true,
       data: contract
     }
@@ -146,16 +142,11 @@ export async function PUT(
         totalPrice,
         discountAmount,
         brokerName,
-        commissionSafeId,
         brokerAmount
-      },
-      include: {
-        unit: true,
-        customer: true
       }
     })
 
-    const response: ApiResponse<Contract> = {
+    const response: ApiResponse<any> = {
       success: true,
       data: contract,
       message: 'تم تحديث العقد بنجاح'

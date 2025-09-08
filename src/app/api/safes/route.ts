@@ -27,23 +27,6 @@ export async function GET(request: NextRequest) {
     const [safes, total] = await Promise.all([
       prisma.safe.findMany({
         where: whereClause,
-        include: {
-          vouchers: {
-            where: { deletedAt: null },
-            take: 5,
-            orderBy: { createdAt: 'desc' }
-          },
-          transfersFrom: {
-            where: { deletedAt: null },
-            take: 5,
-            orderBy: { createdAt: 'desc' }
-          },
-          transfersTo: {
-            where: { deletedAt: null },
-            take: 5,
-            orderBy: { createdAt: 'desc' }
-          }
-        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }

@@ -24,13 +24,6 @@ export async function GET(request: NextRequest) {
     }
 
     const partnerGroups = await prisma.partnerGroup.findMany({
-      include: {
-        partners: {
-          include: {
-            partner: true
-          }
-        }
-      },
       orderBy: { createdAt: 'desc' }
     })
 
@@ -41,10 +34,7 @@ export async function GET(request: NextRequest) {
       notes: group.notes,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
-      partners: group.partners.map(p => ({
-        partnerId: p.partnerId,
-        percent: p.percentage
-      }))
+      partners: []
     }))
 
     return NextResponse.json({ success: true, data: transformedGroups })

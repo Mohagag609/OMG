@@ -34,27 +34,7 @@ export async function GET(
     }
 
     const unit = await prisma.unit.findUnique({
-      where: { id: params.id },
-      include: {
-        contracts: {
-          where: { deletedAt: null },
-          include: {
-            customer: true
-          }
-        },
-        installments: {
-          where: { deletedAt: null }
-        },
-        vouchers: {
-          where: { deletedAt: null }
-        },
-        unitPartners: {
-          where: { deletedAt: null },
-          include: {
-            partner: true
-          }
-        }
-      }
+      where: { id: params.id }
     })
 
     if (!unit) {

@@ -34,18 +34,7 @@ export async function GET(
     const partnerId = params.id
 
     const partner = await prisma.partner.findUnique({
-      where: { id: partnerId },
-      include: {
-        unitPartners: {
-          where: { deletedAt: null },
-          include: {
-            unit: true
-          }
-        },
-        partnerDebts: {
-          where: { deletedAt: null }
-        }
-      }
+      where: { id: partnerId }
     })
 
     if (!partner) {

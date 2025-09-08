@@ -27,13 +27,13 @@ export async function checkDatabaseHealth() {
     return {
       status: 'healthy',
       responseTime,
-      database: 'SQLite'
+      database: 'PostgreSQL (Neon)'
     }
   } catch (error) {
     return {
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'خطأ غير معروف',
-      database: 'SQLite'
+      database: 'PostgreSQL (Neon)'
     }
   }
 }

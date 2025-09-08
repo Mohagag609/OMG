@@ -33,27 +33,7 @@ export async function GET(
     }
 
     const safe = await prisma.safe.findUnique({
-      where: { id: params.id },
-      include: {
-        vouchers: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        },
-        transfersFrom: {
-          where: { deletedAt: null },
-          include: {
-            toSafe: true
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        transfersTo: {
-          where: { deletedAt: null },
-          include: {
-            fromSafe: true
-          },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+      where: { id: params.id }
     })
 
     if (!safe) {

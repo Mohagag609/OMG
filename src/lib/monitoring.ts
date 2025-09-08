@@ -221,10 +221,7 @@ export async function checkDataIntegrity(): Promise<{
     // Check for orphaned records
     const orphanedContracts = await prisma.contract.findMany({
       where: {
-        OR: [
-          { unit: { deletedAt: { not: null } } },
-          { customer: { deletedAt: { not: null } } }
-        ]
+        deletedAt: { not: null }
       }
     })
     

@@ -55,18 +55,7 @@ export async function canDeleteEntity(entityType: string, entityId: string): Pro
       case 'safe':
         // Check if safe has balance or transactions
         const safe = await prisma.safe.findUnique({
-          where: { id: entityId },
-          include: {
-            vouchers: {
-              where: { deletedAt: null }
-            },
-            transfersFrom: {
-              where: { deletedAt: null }
-            },
-            transfersTo: {
-              where: { deletedAt: null }
-            }
-          }
+          where: { id: entityId }
         })
         
         if (!safe) {
@@ -80,10 +69,10 @@ export async function canDeleteEntity(entityType: string, entityId: string): Pro
           }
         }
         
-        if (safe.vouchers.length > 0 || safe.transfersFrom.length > 0 || safe.transfersTo.length > 0) {
+        if (safe.balance > 0) {
           return {
             canDelete: false,
-            reason: 'لا يمكن حذف خزنة لها معاملات'
+            reason: 'لا يمكن حذف خزنة لها رصيد'
           }
         }
         break

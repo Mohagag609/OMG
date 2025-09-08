@@ -52,9 +52,6 @@ export async function GET(request: NextRequest) {
     const [partnerDebts, total] = await Promise.all([
       prisma.partnerDebt.findMany({
         where: whereClause,
-        include: {
-          partner: true
-        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }
@@ -145,9 +142,6 @@ export async function POST(request: NextRequest) {
         dueDate: new Date(dueDate),
         notes: notes || null,
         status: 'غير مدفوع'
-      },
-      include: {
-        partner: true
       }
     })
 
