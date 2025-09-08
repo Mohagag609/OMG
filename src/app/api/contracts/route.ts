@@ -381,8 +381,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating contract:', error)
     console.error('Error details:', JSON.stringify(error, null, 2))
+    const errorMessage = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { success: false, error: `خطأ في قاعدة البيانات: ${error.message || error}` },
+      { success: false, error: `خطأ في قاعدة البيانات: ${errorMessage}` },
       { status: 500 }
     )
   }
