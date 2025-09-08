@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
+import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -626,9 +627,7 @@ export default function Contracts() {
                   إضافة عقد جديد
                   <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
                 </ModernButton>
-                <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                  العودة للرئيسية
-                </ModernButton>
+                <NavigationButtons />
               </div>
             </div>
           </div>

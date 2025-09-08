@@ -16,10 +16,13 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
-  // Close sidebar on route change for mobile
+  // Close sidebar on route change and when returning to dashboard
   useEffect(() => {
     const handleRouteChange = () => {
-      if (window.innerWidth < 1024) {
+      // Always close sidebar when returning to dashboard
+      if (window.location.pathname === '/') {
+        setSidebarOpen(false)
+      } else if (window.innerWidth < 1024) {
         setSidebarOpen(false)
       }
     }
@@ -30,6 +33,9 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
       handleRouteChange()
       return originalPush.apply(router, args)
     }
+
+    // Also close sidebar when component mounts (dashboard load)
+    handleRouteChange()
 
     return () => {
       router.push = originalPush
@@ -45,13 +51,37 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
             e.preventDefault()
             setSidebarOpen(!sidebarOpen)
             break
+          case 'n':
+            e.preventDefault()
+            router.push('/units')
+            break
+          case 'p':
+            e.preventDefault()
+            router.push('/partners')
+            break
+          case 'c':
+            e.preventDefault()
+            router.push('/contracts')
+            break
+          case 't':
+            e.preventDefault()
+            router.push('/treasury')
+            break
+          case 'i':
+            e.preventDefault()
+            router.push('/installments')
+            break
+          case 's':
+            e.preventDefault()
+            router.push('/customers')
+            break
         }
       }
     }
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [sidebarOpen])
+  }, [sidebarOpen, router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
