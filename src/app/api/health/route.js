@@ -6,10 +6,19 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-    return NextResponse.json({
-        success: true,
-        message: 'API يعمل بشكل صحيح',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
+    try {
+        return NextResponse.json({
+            success: true,
+            message: 'API يعمل بشكل صحيح',
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development'
+        });
+    } catch (error) {
+        return NextResponse.json({
+            success: false,
+            message: 'خطأ في API',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        }, { status: 500 });
+    }
 }
