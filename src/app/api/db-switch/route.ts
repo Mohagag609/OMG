@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { saveDatabaseConfig } from '@/lib/databaseConfig'
+import { testDatabaseConnection } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -51,14 +53,50 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
-    // For now, just return success without actual database operations
+    // Test actual database connection
+    console.log('🔍 اختبار الاتصال بقاعدة البيانات...')
+    const connectionTest = await testDatabaseConnection(connectionString)
+    
+    if (!connectionTest.success) {
+      return NextResponse.json({
+        success: false,
+        message: `فشل في الاتصال بقاعدة البيانات: ${connectionTest.error}`
+      }, { status: 400 })
+    }
+    
+    console.log('✅ تم التحقق من الاتصال')
+    
+    // Save configuration to database-config.json
+    console.log('💾 حفظ إعدادات قاعدة البيانات...')
+    const configSaved = saveDatabaseConfig({
+      type: type as any,
+      connectionString,
+      isConnected: true,
+      lastTested: new Date().toISOString()
+    })
+    
+    if (!configSaved) {
+      return NextResponse.json({
+        success: false,
+        message: 'فشل في حفظ إعدادات قاعدة البيانات'
+      }, { status: 500 })
+    }
+    
+    // Update environment variables
+    process.env.DATABASE_URL = connectionString
+    process.env.DATABASE_TYPE = type
+    
+    console.log('✅ تم تحديث متغيرات البيئة')
+    
     return NextResponse.json({
       success: true,
-      message: 'تم تبديل قاعدة البيانات بنجاح (وضع الاختبار)',
+      message: 'تم تبديل قاعدة البيانات بنجاح',
       data: {
         type,
         connectionString: connectionString.substring(0, 50) + '...',
-        connected: true
+        connected: true,
+        configUpdated: true,
+        environmentUpdated: true
       }
     })
     

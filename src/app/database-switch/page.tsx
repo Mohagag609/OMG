@@ -1,4 +1,5 @@
 import SimpleDbSwitch from '@/components/admin/SimpleDbSwitch'
+import DatabaseStatus from '@/components/admin/DatabaseStatus'
 
 export default function DatabaseSwitchPage() {
   return (
@@ -13,7 +14,14 @@ export default function DatabaseSwitchPage() {
           </p>
         </div>
 
-        <SimpleDbSwitch />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <SimpleDbSwitch />
+          </div>
+          <div>
+            <DatabaseStatus />
+          </div>
+        </div>
 
         {/* Instructions */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
