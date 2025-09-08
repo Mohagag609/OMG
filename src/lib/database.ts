@@ -45,6 +45,9 @@ export function createPrismaClient() {
   // Set DATABASE_URL environment variable for Prisma
   process.env.DATABASE_URL = config.url
   
+  console.log(`🔗 Connecting to database: ${config.name} (${config.type})`)
+  console.log(`📡 Database URL: ${config.url.replace(/\/\/.*@/, '//***:***@')}`)
+  
   return new PrismaClient({
     datasources: {
       db: {

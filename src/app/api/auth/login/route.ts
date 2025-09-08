@@ -64,8 +64,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error during login:', error)
+    
+    // More specific error handling
+    if (error instanceof Error) {
+      console.error('Error details:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'خطأ في قاعدة البيانات: ' + (error instanceof Error ? error.message : 'خطأ غير معروف') },
       { status: 500 }
     )
   }
