@@ -28,6 +28,8 @@ export default function SimpleDbSwitch() {
     setResult(null)
 
     try {
+      console.log('🔄 إرسال البيانات:', formData)
+      
       const response = await fetch('/api/database/switch', {
         method: 'POST',
         headers: {
@@ -36,9 +38,18 @@ export default function SimpleDbSwitch() {
         body: JSON.stringify(formData)
       })
 
+      console.log('📡 Response status:', response.status)
+      console.log('📡 Response ok:', response.ok)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log('📦 Response data:', data)
       setResult(data)
     } catch (error) {
+      console.error('❌ خطأ في الطلب:', error)
       setResult({
         success: false,
         message: `خطأ في الاتصال: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`

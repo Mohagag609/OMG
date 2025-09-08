@@ -11,12 +11,23 @@ interface SwitchRequest {
   adminKey: string
 }
 
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔄 بدء عملية تبديل قاعدة البيانات...')
+    console.log('🔍 Request URL:', request.url)
+    console.log('🔍 Request method:', request.method)
     
     // Parse request
     const body: SwitchRequest = await request.json()
+    console.log('🔍 Request body:', body)
     const { type, connectionString, adminKey } = body
     
     // Simple admin key check
@@ -100,9 +111,17 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ خطأ في تبديل قاعدة البيانات:', error)
+    console.error('❌ تفاصيل الخطأ:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
+    
     return NextResponse.json({
       success: false,
-      message: `خطأ في تبديل قاعدة البيانات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
+      message: `خطأ في تبديل قاعدة البيانات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`,
+      error: error instanceof Error ? error.message : 'خطأ غير معروف',
+      timestamp: new Date().toISOString()
     }, { status: 500 })
   }
 }
