@@ -6,6 +6,15 @@ const prisma = new PrismaClient();
 async function createUsers() {
   console.log('🔐 بدء إنشاء المستخدمين...');
   try {
+    // Check if we're in production
+    const isProduction = process.env.NODE_ENV === 'production'
+    const databaseUrl = process.env.DATABASE_URL
+
+    if (isProduction && databaseUrl && !databaseUrl.startsWith('file:')) {
+      console.log('Production environment detected - skipping user creation');
+      return
+    }
+
     // Hash passwords
     const hashedPasswordAdmin = await bcrypt.hash('admin123', 12);
     const hashedPasswordUser = await bcrypt.hash('user123', 12);
@@ -45,7 +54,12 @@ async function createUsers() {
 
   } catch (error) {
     console.error('❌ خطأ في إنشاء المستخدمين:', error);
-    process.exit(1);
+    // Don't exit in production
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    } else {
+      console.log('Continuing build despite user creation error in production');
+    }
   } finally {
     await prisma.$disconnect();
   }

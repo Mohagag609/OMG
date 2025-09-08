@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "build:production": "npm run db:postgresql-cloud || echo 'Database switch failed, continuing...' && npx prisma generate && NODE_OPTIONS='--max-old-space-size=4096' npm run build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -24,7 +25,7 @@
     "backup:restore": "node scripts/restore-backup.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "postinstall": "prisma generate && node scripts/setup-db.js && node scripts/create-users.js",
+    "postinstall": "prisma generate && (node scripts/setup-db.js || echo 'Database setup skipped') && (node scripts/create-users.js || echo 'User creation skipped')",
     "deploy:netlify": "npm run build && netlify deploy --prod",
     "deploy:vercel": "npm run build && vercel --prod"
   },

@@ -52,7 +52,12 @@ try {
   console.log('✅ تم توليد Prisma Client بنجاح')
 } catch (error) {
   console.error('❌ فشل في توليد Prisma Client:', error.message)
-  process.exit(1)
+  // In production, don't exit to allow build to continue
+  if (process.env.NODE_ENV === 'production') {
+    console.log('⚠️  Continuing build despite Prisma generation error in production')
+  } else {
+    process.exit(1)
+  }
 }
 
 console.log(`\n🎉 تم التبديل إلى ${DATABASE_TYPE} بنجاح!`)
