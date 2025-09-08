@@ -7,6 +7,8 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken']
   },
+  // إصلاح مشكلة useContext في Server Components
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {
