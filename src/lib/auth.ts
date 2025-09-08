@@ -51,7 +51,7 @@ export async function getUserFromToken(token: string): Promise<any> {
   
   try {
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(decoded.id) },
+      where: { id: typeof decoded.id === 'string' ? parseInt(decoded.id) : decoded.id },
       select: {
         id: true,
         username: true,
