@@ -21,6 +21,13 @@ export const prisma = createPrismaClient()
 
 // Test database connection
 export async function testDatabaseConnection(customUrl?: string) {
+  if (!customUrl) {
+    return { 
+      success: false, 
+      error: 'رابط قاعدة البيانات مطلوب' 
+    }
+  }
+
   const client = createPrismaClient(customUrl)
   
   try {
@@ -34,7 +41,11 @@ export async function testDatabaseConnection(customUrl?: string) {
       error: error instanceof Error ? error.message : 'خطأ غير معروف' 
     }
   } finally {
-    await client.$disconnect()
+    try {
+      await client.$disconnect()
+    } catch (disconnectError) {
+      console.warn('تحذير: فشل في قطع الاتصال:', disconnectError)
+    }
   }
 }
 
