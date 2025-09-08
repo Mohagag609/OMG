@@ -19,6 +19,7 @@
     "db:sqlite": "npm run switch-db sqlite",
     "db:postgresql-local": "npm run switch-db postgresql-local",
     "db:postgresql-cloud": "npm run switch-db postgresql-cloud",
+    "deploy:neon": "npm run switch-db postgresql-cloud && npx prisma generate && npm run build",
     "setup-postgresql": "node scripts/setup-postgresql.js",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
