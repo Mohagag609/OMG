@@ -183,11 +183,11 @@ export default function Units() {
       return
     }
 
-    // إنشاء كود الوحدة التلقائي
+    // إنشاء كود الوحدة التلقائي (ترتيب معكوس)
     const sanitizedBuilding = (newUnit.building || 'غير محدد').replace(/\s/g, '')
     const sanitizedFloor = (newUnit.floor || 'غير محدد').replace(/\s/g, '')
     const sanitizedName = newUnit.name.replace(/\s/g, '')
-    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
+    const code = `${sanitizedName}-${sanitizedFloor}-${sanitizedBuilding}`
 
     // فحص تكرار كود الوحدة
     if (units.some(u => u.code.toLowerCase() === code.toLowerCase())) {
@@ -322,11 +322,11 @@ export default function Units() {
       return
     }
 
-    // إنشاء كود الوحدة التلقائي
+    // إنشاء كود الوحدة التلقائي (ترتيب معكوس)
     const sanitizedBuilding = (newUnit.building || 'غير محدد').replace(/\s/g, '')
     const sanitizedFloor = (newUnit.floor || 'غير محدد').replace(/\s/g, '')
     const sanitizedName = newUnit.name.replace(/\s/g, '')
-    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
+    const code = `${sanitizedName}-${sanitizedFloor}-${sanitizedBuilding}`
 
     // فحص تكرار كود الوحدة (باستثناء الوحدة الحالية)
     if (units.some(u => u.id !== editingUnit.id && u.code.toLowerCase() === code.toLowerCase())) {
@@ -725,7 +725,6 @@ export default function Units() {
                 <tr className="border-b border-gray-200">
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">كود الوحدة</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">النوع</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المساحة</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الطابق</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المبنى</th>
@@ -733,6 +732,7 @@ export default function Units() {
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المتبقي</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الشركاء</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">النوع</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
               </thead>
@@ -762,9 +762,6 @@ export default function Units() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="text-gray-800 font-semibold">{unit.name || '-'}</div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="text-gray-800 font-semibold">{unit.unitType}</div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="text-gray-800 font-semibold">{unit.area || '-'}</div>
@@ -806,6 +803,9 @@ export default function Units() {
                             <span className="text-gray-400">لا يوجد شركاء</span>
                           )}
                         </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-gray-800 font-semibold">{unit.unitType}</div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2 space-x-reverse">

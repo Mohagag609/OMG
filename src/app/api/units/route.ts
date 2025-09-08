@@ -111,11 +111,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate code from building, floor, and name
+    // Generate code from building, floor, and name (reversed order)
     const sanitizedBuilding = (building || 'غير محدد').replace(/\s/g, '')
     const sanitizedFloor = (floor || 'غير محدد').replace(/\s/g, '')
     const sanitizedName = name.replace(/\s/g, '')
-    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
+    const code = `${sanitizedName}-${sanitizedFloor}-${sanitizedBuilding}`
 
     // Check if code already exists
     const existingUnit = await prisma.unit.findFirst({
