@@ -1024,6 +1024,6 @@ export default function Units() {
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-    </div>
+    </Layout>
   )
 }
