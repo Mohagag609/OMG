@@ -1,12 +1,13 @@
 [build]
-  command = "npm run db:postgresql-cloud && npx prisma generate && npm run build"
+  command = "npm run db:postgresql-cloud && npx prisma generate && NODE_OPTIONS='--max-old-space-size=4096' npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
+  NODE_OPTIONS = "--max-old-space-size=4096"
   DATABASE_TYPE = "postgresql-cloud"
-  DATABASE_URL = "postgresql://neondb_owner:npg_iIXv7WPbcQj2@ep-square-sky-adjw0es3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  DATABASE_URL = "postgresql://neondb_owner:npg_FAIGNyR6Mdg3@ep-wild-term-ad65rwsj-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
   JWT_SECRET = "estate-management-production-secret-key-change-this"
   NEXTAUTH_URL = "https://your-app-name.netlify.app"
   NEXTAUTH_SECRET = "nextauth-production-secret-key-change-this"
