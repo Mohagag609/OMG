@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Unit, UnitPartner } from '@/types'
-import { formatCurrency, formatDate } from '@/utils/formatting'
+import { formatCurrency, formatDate, calculateRemainingAmount } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { checkDuplicateCode } from '@/utils/duplicateCheck'
 
@@ -65,13 +65,25 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
 export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
   const [unitPartners, setUnitPartners] = useState<UnitPartner[]>([])
+  const [contracts, setContracts] = useState<any[]>([])
+  const [installments, setInstallments] = useState<any[]>([])
+  const [vouchers, setVouchers] = useState<any[]>([])
+  const [partners, setPartners] = useState<any[]>([])
+  const [partnerGroups, setPartnerGroups] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showUnitDetailsModal, setShowUnitDetailsModal] = useState(false)
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [deletingUnits, setDeletingUnits] = useState<Set<string>>(new Set())
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null)
+  const [newPartner, setNewPartner] = useState({
+    partnerId: '',
+    percentage: ''
+  })
   const [newUnit, setNewUnit] = useState({
     code: '',
     name: '',
@@ -81,7 +93,8 @@ export default function Units() {
     building: '',
     totalPrice: '',
     status: 'متاحة',
-    notes: ''
+    notes: '',
+    partnerGroupId: ''
   })
   
   const router = useRouter()
@@ -127,14 +140,24 @@ export default function Units() {
     try {
       const token = localStorage.getItem('authToken')
       
-      const [unitsResponse, unitPartnersResponse] = await Promise.all([
+      const [unitsResponse, unitPartnersResponse, contractsResponse, installmentsResponse, vouchersResponse, partnersResponse, partnerGroupsResponse] = await Promise.all([
         fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/installments', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/vouchers', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       
-      const [unitsData, unitPartnersData] = await Promise.all([
+      const [unitsData, unitPartnersData, contractsData, installmentsData, vouchersData, partnersData, partnerGroupsData] = await Promise.all([
         unitsResponse.json(),
-        unitPartnersResponse.json()
+        unitPartnersResponse.json(),
+        contractsResponse.json(),
+        installmentsResponse.json(),
+        vouchersResponse.json(),
+        partnersResponse.json(),
+        partnerGroupsResponse.json()
       ])
       
       if (unitsData.success) {
@@ -145,6 +168,26 @@ export default function Units() {
 
       if (unitPartnersData.success) {
         setUnitPartners(unitPartnersData.data)
+      }
+
+      if (contractsData.success) {
+        setContracts(contractsData.data)
+      }
+
+      if (installmentsData.success) {
+        setInstallments(installmentsData.data)
+      }
+
+      if (vouchersData.success) {
+        setVouchers(vouchersData.data)
+      }
+
+      if (partnersData.success) {
+        setPartners(partnersData.data)
+      }
+
+      if (partnerGroupsData.success) {
+        setPartnerGroups(partnerGroupsData.data)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -157,21 +200,35 @@ export default function Units() {
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newUnit.code) {
+    if (!newUnit.name || !newUnit.floor || !newUnit.building || !newUnit.totalPrice || !newUnit.partnerGroupId) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال كود الوحدة'
+        message: 'جميع الحقول المطلوبة يجب أن تكون مملوءة'
       })
       return
     }
 
+    // Generate code from building, floor, and name
+    const code = `${newUnit.building.replace(/\s/g, '')}-${newUnit.floor.replace(/\s/g, '')}-${newUnit.name.replace(/\s/g, '')}`
+    
     // فحص تكرار كود الوحدة
-    if (checkDuplicateCode(newUnit.code, units)) {
+    if (units.some(u => u.code.toLowerCase() === code.toLowerCase())) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'كود الوحدة موجود بالفعل'
+        message: 'وحدة بنفس الاسم والدور والبرج موجودة بالفعل'
+      })
+      return
+    }
+
+    // Check if partner group exists and has 100% total
+    const partnerGroup = partnerGroups.find(g => g.id === newUnit.partnerGroupId)
+    if (!partnerGroup) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'مجموعة الشركاء غير موجودة'
       })
       return
     }
@@ -201,7 +258,8 @@ export default function Units() {
       building: '',
       totalPrice: '',
       status: 'متاحة',
-      notes: ''
+      notes: '',
+      partnerGroupId: ''
     })
 
     try {
@@ -214,7 +272,8 @@ export default function Units() {
         },
         body: JSON.stringify({
           ...newUnit,
-          totalPrice: parseFloat(newUnit.totalPrice)
+          totalPrice: parseFloat(newUnit.totalPrice),
+          partnerGroupId: newUnit.partnerGroupId
         })
       })
 
@@ -288,7 +347,8 @@ export default function Units() {
       building: '',
       totalPrice: '',
       status: 'متاحة',
-      notes: ''
+      notes: '',
+      partnerGroupId: ''
     })
 
     try {
@@ -423,8 +483,328 @@ export default function Units() {
   }
 
   const getPartnerName = (partnerId: string) => {
-    // This would need to be implemented with actual partner data
-    return `شريك ${partnerId.slice(-4)}`
+    const partner = partners.find(p => p.id === partnerId)
+    return partner ? partner.name : `شريك ${partnerId.slice(-4)}`
+  }
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
+
+  const getSortedUnits = () => {
+    let sortedUnits = [...units]
+    
+    if (sortConfig) {
+      sortedUnits.sort((a, b) => {
+        let aValue: any = a[sortConfig.key as keyof Unit]
+        let bValue: any = b[sortConfig.key as keyof Unit]
+        
+        if (sortConfig.key === 'remaining') {
+          aValue = calculateRemainingAmount(a, contracts, installments, vouchers)
+          bValue = calculateRemainingAmount(b, contracts, installments, vouchers)
+        }
+        
+        if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase()
+          bValue = bValue.toLowerCase()
+        }
+        
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1
+        }
+        return 0
+      })
+    }
+    
+    return sortedUnits
+  }
+
+  const getFilteredUnits = () => {
+    const sortedUnits = getSortedUnits()
+    
+    if (!search) return sortedUnits
+    
+    return sortedUnits.filter(unit => {
+      const searchable = `${unit.code || ''} ${unit.name || ''} ${unit.floor || ''} ${unit.building || ''} ${unit.status || ''} ${unit.area || ''} ${unit.unitType || ''}`.toLowerCase()
+      return searchable.includes(search.toLowerCase())
+    })
+  }
+
+  const exportToCSV = () => {
+    const headers = ['كود الوحدة', 'الاسم', 'النوع', 'المساحة', 'الطابق', 'المبنى', 'السعر', 'المتبقي', 'الحالة', 'الشركاء', 'ملاحظات']
+    const rows = getFilteredUnits().map(unit => {
+      const partners = getUnitPartners(unit.id)
+        .map(up => `${getPartnerName(up.partnerId)} (${up.percentage}%)`)
+        .join(' | ')
+      const remaining = calculateRemainingAmount(unit, contracts, installments, vouchers)
+      
+      return [
+        unit.code,
+        unit.name || '',
+        unit.unitType,
+        unit.area || '',
+        unit.floor || '',
+        unit.building || '',
+        unit.totalPrice,
+        remaining,
+        unit.status,
+        partners || 'لا يوجد شركاء',
+        unit.notes || ''
+      ]
+    })
+    
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `units-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const printPDF = () => {
+    const printContent = `
+      <html dir="rtl">
+        <head>
+          <title>تقرير الوحدات</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .date { text-align: left; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>تقرير الوحدات</h1>
+            <div class="date">تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>كود الوحدة</th>
+                <th>الاسم</th>
+                <th>النوع</th>
+                <th>المساحة</th>
+                <th>الطابق</th>
+                <th>المبنى</th>
+                <th>السعر</th>
+                <th>المتبقي</th>
+                <th>الحالة</th>
+                <th>الشركاء</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${getFilteredUnits().map(unit => {
+                const partners = getUnitPartners(unit.id)
+                  .map(up => `${getPartnerName(up.partnerId)} (${up.percentage}%)`)
+                  .join(', ')
+                const remaining = calculateRemainingAmount(unit, contracts, installments, vouchers)
+                
+                return `
+                  <tr>
+                    <td>${unit.code}</td>
+                    <td>${unit.name || ''}</td>
+                    <td>${unit.unitType}</td>
+                    <td>${unit.area || ''}</td>
+                    <td>${unit.floor || ''}</td>
+                    <td>${unit.building || ''}</td>
+                    <td>${formatCurrency(unit.totalPrice)}</td>
+                    <td>${formatCurrency(remaining)}</td>
+                    <td>${unit.status}</td>
+                    <td>${partners || 'لا يوجد شركاء'}</td>
+                  </tr>
+                `
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
+  const openUnitDetails = (unit: Unit) => {
+    setSelectedUnit(unit)
+    setShowUnitDetailsModal(true)
+    setNewPartner({ partnerId: '', percentage: '' })
+  }
+
+  const addPartnerToUnit = async () => {
+    if (!selectedUnit || !newPartner.partnerId || !newPartner.percentage) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء إدخال جميع البيانات المطلوبة'
+      })
+      return
+    }
+
+    const percentage = parseFloat(newPartner.percentage)
+    if (percentage <= 0 || percentage > 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'النسبة المئوية يجب أن تكون بين 0 و 100'
+      })
+      return
+    }
+
+    // Check total percentage
+    const currentPartners = getUnitPartners(selectedUnit.id)
+    const totalPercentage = currentPartners.reduce((sum, up) => sum + up.percentage, 0)
+    if (totalPercentage + percentage > 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: `إجمالي النسب سيكون ${totalPercentage + percentage}% ويجب أن يكون 100% أو أقل`
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/unit-partners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          unitId: selectedUnit.id,
+          partnerId: newPartner.partnerId,
+          percentage: percentage
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setUnitPartners(prev => [...prev, data.data])
+        setNewPartner({ partnerId: '', percentage: '' })
+        addNotification({
+          type: 'success',
+          title: 'تم الحفظ بنجاح',
+          message: 'تم إضافة الشريك للوحدة بنجاح'
+        })
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الحفظ',
+          message: data.error || 'فشل في إضافة الشريك'
+        })
+      }
+    } catch (err) {
+      console.error('Add partner error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الحفظ',
+        message: 'فشل في إضافة الشريك'
+      })
+    }
+  }
+
+  const removePartnerFromUnit = async (unitPartnerId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الشريك من الوحدة؟')) return
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/unit-partners/${unitPartnerId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setUnitPartners(prev => prev.filter(up => up.id !== unitPartnerId))
+        addNotification({
+          type: 'success',
+          title: 'تم الحذف بنجاح',
+          message: 'تم حذف الشريك من الوحدة بنجاح'
+        })
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الحذف',
+          message: data.error || 'فشل في حذف الشريك'
+        })
+      }
+    } catch (err) {
+      console.error('Remove partner error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الحذف',
+        message: 'فشل في حذف الشريك'
+      })
+    }
+  }
+
+  const updatePartnerPercentage = async (unitPartnerId: string, newPercentage: number) => {
+    if (newPercentage <= 0 || newPercentage > 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'النسبة المئوية يجب أن تكون بين 0 و 100'
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/unit-partners/${unitPartnerId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ percentage: newPercentage })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setUnitPartners(prev => prev.map(up => 
+          up.id === unitPartnerId ? { ...up, percentage: newPercentage } : up
+        ))
+        addNotification({
+          type: 'success',
+          title: 'تم التحديث بنجاح',
+          message: 'تم تحديث نسبة الشريك بنجاح'
+        })
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في التحديث',
+          message: data.error || 'فشل في تحديث نسبة الشريك'
+        })
+      }
+    } catch (err) {
+      console.error('Update partner percentage error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التحديث',
+        message: 'فشل في تحديث نسبة الشريك'
+      })
+    }
   }
 
   if (loading) {
@@ -483,10 +863,10 @@ export default function Units() {
                   className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
                 />
               </div>
-              <ModernButton variant="secondary" size="sm">
+              <ModernButton variant="secondary" size="sm" onClick={exportToCSV}>
                 📊 تصدير CSV
               </ModernButton>
-              <ModernButton variant="secondary" size="sm">
+              <ModernButton variant="secondary" size="sm" onClick={printPDF}>
                 🖨️ طباعة PDF
               </ModernButton>
             </div>
@@ -528,25 +908,66 @@ export default function Units() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">كود الوحدة</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">النوع</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المساحة</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الطابق</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المبنى</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">السعر</th>
-                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('code')}
+                  >
+                    كود الوحدة {sortConfig?.key === 'code' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('name')}
+                  >
+                    الاسم {sortConfig?.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('unitType')}
+                  >
+                    النوع {sortConfig?.key === 'unitType' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('area')}
+                  >
+                    المساحة {sortConfig?.key === 'area' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('floor')}
+                  >
+                    الطابق {sortConfig?.key === 'floor' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('building')}
+                  >
+                    المبنى {sortConfig?.key === 'building' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('totalPrice')}
+                  >
+                    السعر {sortConfig?.key === 'totalPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('remaining')}
+                  >
+                    المتبقي {sortConfig?.key === 'remaining' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('status')}
+                  >
+                    الحالة {sortConfig?.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الشركاء</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
-                {units.filter(unit => 
-                  search === '' || 
-                  unit.code.toLowerCase().includes(search.toLowerCase()) ||
-                  (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
-                  unit.unitType.toLowerCase().includes(search.toLowerCase())
-                ).map((unit) => {
+                {getFilteredUnits().map((unit) => {
                   const partners = getUnitPartners(unit.id)
                   return (
                     <tr 
@@ -581,12 +1002,19 @@ export default function Units() {
                         <div className="font-bold text-green-800">{formatCurrency(unit.totalPrice)}</div>
                       </td>
                       <td className="py-4 px-6">
+                        <div className="font-bold text-blue-800">
+                          {formatCurrency(calculateRemainingAmount(unit, contracts, installments, vouchers))}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           unit.status === 'متاحة' 
                             ? 'bg-green-100 text-green-800' 
                             : unit.status === 'محجوزة'
                             ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
+                            : unit.status === 'مباعة'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}>
                           {unit.status}
                         </span>
@@ -608,6 +1036,9 @@ export default function Units() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2 space-x-reverse">
+                          <ModernButton size="sm" variant="info" onClick={() => openUnitDetails(unit)}>
+                            ⚙️ إدارة
+                          </ModernButton>
                           <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(unit)}>
                             ✏️ تعديل
                           </ModernButton>
@@ -728,6 +1159,18 @@ export default function Units() {
                   <option value="متاحة">متاحة</option>
                   <option value="محجوزة">محجوزة</option>
                   <option value="مباعة">مباعة</option>
+                  <option value="مرتجعة">مرتجعة</option>
+                </ModernSelect>
+                
+                <ModernSelect
+                  label="مجموعة الشركاء *"
+                  value={newUnit.partnerGroupId}
+                  onChange={(e: any) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
+                >
+                  <option value="">اختر مجموعة شركاء...</option>
+                  {partnerGroups.map(group => (
+                    <option key={group.id} value={group.id}>{group.name}</option>
+                  ))}
                 </ModernSelect>
                 
                 <div className="md:col-span-2">
@@ -769,6 +1212,123 @@ export default function Units() {
                 </ModernButton>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Unit Details Modal */}
+      {showUnitDetailsModal && selectedUnit && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  إدارة الوحدة - {selectedUnit.code}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowUnitDetailsModal(false)
+                    setSelectedUnit(null)
+                  }}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Unit Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">معلومات الوحدة</h3>
+                  <div className="space-y-3">
+                    <div><span className="font-semibold">الاسم:</span> {selectedUnit.name || '-'}</div>
+                    <div><span className="font-semibold">النوع:</span> {selectedUnit.unitType}</div>
+                    <div><span className="font-semibold">المساحة:</span> {selectedUnit.area || '-'}</div>
+                    <div><span className="font-semibold">الطابق:</span> {selectedUnit.floor || '-'}</div>
+                    <div><span className="font-semibold">المبنى:</span> {selectedUnit.building || '-'}</div>
+                    <div><span className="font-semibold">السعر:</span> {formatCurrency(selectedUnit.totalPrice)}</div>
+                    <div><span className="font-semibold">المتبقي:</span> {formatCurrency(calculateRemainingAmount(selectedUnit, contracts, installments, vouchers))}</div>
+                    <div><span className="font-semibold">الحالة:</span> {selectedUnit.status}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">الشركاء الحاليون</h3>
+                  <div className="space-y-2">
+                    {getUnitPartners(selectedUnit.id).map((partner, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <span className="font-semibold">{getPartnerName(partner.partnerId)}</span>
+                          <span className="text-gray-600 mr-2">({partner.percentage}%)</span>
+                        </div>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            defaultValue={partner.percentage}
+                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                            onBlur={(e) => {
+                              const newPercentage = parseFloat(e.target.value)
+                              if (newPercentage !== partner.percentage) {
+                                updatePartnerPercentage(partner.id, newPercentage)
+                              }
+                            }}
+                          />
+                          <ModernButton 
+                            size="sm" 
+                            variant="danger" 
+                            onClick={() => removePartnerFromUnit(partner.id)}
+                          >
+                            حذف
+                          </ModernButton>
+                        </div>
+                      </div>
+                    ))}
+                    {getUnitPartners(selectedUnit.id).length === 0 && (
+                      <div className="text-gray-500 text-center py-4">لا يوجد شركاء</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Add New Partner */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">إضافة شريك جديد</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <ModernSelect
+                    label="اختر الشريك"
+                    value={newPartner.partnerId}
+                    onChange={(e: any) => setNewPartner({...newPartner, partnerId: e.target.value})}
+                  >
+                    <option value="">اختر شريك...</option>
+                    {partners.map(partner => (
+                      <option key={partner.id} value={partner.id}>{partner.name}</option>
+                    ))}
+                  </ModernSelect>
+                  
+                  <ModernInput
+                    label="النسبة المئوية"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={newPartner.percentage}
+                    onChange={(e: any) => setNewPartner({...newPartner, percentage: e.target.value})}
+                    placeholder="النسبة %"
+                  />
+                  
+                  <div className="flex items-end">
+                    <ModernButton onClick={addPartnerToUnit} className="w-full">
+                      إضافة شريك
+                    </ModernButton>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
