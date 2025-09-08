@@ -118,8 +118,11 @@ export async function POST(request: NextRequest) {
     const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
 
     // Check if code already exists
-    const existingUnit = await prisma.unit.findUnique({
-      where: { code }
+    const existingUnit = await prisma.unit.findFirst({
+      where: { 
+        code,
+        deletedAt: null
+      }
     })
 
     if (existingUnit) {
@@ -132,8 +135,11 @@ export async function POST(request: NextRequest) {
     // Check if partner group exists and has 100% total (only if partnerGroupId is provided)
     let partnerGroup = null
     if (partnerGroupId && partnerGroupId.trim()) {
-      partnerGroup = await prisma.partnerGroup.findUnique({
-        where: { id: partnerGroupId },
+      partnerGroup = await prisma.partnerGroup.findFirst({
+        where: { 
+          id: partnerGroupId,
+          deletedAt: null
+        },
         include: { partners: true }
       })
 

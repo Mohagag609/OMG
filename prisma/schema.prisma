@@ -35,7 +35,7 @@ model Customer {
 // Units - مطابق لـ golden-dataset.json
 model Unit {
   id        String  @id @default(cuid())
-  code      String
+  code      String  @unique
   name      String?
   unitType  String  @default("سكني")
   area      String?
@@ -163,7 +163,7 @@ model PartnerDebt {
 // Safes - مطابق لـ golden-dataset.json
 model Safe {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   balance   Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -220,7 +220,7 @@ model Voucher {
 // Brokers - مطابق لـ golden-dataset.json
 model Broker {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   phone     String?
   notes     String?
   createdAt DateTime @default(now())

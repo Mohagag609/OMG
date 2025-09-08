@@ -114,8 +114,11 @@ export async function POST(request: NextRequest) {
 
     // Check if phone already exists (only if phone is provided)
     if (phone && phone.trim()) {
-      const existingCustomer = await prisma.customer.findUnique({
-        where: { phone }
+      const existingCustomer = await prisma.customer.findFirst({
+        where: { 
+          phone,
+          deletedAt: null
+        }
       })
 
       if (existingCustomer) {
@@ -128,8 +131,11 @@ export async function POST(request: NextRequest) {
 
     // Check if nationalId already exists (only if nationalId is provided)
     if (nationalId && nationalId.trim()) {
-      const existingCustomer = await prisma.customer.findUnique({
-        where: { nationalId }
+      const existingCustomer = await prisma.customer.findFirst({
+        where: { 
+          nationalId,
+          deletedAt: null
+        }
       })
 
       if (existingCustomer) {
