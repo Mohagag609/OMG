@@ -133,3 +133,20 @@ export function formatStatus(status: string): string {
   if (!status) return ''
   return status.trim()
 }
+
+// حساب المبلغ المتبقي للوحدة
+export function calculateRemainingAmount(unit: any, contracts: any[] = [], installments: any[] = [], vouchers: any[] = []): number {
+  const contract = contracts.find(c => c.unitId === unit.id)
+  if (!contract) return 0
+
+  const totalOwed = (contract.totalPrice || 0) - (contract.discountAmount || 0)
+
+  const installmentIds = new Set(installments.filter(i => i.unitId === unit.id).map(i => i.id))
+
+  const totalPaid = vouchers
+    .filter(v => v.type === 'receipt' && (v.linkedRef === contract.id || installmentIds.has(v.linkedRef)))
+    .reduce((sum, v) => sum + v.amount, 0)
+
+  const remaining = totalOwed - totalPaid
+  return Math.max(0, remaining)
+}
