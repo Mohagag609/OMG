@@ -440,7 +440,7 @@ export default function Customers() {
     setEditingCustomer(customer)
     setNewCustomer({
       name: customer.name,
-      phone: customer.phone,
+      phone: customer.phone || '',
       nationalId: customer.nationalId || '',
       address: customer.address || '',
       status: customer.status,
