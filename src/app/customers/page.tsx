@@ -7,6 +7,8 @@ import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -72,6 +74,7 @@ export default function Customers() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [deletingCustomers, setDeletingCustomers] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -89,6 +92,10 @@ export default function Customers() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
           case 'n':
             e.preventDefault()
             setShowAddModal(true)
@@ -108,7 +115,7 @@ export default function Customers() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [sidebarOpen])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')

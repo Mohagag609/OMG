@@ -5,6 +5,58 @@ import { useRouter, useParams } from 'next/navigation'
 import { Partner, UnitPartner, Voucher, PartnerDebt } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
+
+// Modern UI Components
+const ModernCard = ({ children, className = '', ...props }: any) => (
+  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
+    {children}
+  </div>
+)
+
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+  const variants: { [key: string]: string } = {
+    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
+    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
+    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
+    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
+    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
+    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
+  }
+  
+  const sizes: { [key: string]: string } = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-2.5 text-sm font-medium',
+    lg: 'px-6 py-3 text-base font-medium'
+  }
+  
+  return (
+    <button 
+      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
+const KPICard = ({ title, value, icon, color, trend }: any) => (
+  <ModernCard>
+    <div className="flex items-center justify-between">
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+        <p className={`text-2xl font-bold ${color}`}>{value}</p>
+        {trend && (
+          <p className="text-xs text-gray-500 mt-1">{trend}</p>
+        )}
+      </div>
+      <div className={`w-12 h-12 ${color.replace('text-', 'bg-').replace('-600', '-100')} rounded-xl flex items-center justify-center`}>
+        <span className="text-2xl">{icon}</span>
+      </div>
+    </div>
+  </ModernCard>
+)
 
 export default function PartnerDetails() {
   const [partner, setPartner] = useState<Partner | null>(null)
@@ -13,7 +65,7 @@ export default function PartnerDetails() {
   const [partnerDebts, setPartnerDebts] = useState<PartnerDebt[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const params = useParams()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -29,6 +81,23 @@ export default function PartnerDetails() {
     
     fetchPartnerDetails()
   }, [partnerId])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [sidebarOpen])
 
   const fetchPartnerDetails = async () => {
     try {
@@ -46,7 +115,7 @@ export default function PartnerDetails() {
       }
 
       // Fetch unit partners
-      const unitPartnersResponse = await fetch(`/api/unit-partners?unitId=${partnerId}`, {
+      const unitPartnersResponse = await fetch(`/api/unit-partners?partnerId=${partnerId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const unitPartnersData = await unitPartnersResponse.json()
@@ -124,7 +193,6 @@ export default function PartnerDetails() {
     // Process partner debts
     partnerDebts.forEach(debt => {
       if (debt.status === 'مدفوع') {
-        // This is simplified - in real implementation you'd need to track which partner owes/pays
         transactions.push({
           date: debt.dueDate.toString(),
           description: `دين شريك - ${debt.notes || 'بدون ملاحظات'}`,
@@ -147,9 +215,10 @@ export default function PartnerDetails() {
 
   if (loading) {
     return (
-      <div className="container">
-        <div className="panel">
-          <h2>جاري التحميل...</h2>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
         </div>
       </div>
     )
@@ -157,13 +226,29 @@ export default function PartnerDetails() {
 
   if (error || !partner) {
     return (
-      <div className="container">
-        <div className="panel">
-          <h2>خطأ</h2>
-          <p>{error || 'لم يتم العثور على الشريك'}</p>
-          <button className="btn secondary" onClick={() => router.push('/partners')}>
-            العودة للشركاء
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        
+        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 space-x-reverse">
+                  <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                  <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-red-700 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">⚠️</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">خطأ</h1>
+                    <p className="text-gray-600">{error || 'لم يتم العثور على الشريك'}</p>
+                  </div>
+                </div>
+                <ModernButton variant="secondary" onClick={() => router.push('/partners')}>
+                  العودة للشركاء
+                </ModernButton>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -172,156 +257,189 @@ export default function PartnerDetails() {
   const ledger = calculatePartnerLedger()
 
   return (
-    <div className="container">
-      <div className="header">
-        <div className="brand">
-          <div className="logo">👤</div>
-          <h1>تفاصيل الشريك: {partner.name}</h1>
-        </div>
-        <div className="tools">
-          <button className="btn secondary" onClick={() => router.push('/partners')}>
-            العودة للشركاء
-          </button>
-        </div>
-      </div>
-
-      <div className="main-layout">
-        <div className="sidebar">
-          <button className="tab" onClick={() => router.push('/')}>لوحة التحكم</button>
-          <button className="tab" onClick={() => router.push('/customers')}>العملاء</button>
-          <button className="tab" onClick={() => router.push('/units')}>الوحدات</button>
-          <button className="tab" onClick={() => router.push('/contracts')}>العقود</button>
-          <button className="tab" onClick={() => router.push('/brokers')}>السماسرة</button>
-          <button className="tab" onClick={() => router.push('/installments')}>الأقساط</button>
-          <button className="tab" onClick={() => router.push('/vouchers')}>السندات</button>
-          <button className="tab active">الشركاء</button>
-          <button className="tab" onClick={() => router.push('/partner-debts')}>ديون الشركاء</button>
-          <button className="tab" onClick={() => router.push('/treasury')}>الخزينة</button>
-          <button className="tab" onClick={() => router.push('/reports')}>التقارير</button>
-          <button className="tab" onClick={() => router.push('/backup')}>نسخة احتياطية</button>
-        </div>
-
-        <div className="content">
-          {/* Partner Info */}
-          <div className="panel">
-            <h2>بيانات الشريك</h2>
-            <div className="grid-2" style={{ gap: '16px' }}>
-              <div>
-                <label className="form-label">الاسم</label>
-                <p className="form-value">{partner.name}</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">👤</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">تفاصيل الشريك: {partner.name}</h1>
+                  <p className="text-gray-600">بيانات شاملة وحسابات مفصلة</p>
+                </div>
               </div>
-              <div>
-                <label className="form-label">الهاتف</label>
-                <p className="form-value">{partner.phone || '-'}</p>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">ملاحظات</label>
-                <p className="form-value">{partner.notes || '-'}</p>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <ModernButton variant="secondary" onClick={() => router.push('/partners')}>
+                  العودة للشركاء
+                </ModernButton>
+                <ModernButton variant="secondary" onClick={() => router.push('/')}>
+                  🏠 العودة للرئيسية
+                </ModernButton>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Partner Info */}
+          <ModernCard className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">بيانات الشريك</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">الاسم</label>
+                <p className="text-lg font-semibold text-gray-900">{partner.name}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">الهاتف</label>
+                <p className="text-lg font-semibold text-gray-900">{partner.phone || '-'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                <p className="text-lg font-semibold text-gray-900">{partner.notes || '-'}</p>
+              </div>
+            </div>
+          </ModernCard>
 
           {/* KPIs */}
-          <div className="grid-3" style={{ gap: '16px', marginTop: '20px' }}>
-            <div className="card">
-              <h4>إجمالي الدخل</h4>
-              <div className="big" style={{ color: 'var(--ok)' }}>
-                {formatCurrency(ledger.totalIncome)}
-              </div>
-            </div>
-            <div className="card">
-              <h4>إجمالي المصروفات</h4>
-              <div className="big" style={{ color: 'var(--warn)' }}>
-                {formatCurrency(ledger.totalExpense)}
-              </div>
-            </div>
-            <div className="card">
-              <h4>صافي الموقف</h4>
-              <div className="big" style={{ color: 'var(--brand)' }}>
-                {formatCurrency(ledger.netPosition)}
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <KPICard
+              title="إجمالي الدخل"
+              value={formatCurrency(ledger.totalIncome)}
+              icon="💰"
+              color="text-green-600"
+              trend="من جميع المعاملات"
+            />
+            <KPICard
+              title="إجمالي المصروفات"
+              value={formatCurrency(ledger.totalExpense)}
+              icon="📉"
+              color="text-red-600"
+              trend="العمولات والمصروفات"
+            />
+            <KPICard
+              title="صافي الموقف"
+              value={formatCurrency(ledger.netPosition)}
+              icon="📊"
+              color="text-blue-600"
+              trend="الرصيد النهائي"
+            />
           </div>
 
           {/* Units and Ledger */}
-          <div className="grid-2" style={{ gap: '16px', marginTop: '20px' }}>
-            <div className="panel">
-              <h3>الوحدات المملوكة</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <ModernCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-6">الوحدات المملوكة</h3>
               {unitPartners.length === 0 ? (
-                <p>لا توجد وحدات مملوكة</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl text-gray-400">🏠</span>
+                  </div>
+                  <p className="text-gray-500">لا توجد وحدات مملوكة</p>
+                </div>
               ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>الوحدة</th>
-                      <th>نسبة الملكية</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unitPartners.map((up) => (
-                      <tr key={up.id}>
-                        <td>{(up as any).unit?.code || 'غير محدد'}</td>
-                        <td>{up.percentage}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            <div className="panel">
-              <h3>كشف الحساب التفصيلي</h3>
-              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {ledger.transactions.length === 0 ? (
-                  <p>لا توجد معاملات</p>
-                ) : (
-                  <table className="table">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
                     <thead>
-                      <tr>
-                        <th>التاريخ</th>
-                        <th>البيان</th>
-                        <th>دخل</th>
-                        <th>صرف</th>
-                        <th>الرصيد</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">الوحدة</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">نسبة الملكية</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {ledger.transactions.map((tx, index) => {
-                        let balance = 0
-                        for (let i = 0; i <= index; i++) {
-                          balance += ledger.transactions[i].income - ledger.transactions[i].expense
-                        }
-                        return (
-                          <tr key={index}>
-                            <td>{formatDate(tx.date)}</td>
-                            <td>{tx.description}</td>
-                            <td>
-                              {tx.income > 0 ? (
-                                <span style={{ color: 'var(--ok)' }}>
-                                  {formatCurrency(tx.income)}
-                                </span>
-                              ) : '—'}
-                            </td>
-                            <td>
-                              {tx.expense > 0 ? (
-                                <span style={{ color: 'var(--warn)' }}>
-                                  {formatCurrency(tx.expense)}
-                                </span>
-                              ) : '—'}
-                            </td>
-                            <td>
-                              <strong style={{ color: 'var(--brand)' }}>
-                                {formatCurrency(balance)}
-                              </strong>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      {unitPartners.map((up) => (
+                        <tr key={up.id} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">{(up as any).unit?.code || 'غير محدد'}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-blue-600">{up.percentage}%</div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </ModernCard>
+
+            <ModernCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-6">كشف الحساب التفصيلي</h3>
+              <div className="max-h-96 overflow-y-auto">
+                {ledger.transactions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl text-gray-400">📊</span>
+                    </div>
+                    <p className="text-gray-500">لا توجد معاملات</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-right py-3 px-4 font-semibold text-gray-700">التاريخ</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-700">البيان</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-700">دخل</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-700">صرف</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-700">الرصيد</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ledger.transactions.map((tx, index) => {
+                          let balance = 0
+                          for (let i = 0; i <= index; i++) {
+                            balance += ledger.transactions[i].income - ledger.transactions[i].expense
+                          }
+                          return (
+                            <tr key={index} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150">
+                              <td className="py-3 px-4">
+                                <div className="text-sm text-gray-600">{formatDate(tx.date)}</div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-sm font-medium text-gray-900">{tx.description}</div>
+                              </td>
+                              <td className="py-3 px-4">
+                                {tx.income > 0 ? (
+                                  <span className="text-sm font-semibold text-green-600">
+                                    {formatCurrency(tx.income)}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">—</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {tx.expense > 0 ? (
+                                  <span className="text-sm font-semibold text-red-600">
+                                    {formatCurrency(tx.expense)}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">—</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <strong className="text-sm font-bold text-blue-600">
+                                  {formatCurrency(balance)}
+                                </strong>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
-            </div>
+            </ModernCard>
           </div>
         </div>
       </div>
