@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const CONFIG_FILE = path.join(process.cwd(), 'database-config.json')
+let CONFIG_FILE = path.join(process.cwd(), 'database-config.json')
 
 export interface DatabaseConfig {
   type: 'sqlite' | 'postgresql' | 'postgresql-local' | 'postgresql-cloud'
@@ -115,7 +115,37 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
     
     // Write config file with proper formatting
     const configData = JSON.stringify(configWithMetadata, null, 2)
-    fs.writeFileSync(CONFIG_FILE, configData, 'utf8')
+    
+    try {
+      fs.writeFileSync(CONFIG_FILE, configData, 'utf8')
+      console.log('✅ تم كتابة الملف بنجاح')
+    } catch (writeError: any) {
+      console.error('❌ فشل في كتابة الملف:', writeError?.message)
+      console.error('🔍 تفاصيل خطأ الكتابة:', {
+        name: writeError?.name,
+        message: writeError?.message,
+        code: writeError?.code,
+        errno: writeError?.errno
+      })
+      
+      // Try alternative location
+      const altConfigFile = path.join(process.cwd(), 'tmp', 'database-config.json')
+      const altConfigDir = path.dirname(altConfigFile)
+      
+      try {
+        if (!fs.existsSync(altConfigDir)) {
+          fs.mkdirSync(altConfigDir, { recursive: true })
+        }
+        fs.writeFileSync(altConfigFile, configData, 'utf8')
+        console.log('✅ تم حفظ الملف في موقع بديل:', altConfigFile)
+        
+        // Update CONFIG_FILE to point to alternative location
+        CONFIG_FILE = altConfigFile
+      } catch (altError: any) {
+        console.error('❌ فشل في الموقع البديل أيضاً:', altError?.message)
+        throw writeError // Throw original error
+      }
+    }
     
     // Verify the file was written correctly
     if (fs.existsSync(CONFIG_FILE)) {
@@ -156,6 +186,15 @@ export function saveDatabaseConfig(config: DatabaseConfig): boolean {
   } catch (error: any) {
     console.error('❌ خطأ في حفظ إعدادات قاعدة البيانات:', error?.message)
     console.error('📁 مسار الملف:', CONFIG_FILE)
+    console.error('🔍 تفاصيل الخطأ:', {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack,
+      code: error?.code,
+      errno: error?.errno,
+      syscall: error?.syscall,
+      path: error?.path
+    })
     return false
   }
 }
@@ -200,4 +239,9 @@ export function hasDatabaseTypeChanged(newType: string): boolean {
 export function forceReloadConfig(): DatabaseConfig {
   console.log('🔄 إعادة تحميل إعدادات قاعدة البيانات...')
   return loadDatabaseConfig()
+}
+
+// Get current config file path
+export function getConfigFilePath(): string {
+  return CONFIG_FILE
 }
