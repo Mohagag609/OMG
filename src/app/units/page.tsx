@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Unit, UnitPartner } from '@/types'
+import { Unit, UnitPartner, PartnerGroup } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { checkDuplicateCode } from '@/utils/duplicateCheck'
+import Layout from '@/components/Layout'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -65,23 +66,26 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
 export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
   const [unitPartners, setUnitPartners] = useState<UnitPartner[]>([])
+  const [partnerGroups, setPartnerGroups] = useState<PartnerGroup[]>([])
+  const [partners, setPartners] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [deletingUnits, setDeletingUnits] = useState<Set<string>>(new Set())
   const [newUnit, setNewUnit] = useState({
-    code: '',
     name: '',
-    unitType: '',
+    unitType: 'سكني',
     area: '',
     floor: '',
     building: '',
     totalPrice: '',
     status: 'متاحة',
-    notes: ''
+    notes: '',
+    partnerGroupId: ''
   })
   
   const router = useRouter()
@@ -127,14 +131,18 @@ export default function Units() {
     try {
       const token = localStorage.getItem('authToken')
       
-      const [unitsResponse, unitPartnersResponse] = await Promise.all([
+      const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
         fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       
-      const [unitsData, unitPartnersData] = await Promise.all([
+      const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([
         unitsResponse.json(),
-        unitPartnersResponse.json()
+        unitPartnersResponse.json(),
+        partnerGroupsResponse.json(),
+        partnersResponse.json()
       ])
       
       if (unitsData.success) {
@@ -145,6 +153,14 @@ export default function Units() {
 
       if (unitPartnersData.success) {
         setUnitPartners(unitPartnersData.data)
+      }
+
+      if (partnerGroupsData.success) {
+        setPartnerGroups(partnerGroupsData.data)
+      }
+
+      if (partnersData.success) {
+        setPartners(partnersData.data)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -157,21 +173,67 @@ export default function Units() {
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newUnit.code) {
+    // التحقق من البيانات المطلوبة
+    if (!newUnit.name.trim() || !newUnit.floor.trim() || !newUnit.building.trim()) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'الرجاء إدخال كود الوحدة'
+        message: 'الرجاء إدخال اسم الوحدة والدور والبرج'
       })
       return
     }
 
-    // فحص تكرار كود الوحدة
-    if (checkDuplicateCode(newUnit.code, units)) {
+    if (!newUnit.totalPrice || parseFloat(newUnit.totalPrice) <= 0) {
       addNotification({
         type: 'error',
         title: 'خطأ في البيانات',
-        message: 'كود الوحدة موجود بالفعل'
+        message: 'الرجاء إدخال سعر الوحدة'
+      })
+      return
+    }
+
+    if (!newUnit.partnerGroupId) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء اختيار مجموعة شركاء'
+      })
+      return
+    }
+
+    // إنشاء كود الوحدة التلقائي
+    const sanitizedBuilding = newUnit.building.replace(/\s/g, '')
+    const sanitizedFloor = newUnit.floor.replace(/\s/g, '')
+    const sanitizedName = newUnit.name.replace(/\s/g, '')
+    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
+
+    // فحص تكرار كود الوحدة
+    if (units.some(u => u.code.toLowerCase() === code.toLowerCase())) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'هذه الوحدة (نفس الاسم والدور والبرج) موجودة بالفعل'
+      })
+      return
+    }
+
+    // التحقق من مجموعة الشركاء
+    const selectedGroup = partnerGroups.find(g => g.id === newUnit.partnerGroupId)
+    if (!selectedGroup) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'لم يتم العثور على مجموعة الشركاء المحددة'
+      })
+      return
+    }
+
+    const totalPercent = selectedGroup.partners.reduce((sum, p) => sum + p.percent, 0)
+    if (totalPercent !== 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: `لا يمكن استخدام هذه المجموعة. إجمالي النسب فيها هو ${totalPercent}% ويجب أن يكون 100%`
       })
       return
     }
@@ -185,6 +247,7 @@ export default function Units() {
     const tempUnit = {
       ...newUnit,
       id: `temp-${Date.now()}`,
+      code,
       totalPrice: parseFloat(newUnit.totalPrice),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -193,15 +256,15 @@ export default function Units() {
 
     // إعادة تعيين النموذج
     setNewUnit({
-      code: '',
       name: '',
-      unitType: '',
+      unitType: 'سكني',
       area: '',
       floor: '',
       building: '',
       totalPrice: '',
       status: 'متاحة',
-      notes: ''
+      notes: '',
+      partnerGroupId: ''
     })
 
     try {
@@ -214,7 +277,9 @@ export default function Units() {
         },
         body: JSON.stringify({
           ...newUnit,
-          totalPrice: parseFloat(newUnit.totalPrice)
+          code,
+          totalPrice: parseFloat(newUnit.totalPrice),
+          partnerGroupId: newUnit.partnerGroupId
         })
       })
 
@@ -261,6 +326,41 @@ export default function Units() {
     
     if (!editingUnit) return
 
+    // التحقق من البيانات المطلوبة
+    if (!newUnit.name.trim() || !newUnit.floor.trim() || !newUnit.building.trim()) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء إدخال اسم الوحدة والدور والبرج'
+      })
+      return
+    }
+
+    if (!newUnit.totalPrice || parseFloat(newUnit.totalPrice) <= 0) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'الرجاء إدخال سعر الوحدة'
+      })
+      return
+    }
+
+    // إنشاء كود الوحدة التلقائي
+    const sanitizedBuilding = newUnit.building.replace(/\s/g, '')
+    const sanitizedFloor = newUnit.floor.replace(/\s/g, '')
+    const sanitizedName = newUnit.name.replace(/\s/g, '')
+    const code = `${sanitizedBuilding}-${sanitizedFloor}-${sanitizedName}`
+
+    // فحص تكرار كود الوحدة (باستثناء الوحدة الحالية)
+    if (units.some(u => u.id !== editingUnit.id && u.code.toLowerCase() === code.toLowerCase())) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في البيانات',
+        message: 'هذه الوحدة (نفس الاسم والدور والبرج) موجودة بالفعل'
+      })
+      return
+    }
+
     // إغلاق النافذة فوراً وإظهار النجاح
     setShowAddModal(false)
     setEditingUnit(null)
@@ -271,6 +371,7 @@ export default function Units() {
     const updatedUnit = {
       ...editingUnit,
       ...newUnit,
+      code,
       totalPrice: parseFloat(newUnit.totalPrice),
       updatedAt: new Date().toISOString()
     }
@@ -280,15 +381,15 @@ export default function Units() {
 
     // إعادة تعيين النموذج
     setNewUnit({
-      code: '',
       name: '',
-      unitType: '',
+      unitType: 'سكني',
       area: '',
       floor: '',
       building: '',
       totalPrice: '',
       status: 'متاحة',
-      notes: ''
+      notes: '',
+      partnerGroupId: ''
     })
 
     try {
@@ -301,7 +402,9 @@ export default function Units() {
         },
         body: JSON.stringify({
           ...newUnit,
-          totalPrice: parseFloat(newUnit.totalPrice)
+          code,
+          totalPrice: parseFloat(newUnit.totalPrice),
+          partnerGroupId: newUnit.partnerGroupId
         })
       })
 
@@ -405,15 +508,15 @@ export default function Units() {
   const openEditModal = (unit: Unit) => {
     setEditingUnit(unit)
     setNewUnit({
-      code: unit.code,
       name: unit.name || '',
-      unitType: unit.unitType,
+      unitType: unit.unitType || 'سكني',
       area: unit.area || '',
       floor: unit.floor || '',
       building: unit.building || '',
       totalPrice: unit.totalPrice.toString(),
       status: unit.status,
-      notes: unit.notes || ''
+      notes: unit.notes || '',
+      partnerGroupId: '' // سيتم تحديث هذا لاحقاً
     })
     setShowAddModal(true)
   }
@@ -423,78 +526,183 @@ export default function Units() {
   }
 
   const getPartnerName = (partnerId: string) => {
-    // This would need to be implemented with actual partner data
-    return `شريك ${partnerId.slice(-4)}`
+    const partner = partners.find(p => p.id === partnerId)
+    return partner ? partner.name : `شريك ${partnerId.slice(-4)}`
+  }
+
+  const calculateRemainingAmount = (unit: Unit) => {
+    // حساب المبلغ المتبقي بناءً على العقود والمدفوعات
+    // هذا يحتاج إلى تنفيذ أكثر تفصيلاً مع البيانات الفعلية
+    return unit.totalPrice
+  }
+
+  const getUnitDisplayName = (unit: Unit) => {
+    if (!unit) return '—'
+    const name = unit.name ? `اسم الوحدة (${unit.name})` : ''
+    const floor = unit.floor ? `رقم الدور (${unit.floor})` : ''
+    const building = unit.building ? `رقم العمارة (${unit.building})` : ''
+    return [name, floor, building].filter(Boolean).join(' ')
+  }
+
+  const exportToCSV = () => {
+    const headers = ['كود الوحدة', 'اسم الوحدة', 'الدور', 'البرج', 'نوع الوحدة', 'الشركاء', 'السعر', 'المتبقي', 'الحالة', 'ملاحظات']
+    const rows = units.map(unit => {
+      const unitPartnersList = getUnitPartners(unit.id)
+      const partnersText = unitPartnersList
+        .map(up => `${getPartnerName(up.partnerId)} (${up.percentage}%)`)
+        .join(' | ')
+      
+      return [
+        unit.code,
+        unit.name || '',
+        unit.floor || '',
+        unit.building || '',
+        unit.unitType || '',
+        partnersText || '—',
+        unit.totalPrice,
+        calculateRemainingAmount(unit),
+        unit.status,
+        unit.notes || ''
+      ]
+    })
+    
+    const csvContent = [headers, ...rows].map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'units.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const printUnits = () => {
+    const printContent = `
+      <html dir="rtl">
+        <head>
+          <title>تقرير الوحدات</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .header { text-align: center; margin-bottom: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>تقرير الوحدات</h1>
+            <p>تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>كود الوحدة</th>
+                <th>اسم الوحدة</th>
+                <th>الدور</th>
+                <th>البرج</th>
+                <th>نوع الوحدة</th>
+                <th>السعر</th>
+                <th>المتبقي</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${units.map(unit => `
+                <tr>
+                  <td>${unit.code}</td>
+                  <td>${unit.name || ''}</td>
+                  <td>${unit.floor || ''}</td>
+                  <td>${unit.building || ''}</td>
+                  <td>${unit.unitType || ''}</td>
+                  <td>${formatCurrency(unit.totalPrice)}</td>
+                  <td>${formatCurrency(calculateRemainingAmount(unit))}</td>
+                  <td>${unit.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(printContent)
+    printWindow.document.close()
+    printWindow.print()
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout title="إدارة الوحدات" subtitle="نظام متطور لإدارة الوحدات العقارية" icon="🏠">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">🏠</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة الوحدات</h1>
-                <p className="text-gray-600">نظام متطور لإدارة الوحدات العقارية</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton onClick={() => setShowAddModal(true)}>
-                <span className="mr-2">➕</span>
-                إضافة وحدة جديدة
-                <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-              </ModernButton>
-              <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                العودة للرئيسية
-              </ModernButton>
-            </div>
-          </div>
-        </div>
+    <Layout title="إدارة الوحدات" subtitle="نظام متطور لإدارة الوحدات العقارية" icon="🏠">
+      <div className="flex items-center justify-between mb-8">
+        <ModernButton onClick={() => setShowAddModal(true)}>
+          <span className="mr-2">➕</span>
+          إضافة وحدة جديدة
+          <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
+        </ModernButton>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search and Filters */}
-        <ModernCard className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="relative">
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="🔍 ابحث في الوحدات... (Ctrl+F)"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
-                />
-              </div>
-              <ModernButton variant="secondary" size="sm">
-                📊 تصدير CSV
-              </ModernButton>
-              <ModernButton variant="secondary" size="sm">
-                🖨️ طباعة PDF
-              </ModernButton>
+      {/* Search and Filters */}
+      <ModernCard className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <div className="relative">
+              <input
+                id="search-input"
+                type="text"
+                placeholder="🔍 ابحث في الوحدات... (Ctrl+F)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
+              />
             </div>
-            <div className="text-sm text-gray-500">
-              {units.length} وحدة
-            </div>
+            <ModernSelect
+              value={statusFilter}
+              onChange={(e: any) => setStatusFilter(e.target.value)}
+              className="w-40"
+            >
+              <option value="all">جميع الحالات</option>
+              <option value="متاحة">متاحة</option>
+              <option value="محجوزة">محجوزة</option>
+              <option value="مباعة">مباعة</option>
+            </ModernSelect>
+            <ModernButton variant="secondary" size="sm" onClick={exportToCSV}>
+              📊 تصدير CSV
+            </ModernButton>
+            <ModernButton variant="secondary" size="sm" onClick={printUnits}>
+              🖨️ طباعة PDF
+            </ModernButton>
           </div>
-        </ModernCard>
+          <div className="text-sm text-gray-500">
+            {units.filter(unit => {
+              const matchesSearch = search === '' || 
+                unit.code.toLowerCase().includes(search.toLowerCase()) ||
+                (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+                unit.unitType.toLowerCase().includes(search.toLowerCase())
+              const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+              return matchesSearch && matchesStatus
+            }).length} وحدة
+          </div>
+        </div>
+      </ModernCard>
 
         {/* Units List */}
         <ModernCard>
@@ -535,18 +743,21 @@ export default function Units() {
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الطابق</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المبنى</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">السعر</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">المتبقي</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الشركاء</th>
                   <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
-                {units.filter(unit => 
-                  search === '' || 
-                  unit.code.toLowerCase().includes(search.toLowerCase()) ||
-                  (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
-                  unit.unitType.toLowerCase().includes(search.toLowerCase())
-                ).map((unit) => {
+                {units.filter(unit => {
+                  const matchesSearch = search === '' || 
+                    unit.code.toLowerCase().includes(search.toLowerCase()) ||
+                    (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+                    unit.unitType.toLowerCase().includes(search.toLowerCase())
+                  const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+                  return matchesSearch && matchesStatus
+                }).map((unit) => {
                   const partners = getUnitPartners(unit.id)
                   return (
                     <tr 
@@ -581,6 +792,9 @@ export default function Units() {
                         <div className="font-bold text-green-800">{formatCurrency(unit.totalPrice)}</div>
                       </td>
                       <td className="py-4 px-6">
+                        <div className="font-bold text-blue-800">{formatCurrency(calculateRemainingAmount(unit))}</div>
+                      </td>
+                      <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           unit.status === 'متاحة' 
                             ? 'bg-green-100 text-green-800' 
@@ -608,9 +822,26 @@ export default function Units() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2 space-x-reverse">
-                          <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(unit)}>
+                          <ModernButton size="sm" variant="info" onClick={() => router.push(`/units/${unit.id}`)}>
+                            👁️ إدارة
+                          </ModernButton>
+                          <ModernButton size="sm" variant="warning" onClick={() => openEditModal(unit)}>
                             ✏️ تعديل
                           </ModernButton>
+                          {unit.status === 'مباعة' && (
+                            <ModernButton size="sm" variant="secondary" onClick={() => {
+                              if (confirm('هل أنت متأكد من إرجاع هذه الوحدة؟')) {
+                                // إضافة منطق الإرجاع هنا
+                                addNotification({
+                                  type: 'info',
+                                  title: 'قيد التطوير',
+                                  message: 'ميزة الإرجاع قيد التطوير'
+                                })
+                              }
+                            }}>
+                              ↩️ إرجاع
+                            </ModernButton>
+                          )}
                           <ModernButton size="sm" variant="danger" onClick={() => handleDeleteUnit(unit.id)}>
                             🗑️ حذف
                           </ModernButton>
@@ -639,15 +870,15 @@ export default function Units() {
                     setShowAddModal(false)
                     setEditingUnit(null)
                     setNewUnit({
-                      code: '',
                       name: '',
-                      unitType: '',
+                      unitType: 'سكني',
                       area: '',
                       floor: '',
                       building: '',
                       totalPrice: '',
                       status: 'متاحة',
-                      notes: ''
+                      notes: '',
+                      partnerGroupId: ''
                     })
                   }}
                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
@@ -658,21 +889,50 @@ export default function Units() {
             </div>
 
             <form onSubmit={editingUnit ? handleEditUnit : handleAddUnit} className="p-6">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center">
+                  <span className="text-blue-500 mr-2">ℹ️</span>
+                  <span className="text-blue-700 text-sm font-medium">
+                    الاسم والدور والبرج والسعر ومجموعة الشركاء مطلوبة
+                  </span>
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ModernInput
-                  label="كود الوحدة *"
-                  type="text"
-                  value={newUnit.code}
-                  onChange={(e: any) => setNewUnit({...newUnit, code: e.target.value})}
-                  placeholder="كود الوحدة"
-                />
-                
-                <ModernInput
-                  label="اسم الوحدة"
+                  label="اسم الوحدة * (مطلوب)"
                   type="text"
                   value={newUnit.name}
                   onChange={(e: any) => setNewUnit({...newUnit, name: e.target.value})}
                   placeholder="اسم الوحدة"
+                  required
+                />
+                
+                <ModernInput
+                  label="الطابق * (مطلوب)"
+                  type="text"
+                  value={newUnit.floor}
+                  onChange={(e: any) => setNewUnit({...newUnit, floor: e.target.value})}
+                  placeholder="رقم الطابق"
+                  required
+                />
+                
+                <ModernInput
+                  label="المبنى * (مطلوب)"
+                  type="text"
+                  value={newUnit.building}
+                  onChange={(e: any) => setNewUnit({...newUnit, building: e.target.value})}
+                  placeholder="اسم المبنى"
+                  required
+                />
+                
+                <ModernInput
+                  label="السعر الإجمالي * (مطلوب)"
+                  type="number"
+                  value={newUnit.totalPrice}
+                  onChange={(e: any) => setNewUnit({...newUnit, totalPrice: e.target.value})}
+                  placeholder="السعر الإجمالي"
+                  required
                 />
                 
                 <ModernSelect
@@ -680,45 +940,32 @@ export default function Units() {
                   value={newUnit.unitType}
                   onChange={(e: any) => setNewUnit({...newUnit, unitType: e.target.value})}
                 >
-                  <option value="">اختر نوع الوحدة...</option>
-                  <option value="شقة">شقة</option>
-                  <option value="فيلا">فيلا</option>
-                  <option value="محل">محل</option>
-                  <option value="مكتب">مكتب</option>
-                  <option value="مستودع">مستودع</option>
+                  <option value="سكني">سكني</option>
+                  <option value="تجاري">تجاري</option>
+                  <option value="إداري">إداري</option>
+                  <option value="صناعي">صناعي</option>
                 </ModernSelect>
                 
                 <ModernInput
-                  label="المساحة"
+                  label="المساحة (اختياري)"
                   type="text"
                   value={newUnit.area}
                   onChange={(e: any) => setNewUnit({...newUnit, area: e.target.value})}
                   placeholder="المساحة بالمتر المربع"
                 />
                 
-                <ModernInput
-                  label="الطابق"
-                  type="text"
-                  value={newUnit.floor}
-                  onChange={(e: any) => setNewUnit({...newUnit, floor: e.target.value})}
-                  placeholder="رقم الطابق"
-                />
-                
-                <ModernInput
-                  label="المبنى"
-                  type="text"
-                  value={newUnit.building}
-                  onChange={(e: any) => setNewUnit({...newUnit, building: e.target.value})}
-                  placeholder="اسم المبنى"
-                />
-                
-                <ModernInput
-                  label="السعر الإجمالي *"
-                  type="number"
-                  value={newUnit.totalPrice}
-                  onChange={(e: any) => setNewUnit({...newUnit, totalPrice: e.target.value})}
-                  placeholder="السعر الإجمالي"
-                />
+                <ModernSelect
+                  label="مجموعة الشركاء * (مطلوبة)"
+                  value={newUnit.partnerGroupId}
+                  onChange={(e: any) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
+                >
+                  <option value="">اختر مجموعة شركاء...</option>
+                  {partnerGroups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.partners.reduce((sum, p) => sum + p.percent, 0)}%)
+                    </option>
+                  ))}
+                </ModernSelect>
                 
                 <ModernSelect
                   label="الحالة"
@@ -750,15 +997,15 @@ export default function Units() {
                   setShowAddModal(false)
                   setEditingUnit(null)
                   setNewUnit({
-                    code: '',
                     name: '',
-                    unitType: '',
+                    unitType: 'سكني',
                     area: '',
                     floor: '',
                     building: '',
                     totalPrice: '',
                     status: 'متاحة',
-                    notes: ''
+                    notes: '',
+                    partnerGroupId: ''
                   })
                 }}>
                   إلغاء
