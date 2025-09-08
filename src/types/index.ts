@@ -3,7 +3,7 @@
 export interface Customer {
   id: string
   name: string
-  phone: string
+  phone?: string | null
   nationalId?: string | null
   address?: string | null
   status: string
