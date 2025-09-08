@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 export default function TestSafes() {
   const [safes, setSafes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSafes = async () => {
@@ -37,7 +37,7 @@ export default function TestSafes() {
         }
       } catch (err) {
         console.error('Error:', err)
-        setError(err.message)
+        setError(err instanceof Error ? err.message : String(err))
       } finally {
         setLoading(false)
       }
