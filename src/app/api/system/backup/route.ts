@@ -6,6 +6,14 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Starting comprehensive system backup...')
 
+    // Detect database type
+    const dbUrl = process.env.DATABASE_URL || ''
+    const isSQLite = dbUrl.startsWith('file:') || dbUrl.includes('sqlite')
+    const isPostgreSQL = dbUrl.includes('postgresql://')
+    const isNeon = dbUrl.includes('neon.tech')
+
+    console.log('Database type detected:', { isSQLite, isPostgreSQL, isNeon })
+
     // Fetch all data from database
     const [
       users,
@@ -65,8 +73,241 @@ export async function GET(request: NextRequest) {
     // Create ZIP file
     const zip = new JSZip()
 
-    // 1. Database Schema
-    const schemaSQL = `-- Database Schema Export
+    // 1. Database Schema (SQLite/PostgreSQL compatible)
+    const schemaSQL = isSQLite ? 
+      `-- SQLite Schema Export
+-- Generated on: ${new Date().toISOString()}
+
+-- Users table
+CREATE TABLE IF NOT EXISTS "users" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "username" TEXT UNIQUE NOT NULL,
+  "password" TEXT NOT NULL,
+  "email" TEXT UNIQUE,
+  "fullName" TEXT,
+  "role" TEXT DEFAULT 'admin',
+  "isActive" BOOLEAN DEFAULT 1,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Units table
+CREATE TABLE IF NOT EXISTS "units" (
+  "id" TEXT PRIMARY KEY,
+  "code" TEXT UNIQUE NOT NULL,
+  "name" TEXT,
+  "unitType" TEXT DEFAULT 'سكني',
+  "area" TEXT,
+  "floor" TEXT,
+  "building" TEXT,
+  "totalPrice" REAL DEFAULT 0,
+  "status" TEXT DEFAULT 'متاحة',
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Customers table
+CREATE TABLE IF NOT EXISTS "customers" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "phone" TEXT UNIQUE,
+  "nationalId" TEXT UNIQUE,
+  "address" TEXT,
+  "status" TEXT DEFAULT 'نشط',
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Brokers table
+CREATE TABLE IF NOT EXISTS "brokers" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT UNIQUE NOT NULL,
+  "phone" TEXT,
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Contracts table
+CREATE TABLE IF NOT EXISTS "contracts" (
+  "id" TEXT PRIMARY KEY,
+  "unitId" TEXT NOT NULL,
+  "customerId" TEXT NOT NULL,
+  "start" DATETIME NOT NULL,
+  "totalPrice" REAL NOT NULL,
+  "discountAmount" REAL DEFAULT 0,
+  "brokerName" TEXT,
+  "brokerPercent" REAL DEFAULT 0,
+  "brokerAmount" REAL DEFAULT 0,
+  "commissionSafeId" TEXT,
+  "downPaymentSafeId" TEXT,
+  "maintenanceDeposit" REAL DEFAULT 0,
+  "installmentType" TEXT DEFAULT 'شهري',
+  "installmentCount" INTEGER DEFAULT 0,
+  "extraAnnual" INTEGER DEFAULT 0,
+  "annualPaymentValue" REAL DEFAULT 0,
+  "downPayment" REAL DEFAULT 0,
+  "paymentType" TEXT DEFAULT 'installment',
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("unitId") REFERENCES "units"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE CASCADE
+);
+
+-- Installments table
+CREATE TABLE IF NOT EXISTS "installments" (
+  "id" TEXT PRIMARY KEY,
+  "unitId" TEXT NOT NULL,
+  "amount" REAL NOT NULL,
+  "dueDate" DATETIME NOT NULL,
+  "status" TEXT DEFAULT 'معلق',
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("unitId") REFERENCES "units"("id") ON DELETE CASCADE
+);
+
+-- Safes table
+CREATE TABLE IF NOT EXISTS "safes" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT UNIQUE NOT NULL,
+  "balance" REAL DEFAULT 0,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Partners table
+CREATE TABLE IF NOT EXISTS "partners" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "phone" TEXT,
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Vouchers table
+CREATE TABLE IF NOT EXISTS "vouchers" (
+  "id" TEXT PRIMARY KEY,
+  "type" TEXT NOT NULL,
+  "date" DATETIME NOT NULL,
+  "amount" REAL NOT NULL,
+  "safeId" TEXT NOT NULL,
+  "description" TEXT NOT NULL,
+  "payer" TEXT,
+  "beneficiary" TEXT,
+  "linkedRef" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("safeId") REFERENCES "safes"("id") ON DELETE CASCADE
+);
+
+-- Transfers table
+CREATE TABLE IF NOT EXISTS "transfers" (
+  "id" TEXT PRIMARY KEY,
+  "fromSafeId" TEXT,
+  "toSafeId" TEXT,
+  "amount" REAL NOT NULL,
+  "description" TEXT,
+  "date" DATETIME NOT NULL,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("fromSafeId") REFERENCES "safes"("id") ON DELETE SET NULL,
+  FOREIGN KEY ("toSafeId") REFERENCES "safes"("id") ON DELETE SET NULL
+);
+
+-- Unit Partners table
+CREATE TABLE IF NOT EXISTS "unit_partners" (
+  "id" TEXT PRIMARY KEY,
+  "unitId" TEXT NOT NULL,
+  "partnerId" TEXT NOT NULL,
+  "percentage" REAL NOT NULL,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("unitId") REFERENCES "units"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("partnerId") REFERENCES "partners"("id") ON DELETE CASCADE,
+  UNIQUE("unitId", "partnerId")
+);
+
+-- Broker Dues table
+CREATE TABLE IF NOT EXISTS "broker_dues" (
+  "id" TEXT PRIMARY KEY,
+  "brokerId" TEXT NOT NULL,
+  "amount" REAL NOT NULL,
+  "dueDate" DATETIME NOT NULL,
+  "status" TEXT DEFAULT 'معلق',
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("brokerId") REFERENCES "brokers"("id") ON DELETE CASCADE
+);
+
+-- Partner Debts table
+CREATE TABLE IF NOT EXISTS "partner_debts" (
+  "id" TEXT PRIMARY KEY,
+  "partnerId" TEXT NOT NULL,
+  "amount" REAL NOT NULL,
+  "dueDate" DATETIME NOT NULL,
+  "status" TEXT DEFAULT 'معلق',
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("partnerId") REFERENCES "partners"("id") ON DELETE CASCADE
+);
+
+-- Partner Groups table
+CREATE TABLE IF NOT EXISTS "partner_groups" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT UNIQUE NOT NULL,
+  "notes" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME
+);
+
+-- Partner Group Partners table
+CREATE TABLE IF NOT EXISTS "partner_group_partners" (
+  "id" TEXT PRIMARY KEY,
+  "partnerGroupId" TEXT NOT NULL,
+  "partnerId" TEXT NOT NULL,
+  "percentage" REAL NOT NULL,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" DATETIME,
+  FOREIGN KEY ("partnerGroupId") REFERENCES "partner_groups"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("partnerId") REFERENCES "partners"("id") ON DELETE CASCADE,
+  UNIQUE("partnerGroupId", "partnerId")
+);
+
+-- Audit Logs table
+CREATE TABLE IF NOT EXISTS "audit_logs" (
+  "id" TEXT PRIMARY KEY,
+  "userId" INTEGER,
+  "action" TEXT NOT NULL,
+  "tableName" TEXT,
+  "recordId" TEXT,
+  "oldValues" TEXT,
+  "newValues" TEXT,
+  "ipAddress" TEXT,
+  "userAgent" TEXT,
+  "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL
+);` :
+      `-- PostgreSQL Schema Export
 -- Generated on: ${new Date().toISOString()}
 
 -- Users table
@@ -304,9 +545,10 @@ CREATE TABLE IF NOT EXISTS "audit_logs" (
     // 2. Data Export (SQL INSERT statements)
     const dataSQL = `-- Data Export
 -- Generated on: ${new Date().toISOString()}
+-- Database Type: ${isSQLite ? 'SQLite' : 'PostgreSQL'}
 
 -- Users data
-${users.map(user => `INSERT INTO "users" ("id", "username", "password", "email", "fullName", "role", "isActive", "createdAt", "updatedAt") VALUES (${user.id}, '${user.username}', '${user.password}', ${user.email ? `'${user.email}'` : 'NULL'}, ${user.fullName ? `'${user.fullName}'` : 'NULL'}, '${user.role}', ${user.isActive}, '${user.createdAt.toISOString()}', '${user.updatedAt.toISOString()}');`).join('\n')}
+${users.map(user => `INSERT INTO "users" ("id", "username", "password", "email", "fullName", "role", "isActive", "createdAt", "updatedAt") VALUES (${isSQLite ? user.id : user.id}, '${user.username}', '${user.password}', ${user.email ? `'${user.email}'` : 'NULL'}, ${user.fullName ? `'${user.fullName}'` : 'NULL'}, '${user.role}', ${isSQLite ? (user.isActive ? 1 : 0) : user.isActive}, '${user.createdAt.toISOString()}', '${user.updatedAt.toISOString()}');`).join('\n')}
 
 -- Units data
 ${units.map(unit => `INSERT INTO "units" ("id", "code", "name", "unitType", "area", "floor", "building", "totalPrice", "status", "notes", "createdAt", "updatedAt", "deletedAt") VALUES ('${unit.id}', '${unit.code}', ${unit.name ? `'${unit.name}'` : 'NULL'}, '${unit.unitType}', ${unit.area ? `'${unit.area}'` : 'NULL'}, ${unit.floor ? `'${unit.floor}'` : 'NULL'}, ${unit.building ? `'${unit.building}'` : 'NULL'}, ${unit.totalPrice}, '${unit.status}', ${unit.notes ? `'${unit.notes}'` : 'NULL'}, '${unit.createdAt.toISOString()}', '${unit.updatedAt.toISOString()}', ${unit.deletedAt ? `'${unit.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
@@ -333,7 +575,7 @@ ${partners.map(partner => `INSERT INTO "partners" ("id", "name", "phone", "notes
 ${vouchers.map(voucher => `INSERT INTO "vouchers" ("id", "type", "date", "amount", "safeId", "description", "payer", "beneficiary", "linkedRef", "createdAt", "updatedAt", "deletedAt") VALUES ('${voucher.id}', '${voucher.type}', '${voucher.date.toISOString()}', ${voucher.amount}, '${voucher.safeId}', '${voucher.description}', ${voucher.payer ? `'${voucher.payer}'` : 'NULL'}, ${voucher.beneficiary ? `'${voucher.beneficiary}'` : 'NULL'}, ${voucher.linkedRef ? `'${voucher.linkedRef}'` : 'NULL'}, '${voucher.createdAt.toISOString()}', '${voucher.updatedAt.toISOString()}', ${voucher.deletedAt ? `'${voucher.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
 
 -- Transfers data
-${transfers.map(transfer => `INSERT INTO "transfers" ("id", "fromSafeId", "toSafeId", "amount", "description", "date", "createdAt", "updatedAt", "deletedAt") VALUES ('${transfer.id}', ${transfer.fromSafeId ? `'${transfer.fromSafeId}'` : 'NULL'}, ${transfer.toSafeId ? `'${transfer.toSafeId}'` : 'NULL'}, ${transfer.amount}, ${transfer.description ? `'${transfer.description}'` : 'NULL'}, '${transfer.date.toISOString()}', '${transfer.createdAt.toISOString()}', '${transfer.updatedAt.toISOString()}', ${transfer.deletedAt ? `'${transfer.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
+${transfers.map(transfer => `INSERT INTO "transfers" ("id", "fromSafeId", "toSafeId", "amount", "description", "date", "createdAt", "updatedAt", "deletedAt") VALUES ('${transfer.id}', ${transfer.fromSafeId ? `'${transfer.fromSafeId}'` : 'NULL'}, ${transfer.toSafeId ? `'${transfer.toSafeId}'` : 'NULL'}, ${transfer.amount}, ${transfer.description ? `'${transfer.description}'` : 'NULL'}, '${(transfer as any).date?.toISOString() || new Date().toISOString()}', '${transfer.createdAt.toISOString()}', '${transfer.updatedAt.toISOString()}', ${transfer.deletedAt ? `'${transfer.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
 
 -- Unit Partners data
 ${unitPartners.map(up => `INSERT INTO "unit_partners" ("id", "unitId", "partnerId", "percentage", "createdAt", "updatedAt", "deletedAt") VALUES ('${up.id}', '${up.unitId}', '${up.partnerId}', ${up.percentage}, '${up.createdAt.toISOString()}', '${up.updatedAt.toISOString()}', ${up.deletedAt ? `'${up.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
@@ -351,7 +593,7 @@ ${partnerGroups.map(pg => `INSERT INTO "partner_groups" ("id", "name", "notes", 
 ${partnerGroupPartners.map(pgp => `INSERT INTO "partner_group_partners" ("id", "partnerGroupId", "partnerId", "percentage", "createdAt", "updatedAt", "deletedAt") VALUES ('${pgp.id}', '${pgp.partnerGroupId}', '${pgp.partnerId}', ${pgp.percentage}, '${pgp.createdAt.toISOString()}', '${pgp.updatedAt.toISOString()}', ${pgp.deletedAt ? `'${pgp.deletedAt.toISOString()}'` : 'NULL'});`).join('\n')}
 
 -- Audit Logs data
-${auditLogs.map(log => `INSERT INTO "audit_logs" ("id", "userId", "action", "tableName", "recordId", "oldValues", "newValues", "ipAddress", "userAgent", "createdAt") VALUES ('${log.id}', ${log.userId || 'NULL'}, '${log.action}', ${log.tableName ? `'${log.tableName}'` : 'NULL'}, ${log.recordId ? `'${log.recordId}'` : 'NULL'}, ${log.oldValues ? `'${JSON.stringify(log.oldValues)}'` : 'NULL'}, ${log.newValues ? `'${JSON.stringify(log.newValues)}'` : 'NULL'}, ${log.ipAddress ? `'${log.ipAddress}'` : 'NULL'}, ${log.userAgent ? `'${log.userAgent}'` : 'NULL'}, '${log.createdAt.toISOString()}');`).join('\n')}`
+${auditLogs.map(log => `INSERT INTO "audit_logs" ("id", "userId", "action", "tableName", "recordId", "oldValues", "newValues", "ipAddress", "userAgent", "createdAt") VALUES ('${log.id}', ${log.userId || 'NULL'}, '${log.action}', ${(log as any).tableName ? `'${(log as any).tableName}'` : 'NULL'}, ${(log as any).recordId ? `'${(log as any).recordId}'` : 'NULL'}, ${log.oldValues ? `'${JSON.stringify(log.oldValues)}'` : 'NULL'}, ${log.newValues ? `'${JSON.stringify(log.newValues)}'` : 'NULL'}, ${log.ipAddress ? `'${log.ipAddress}'` : 'NULL'}, ${log.userAgent ? `'${log.userAgent}'` : 'NULL'}, '${log.createdAt.toISOString()}');`).join('\n')}`
 
     zip.file('database_data.sql', dataSQL)
 
@@ -360,7 +602,9 @@ ${auditLogs.map(log => `INSERT INTO "audit_logs" ("id", "userId", "action", "tab
       metadata: {
         exportDate: new Date().toISOString(),
         version: '1.0.0',
-        description: 'Complete system backup'
+        description: 'Complete system backup',
+        databaseType: isSQLite ? 'SQLite' : 'PostgreSQL',
+        isNeon: isNeon
       },
       data: {
         users,
@@ -387,8 +631,10 @@ ${auditLogs.map(log => `INSERT INTO "audit_logs" ("id", "userId", "action", "tab
     // 4. System Configuration
     const systemConfig = {
       database: {
-        provider: 'postgresql',
-        version: '15+'
+        type: isSQLite ? 'SQLite' : 'PostgreSQL',
+        provider: isSQLite ? 'sqlite' : 'postgresql',
+        isNeon: isNeon,
+        url: process.env.DATABASE_URL
       },
       application: {
         name: 'Estate Management System',
@@ -413,33 +659,42 @@ ${auditLogs.map(log => `INSERT INTO "audit_logs" ("id", "userId", "action", "tab
     // 5. Import Instructions
     const importInstructions = `# System Import Instructions
 
+## Database Type: ${isSQLite ? 'SQLite' : 'PostgreSQL'}
+${isNeon ? '## Cloud Provider: Neon' : ''}
+
 ## Prerequisites
-1. PostgreSQL database (version 15+)
+1. ${isSQLite ? 'SQLite database file' : 'PostgreSQL database (version 15+)'}
 2. Node.js (version 18+)
 3. Prisma CLI installed
 
 ## Import Steps
 
 ### 1. Database Setup
-\`\`\`bash
-# Create new database
+${isSQLite ? 
+`# SQLite - Create database file
+touch estate_management.db
+
+# Set environment variable
+export DATABASE_URL="file:./estate_management.db"` :
+`# PostgreSQL - Create database
 createdb estate_management
 
 # Set environment variable
-export DATABASE_URL="postgresql://username:password@localhost:5432/estate_management"
-\`\`\`
+export DATABASE_URL="postgresql://username:password@localhost:5432/estate_management"`}
 
 ### 2. Schema Import
-\`\`\`bash
-# Import database schema
-psql -d estate_management -f database_schema.sql
-\`\`\`
+${isSQLite ? 
+`# SQLite - Import schema
+sqlite3 estate_management.db < database_schema.sql` :
+`# PostgreSQL - Import schema
+psql -d estate_management -f database_schema.sql`}
 
 ### 3. Data Import
-\`\`\`bash
-# Import data
-psql -d estate_management -f database_data.sql
-\`\`\`
+${isSQLite ? 
+`# SQLite - Import data
+sqlite3 estate_management.db < database_data.sql` :
+`# PostgreSQL - Import data
+psql -d estate_management -f database_data.sql`}
 
 ### 4. Application Setup
 \`\`\`bash
@@ -474,259 +729,13 @@ npm start
 - All foreign key relationships are preserved
 - Soft-deleted records are included
 - Audit logs are preserved for compliance
+- Compatible with ${isSQLite ? 'SQLite' : 'PostgreSQL'} databases
 
 ## Support
 For technical support, contact the development team.
 `
 
     zip.file('IMPORT_INSTRUCTIONS.md', importInstructions)
-
-    // 6. Prisma Schema
-    const prismaSchema = `// Prisma Schema
-// This file was generated from the backup
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  email     String?  @unique
-  fullName  String?
-  role      String   @default("admin")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("users")
-}
-
-model Unit {
-  id        String    @id @default(cuid())
-  code      String    @unique
-  name      String?
-  unitType  String    @default("سكني")
-  area      String?
-  floor     String?
-  building  String?
-  totalPrice Float    @default(0)
-  status    String    @default("متاحة")
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("units")
-}
-
-model Customer {
-  id         String    @id @default(cuid())
-  name       String
-  phone      String?   @unique
-  nationalId String?   @unique
-  address    String?
-  status     String    @default("نشط")
-  notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
-
-  @@map("customers")
-}
-
-model Broker {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  phone     String?
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("brokers")
-}
-
-model Contract {
-  id                  String    @id @default(cuid())
-  unitId              String
-  customerId          String
-  start               DateTime
-  totalPrice          Float
-  discountAmount      Float     @default(0)
-  brokerName          String?
-  brokerPercent       Float     @default(0)
-  brokerAmount        Float     @default(0)
-  commissionSafeId    String?
-  downPaymentSafeId   String?
-  maintenanceDeposit  Float     @default(0)
-  installmentType     String    @default("شهري")
-  installmentCount    Int       @default(0)
-  extraAnnual         Int       @default(0)
-  annualPaymentValue  Float     @default(0)
-  downPayment         Float     @default(0)
-  paymentType         String    @default("installment")
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  deletedAt           DateTime?
-
-  @@map("contracts")
-}
-
-model Installment {
-  id        String    @id @default(cuid())
-  unitId    String
-  amount    Float
-  dueDate   DateTime
-  status    String    @default("معلق")
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("installments")
-}
-
-model Safe {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  balance   Float     @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("safes")
-}
-
-model Partner {
-  id        String    @id @default(cuid())
-  name      String
-  phone     String?
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("partners")
-}
-
-model Voucher {
-  id          String    @id @default(cuid())
-  type        String
-  date        DateTime
-  amount      Float
-  safeId      String
-  description String
-  payer       String?
-  beneficiary String?
-  linkedRef   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  @@map("vouchers")
-}
-
-model Transfer {
-  id          String    @id @default(cuid())
-  fromSafeId  String?
-  toSafeId    String?
-  amount      Float
-  description String?
-  date        DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  @@map("transfers")
-}
-
-model UnitPartner {
-  id        String    @id @default(cuid())
-  unitId    String
-  partnerId String
-  percentage Float
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("unit_partners")
-}
-
-model BrokerDue {
-  id        String    @id @default(cuid())
-  brokerId  String
-  amount    Float
-  dueDate   DateTime
-  status    String    @default("معلق")
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("broker_dues")
-}
-
-model PartnerDebt {
-  id        String    @id @default(cuid())
-  partnerId String
-  amount    Float
-  dueDate   DateTime
-  status    String    @default("معلق")
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("partner_debts")
-}
-
-model PartnerGroup {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@map("partner_groups")
-}
-
-model PartnerGroupPartner {
-  id              String    @id @default(cuid())
-  partnerGroupId String
-  partnerId       String
-  percentage      Float
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-
-  @@map("partner_group_partners")
-}
-
-model AuditLog {
-  id        String    @id @default(cuid())
-  userId    Int?
-  action    String
-  tableName String?
-  recordId  String?
-  oldValues Json?
-  newValues Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime  @default(now())
-
-  @@map("audit_logs")
-}
-`
-
-    zip.file('schema.prisma', prismaSchema)
 
     // Generate ZIP file
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
@@ -737,7 +746,7 @@ model AuditLog {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="system-backup-${new Date().toISOString().split('T')[0]}.zip"`,
+        'Content-Disposition': `attachment; filename="system-backup-${isSQLite ? 'sqlite' : 'postgresql'}-${new Date().toISOString().split('T')[0]}.zip"`,
         'Content-Length': zipBuffer.length.toString()
       }
     })
