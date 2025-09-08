@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { DashboardKPIs } from '@/types'
-import { formatCurrency, formatDate } from '@/utils/formatting'
-import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { DashboardKPIs } from '../../types'
+import { formatCurrency, formatDate } from '../../utils/formatting'
+import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (

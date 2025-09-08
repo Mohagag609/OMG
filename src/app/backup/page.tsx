@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -215,7 +215,7 @@ export default function Backup() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('ar-SA')
+    return new Date(dateString).toLocaleString('en-GB')
   }
 
   if (loading) {
@@ -316,7 +316,7 @@ export default function Backup() {
             <h2 className="text-xl font-bold text-gray-900">قائمة النسخ الاحتياطية</h2>
             <div className="flex items-center space-x-2 space-x-reverse">
               <span className="text-sm text-gray-500">آخر تحديث:</span>
-              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('en-GB')}</span>
             </div>
           </div>
 
