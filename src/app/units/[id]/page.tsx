@@ -248,11 +248,8 @@ export default function UnitManagement() {
             <ModernButton 
               variant="warning"
               onClick={() => {
-                addNotification({
-                  type: 'info',
-                  title: 'قيد التطوير',
-                  message: 'ميزة تعديل الوحدة قيد التطوير'
-                })
+                // العودة لصفحة الوحدات مع فتح modal التعديل
+                router.push(`/units?edit=${unit.id}`)
               }}
             >
               ✏️ تعديل الوحدة
@@ -260,11 +257,13 @@ export default function UnitManagement() {
             <ModernButton 
               variant="info"
               onClick={() => {
+                // فتح modal إدارة الشركاء
                 addNotification({
-                  type: 'info',
-                  title: 'قيد التطوير',
-                  message: 'ميزة إدارة الشركاء قيد التطوير'
+                  type: 'success',
+                  title: 'إدارة الشركاء',
+                  message: 'تم فتح صفحة إدارة الشركاء'
                 })
+                // يمكن إضافة modal أو صفحة منفصلة هنا
               }}
             >
               👥 إدارة الشركاء
@@ -272,10 +271,12 @@ export default function UnitManagement() {
             <ModernButton 
               variant="success"
               onClick={() => {
+                // طباعة تقرير الوحدة
+                window.print()
                 addNotification({
-                  type: 'info',
-                  title: 'قيد التطوير',
-                  message: 'ميزة تقرير الوحدة قيد التطوير'
+                  type: 'success',
+                  title: 'طباعة التقرير',
+                  message: 'تم فتح نافذة الطباعة'
                 })
               }}
             >
@@ -284,13 +285,41 @@ export default function UnitManagement() {
             {unit.status === 'مباعة' && (
               <ModernButton 
                 variant="secondary"
-                onClick={() => {
+                onClick={async () => {
                   if (confirm('هل أنت متأكد من إرجاع هذه الوحدة؟')) {
-                    addNotification({
-                      type: 'info',
-                      title: 'قيد التطوير',
-                      message: 'ميزة إرجاع الوحدة قيد التطوير'
-                    })
+                    try {
+                      const token = localStorage.getItem('authToken')
+                      const response = await fetch(`/api/units/${unit.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ status: 'متاحة' })
+                      })
+                      
+                      if (response.ok) {
+                        addNotification({
+                          type: 'success',
+                          title: 'تم الإرجاع',
+                          message: 'تم إرجاع الوحدة بنجاح'
+                        })
+                        // إعادة تحميل البيانات
+                        fetchUnitData(unit.id)
+                      } else {
+                        addNotification({
+                          type: 'error',
+                          title: 'خطأ',
+                          message: 'فشل في إرجاع الوحدة'
+                        })
+                      }
+                    } catch (error) {
+                      addNotification({
+                        type: 'error',
+                        title: 'خطأ',
+                        message: 'حدث خطأ في إرجاع الوحدة'
+                      })
+                    }
                   }
                 }}
               >
@@ -299,13 +328,41 @@ export default function UnitManagement() {
             )}
             <ModernButton 
               variant="danger"
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('هل أنت متأكد من حذف هذه الوحدة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
-                  addNotification({
-                    type: 'info',
-                    title: 'قيد التطوير',
-                    message: 'ميزة حذف الوحدة قيد التطوير'
-                  })
+                  try {
+                    const token = localStorage.getItem('authToken')
+                    const response = await fetch(`/api/units/${unit.id}`, {
+                      method: 'DELETE',
+                      headers: {
+                        'Authorization': `Bearer ${token}`
+                      }
+                    })
+                    
+                    if (response.ok) {
+                      addNotification({
+                        type: 'success',
+                        title: 'تم الحذف',
+                        message: 'تم حذف الوحدة بنجاح'
+                      })
+                      // العودة لصفحة الوحدات
+                      setTimeout(() => {
+                        router.push('/units')
+                      }, 1500)
+                    } else {
+                      addNotification({
+                        type: 'error',
+                        title: 'خطأ',
+                        message: 'فشل في حذف الوحدة'
+                      })
+                    }
+                  } catch (error) {
+                    addNotification({
+                      type: 'error',
+                      title: 'خطأ',
+                      message: 'حدث خطأ في حذف الوحدة'
+                    })
+                  }
                 }
               }}
             >

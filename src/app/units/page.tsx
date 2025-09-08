@@ -125,7 +125,20 @@ export default function Units() {
     }
     
     fetchData()
-  }, [])
+    
+    // Check if we need to open edit modal from management page
+    const urlParams = new URLSearchParams(window.location.search)
+    const editId = urlParams.get('edit')
+    if (editId && units.length > 0) {
+      // Find the unit to edit
+      const unitToEdit = units.find(unit => unit.id === editId)
+      if (unitToEdit) {
+        openEditModal(unitToEdit)
+        // Clean up URL
+        window.history.replaceState({}, '', '/units')
+      }
+    }
+  }, [units])
 
   const fetchData = async () => {
     try {
@@ -758,7 +771,7 @@ export default function Units() {
                       `}
                     >
                       <td className="py-4 px-6">
-                        <div className="text-gray-900 font-bold text-lg">{unit.code}</div>
+                        <div className="text-gray-900 font-bold text-xl">{unit.code}</div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="text-gray-800 font-semibold">{unit.name || '-'}</div>
