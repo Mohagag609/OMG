@@ -49,6 +49,18 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
               <NavigationButtons />
             )}
             
+            {/* System Tab */}
+            <div className="hidden md:flex items-center">
+              <button
+                onClick={() => router.push('/system')}
+                className="flex items-center space-x-2 space-x-reverse px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 hover:scale-105 shadow-lg"
+                title="إدارة النظام"
+              >
+                <span className="text-lg">⚙️</span>
+                <span className="font-medium">النظام</span>
+              </button>
+            </div>
+            
             {/* Quick Actions */}
             <div className="hidden md:flex items-center space-x-2 space-x-reverse">
               <button
