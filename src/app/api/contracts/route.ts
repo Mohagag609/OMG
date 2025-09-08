@@ -178,25 +178,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if unit has partners
+    // Check if unit has partners (optional check)
     const unitPartners = await prisma.unitPartner.findMany({
       where: { unitId, deletedAt: null }
     })
 
-    if (unitPartners.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'لا يمكن إنشاء عقد. يجب تحديد شركاء لهذه الوحدة أولاً.' },
-        { status: 400 }
-      )
-    }
-
-    // Check if total percentage is 100%
-    const totalPercent = unitPartners.reduce((sum, p) => sum + p.percentage, 0)
-    if (totalPercent !== 100) {
-      return NextResponse.json(
-        { success: false, error: `لا يمكن إنشاء عقد. مجموع نسب الشركاء هو ${totalPercent}% ويجب أن يكون 100% بالضبط.` },
-        { status: 400 }
-      )
+    // If there are partners, validate their percentages
+    if (unitPartners.length > 0) {
+      const totalPercent = unitPartners.reduce((sum, p) => sum + p.percentage, 0)
+      if (Math.abs(totalPercent - 100) > 0.01) { // Allow small floating point differences
+        return NextResponse.json(
+          { success: false, error: `مجموع نسب الشركاء هو ${totalPercent}% ويجب أن يكون 100% بالضبط.` },
+          { status: 400 }
+        )
+      }
     }
 
     // Create contract and generate installments in a transaction
