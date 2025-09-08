@@ -622,10 +622,10 @@ export default function PartnerDetails() {
                                 >
                                   <td className="py-3 px-4">
                                     <div className={`text-sm ${tx.isClosingEntry ? 'text-gray-700 font-semibold' : 'text-gray-600'}`}>
-                                      {tx.isClosingEntry ? 'إقفال' : new Date(tx.date).toLocaleTimeString('ar-SA', { 
+                                      {tx.isClosingEntry ? 'إقفال' : (tx.date ? new Date(tx.date).toLocaleTimeString('ar-SA', { 
                                         hour: '2-digit', 
                                         minute: '2-digit' 
-                                      })}
+                                      }) : 'غير محدد')}
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">

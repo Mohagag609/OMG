@@ -52,12 +52,22 @@ export async function POST(request: NextRequest) {
         const zip = new JSZip()
         const zipContent = await zip.loadAsync(fileContent)
 
-        // Look for data.json in the ZIP
-        const dataFile = zipContent.file('data.json')
+        // Look for data.json in the ZIP, or try other possible names
+        let dataFile = zipContent.file('data.json')
         if (!dataFile) {
-          console.error('ZIP file does not contain data.json')
+          dataFile = zipContent.file('tables_data.json')
+        }
+        if (!dataFile) {
+          dataFile = zipContent.file('backup_data.json')
+        }
+        if (!dataFile) {
+          console.error('ZIP file does not contain expected data file')
+          console.log('Available files in ZIP:', Object.keys(zipContent.files))
           return NextResponse.json(
-            { error: 'ملف ZIP لا يحتوي على data.json' },
+            { 
+              error: 'ملف ZIP لا يحتوي على ملف البيانات المطلوب',
+              details: 'الملفات المتاحة: ' + Object.keys(zipContent.files).join(', ')
+            },
             { status: 400 }
           )
         }

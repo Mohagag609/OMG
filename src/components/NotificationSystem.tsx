@@ -49,7 +49,7 @@ export function NotificationSystem({ notifications, onRemove }: NotificationSyst
             <div className="notification-title">{notification.title}</div>
             <div className="notification-message">{notification.message}</div>
             <div className="notification-time">
-              {notification.timestamp.toLocaleTimeString('ar-SA')}
+              {notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString('ar-SA') : 'الآن'}
             </div>
           </div>
           <button className="notification-close">×</button>
