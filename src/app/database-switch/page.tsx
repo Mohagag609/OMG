@@ -22,13 +22,13 @@ export default function DatabaseSwitchPage() {
           </h3>
           <div className="space-y-3 text-sm text-blue-800">
             <div>
-              <strong>1. مفتاح الأدمن:</strong> استخدم "admin-setup-key-change-me"
+              <strong>1. مفتاح الأدمن:</strong> استخدم &quot;admin-setup-key-change-me&quot;
             </div>
             <div>
-              <strong>2. SQLite:</strong> استخدم "file:./prisma/dev.db"
+              <strong>2. SQLite:</strong> استخدم &quot;file:./prisma/dev.db&quot;
             </div>
             <div>
-              <strong>3. PostgreSQL محلي:</strong> استخدم "postgresql://postgres:password@localhost:5432/estate_management"
+              <strong>3. PostgreSQL محلي:</strong> استخدم &quot;postgresql://postgres:password@localhost:5432/estate_management&quot;
             </div>
             <div>
               <strong>4. PostgreSQL سحابي:</strong> استخدم الرابط الكامل من مزود الخدمة
