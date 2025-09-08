@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import JSZip from 'jszip'
 import ModernCard from '../../components/ModernCard'
 import ModernButton from '../../components/ModernButton'
 import SidebarToggle from '../../components/SidebarToggle'
