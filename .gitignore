@@ -99,6 +99,10 @@ temp/
 ehthumbs.db
 Thumbs.db
 
+# Core dump files
+core
+core.*
+
 # Backup files
 *.backup
 *.bak
