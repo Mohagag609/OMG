@@ -25,8 +25,8 @@ export default function BackupNewPage() {
   const [resetType, setResetType] = useState<'data' | 'schema' | 'complete'>('data')
 
   const addNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const id = Date.now().toString()
-    setNotifications(prev => [...prev, { id, message, type }])
+    const id = Math.random().toString(36).substr(2, 9)
+    setNotifications(prev => [...prev, { id, message, type, timestamp: new Date() }])
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id))
     }, 5000)
@@ -166,6 +166,8 @@ export default function BackupNewPage() {
           errorMessage += `\nالبيانات الحالية: ${JSON.stringify(error.currentDataCount)}`
         }
         
+        // Show error in alert for debugging
+        alert(`خطأ في الاستيراد:\n${errorMessage}`)
         addNotification(errorMessage, 'error')
       }
     } catch (error) {

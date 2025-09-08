@@ -94,11 +94,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if it's a valid import file structure
     if (!jsonData.metadata || !jsonData.data) {
-      return NextResponse.json(
-        { error: 'ملف استيراد غير صالح. يجب أن يحتوي على metadata و data' },
-        { status: 400 }
-      )
+      // Try to handle direct data format (without metadata wrapper)
+      if (Array.isArray(jsonData) || (typeof jsonData === 'object' && !jsonData.metadata)) {
+        console.log('Detected direct data format, wrapping with metadata')
+        jsonData = {
+          metadata: {
+            version: '1.0.0',
+            exportDate: new Date().toISOString(),
+            databaseType: isSQLite ? 'SQLite' : isPostgreSQL ? 'PostgreSQL' : 'Unknown'
+          },
+          data: jsonData
+        }
+      } else {
+        console.error('Invalid import file structure:', {
+          hasMetadata: !!jsonData.metadata,
+          hasData: !!jsonData.data,
+          keys: Object.keys(jsonData)
+        })
+        return NextResponse.json(
+          { 
+            error: 'ملف استيراد غير صالح. يجب أن يحتوي على metadata و data',
+            details: `المفاتيح الموجودة: ${Object.keys(jsonData).join(', ')}`
+          },
+          { status: 400 }
+        )
+      }
     }
 
     console.log('Import file validated:', {
