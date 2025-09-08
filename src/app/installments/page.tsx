@@ -79,6 +79,10 @@ export default function Installments() {
   const [rescheduleInstallment, setRescheduleInstallment] = useState<Installment | null>(null)
   const [newDueDate, setNewDueDate] = useState('')
   
+  // Master-Detail Layout states
+  const [selectedInstallment, setSelectedInstallment] = useState<Installment | null>(null)
+  const [showDetailPanel, setShowDetailPanel] = useState(false)
+  
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -392,6 +396,16 @@ export default function Installments() {
     })
   }
 
+  const handleInstallmentClick = (installment: Installment) => {
+    setSelectedInstallment(installment)
+    setShowDetailPanel(true)
+  }
+
+  const closeDetailPanel = () => {
+    setShowDetailPanel(false)
+    setSelectedInstallment(null)
+  }
+
   const filteredInstallments = installments.filter(installment => {
     const matchesSearch = search === '' || 
       getUnitName(installment.unitId).toLowerCase().includes(search.toLowerCase()) ||
@@ -643,7 +657,11 @@ export default function Installments() {
                             </thead>
                             <tbody>
                               {unitInstallments.map((installment) => (
-                                <tr key={installment.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                                <tr 
+                                  key={installment.id} 
+                                  className="border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors duration-150"
+                                  onClick={() => handleInstallmentClick(installment)}
+                                >
                                   <td className="py-3 px-6">
                                     <div className="font-semibold text-green-600">{formatCurrency(installment.amount)}</div>
                                   </td>
@@ -661,7 +679,7 @@ export default function Installments() {
                                     <div className="text-gray-600 max-w-xs truncate">{installment.notes || '-'}</div>
                                   </td>
                                   <td className="py-3 px-6">
-                                    <div className="flex items-center space-x-2 space-x-reverse">
+                                    <div className="flex items-center space-x-2 space-x-reverse" onClick={(e) => e.stopPropagation()}>
                                       {installment.status !== 'مدفوع' && (
                                         <>
                                           <ModernButton 
@@ -715,7 +733,11 @@ export default function Installments() {
                 </thead>
                 <tbody>
                   {filteredInstallments.map((installment) => (
-                    <tr key={installment.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                    <tr 
+                      key={installment.id} 
+                      className="border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors duration-150"
+                      onClick={() => handleInstallmentClick(installment)}
+                    >
                       <td className="py-4 px-6">
                         <div className="font-medium text-gray-900">{getUnitName(installment.unitId)}</div>
                       </td>
@@ -736,7 +758,7 @@ export default function Installments() {
                         <div className="text-gray-600 max-w-xs truncate">{installment.notes || '-'}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2 space-x-reverse">
+                        <div className="flex items-center space-x-2 space-x-reverse" onClick={(e) => e.stopPropagation()}>
                           {installment.status !== 'مدفوع' && (
                             <>
                               <ModernButton 
@@ -820,6 +842,168 @@ export default function Installments() {
                 <ModernButton onClick={handleRescheduleSubmit}>
                   📅 تأكيد إعادة الجدولة
                 </ModernButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Panel - Side Drawer */}
+      {showDetailPanel && selectedInstallment && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeDetailPanel}
+          />
+          
+          {/* Side Panel */}
+          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold">تفاصيل القسط</h2>
+                    <p className="text-blue-100 text-sm">معلومات مفصلة عن القسط</p>
+                  </div>
+                  <button
+                    onClick={closeDetailPanel}
+                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors duration-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">المعلومات الأساسية</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">الوحدة:</span>
+                        <span className="font-semibold text-gray-900">{getUnitName(selectedInstallment.unitId)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">المبلغ:</span>
+                        <span className="font-bold text-green-600 text-lg">{formatCurrency(selectedInstallment.amount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">تاريخ الاستحقاق:</span>
+                        <span className={`font-semibold ${isOverdue(selectedInstallment.dueDate) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {formatDate(selectedInstallment.dueDate)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">الحالة:</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedInstallment.status)}`}>
+                          {selectedInstallment.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contract Info */}
+                  {(() => {
+                    const contract = getContractForUnit(selectedInstallment.unitId)
+                    return contract ? (
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">معلومات العقد</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">رقم العقد:</span>
+                            <span className="font-semibold text-gray-900">{contract.id.slice(-8) || 'غير محدد'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">تاريخ العقد:</span>
+                            <span className="font-semibold text-gray-900">{formatDate(contract.start)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">المبلغ الإجمالي:</span>
+                            <span className="font-bold text-blue-600">{formatCurrency(contract.totalPrice)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null
+                  })()}
+
+                  {/* Notes */}
+                  {selectedInstallment.notes && (
+                    <div className="bg-yellow-50 rounded-xl p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">الملاحظات</h3>
+                      <p className="text-gray-700">{selectedInstallment.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Payment History */}
+                  <div className="bg-green-50 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">تاريخ الدفع</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">تاريخ الإنشاء:</span>
+                        <span className="font-semibold">{selectedInstallment.createdAt ? formatDate(selectedInstallment.createdAt) : 'غير محدد'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">آخر تحديث:</span>
+                        <span className="font-semibold">{selectedInstallment.updatedAt ? formatDate(selectedInstallment.updatedAt) : 'غير محدد'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="border-t border-gray-200 p-6 bg-gray-50">
+                <div className="grid grid-cols-2 gap-3">
+                  <ModernButton 
+                    variant="warning" 
+                    size="sm"
+                    onClick={() => {
+                      closeDetailPanel()
+                      handleReschedule(selectedInstallment)
+                    }}
+                  >
+                    📅 تعديل
+                  </ModernButton>
+                  <ModernButton 
+                    variant="info" 
+                    size="sm"
+                    onClick={() => {
+                      window.print()
+                      addNotification({
+                        type: 'success',
+                        title: 'طباعة',
+                        message: 'تم فتح نافذة الطباعة'
+                      })
+                    }}
+                  >
+                    🖨️ طباعة
+                  </ModernButton>
+                  <ModernButton 
+                    variant="success" 
+                    size="sm"
+                    onClick={() => {
+                      // PDF download functionality
+                      addNotification({
+                        type: 'info',
+                        title: 'قيد التطوير',
+                        message: 'ميزة تحميل PDF قيد التطوير'
+                      })
+                    }}
+                  >
+                    📄 PDF
+                  </ModernButton>
+                  <ModernButton 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={closeDetailPanel}
+                  >
+                    إغلاق
+                  </ModernButton>
+                </div>
               </div>
             </div>
           </div>
