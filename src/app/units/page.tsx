@@ -410,9 +410,6 @@ export default function Units() {
       newSet.add(unitId)
       return newSet
     })
-    
-    // إزالة الوحدة من القائمة فوراً مع الحركة
-    setUnits(prev => prev.filter(unit => unit.id !== unitId))
 
     try {
       const token = localStorage.getItem('authToken')
@@ -423,6 +420,8 @@ export default function Units() {
 
       const data = await response.json()
       if (data.success) {
+        // إزالة الوحدة من القائمة فوراً مع الحركة
+        setUnits(prev => prev.filter(unit => unit.id !== unitId))
         setSuccess('تم حذف الوحدة بنجاح!')
         setError(null)
         addNotification({
@@ -431,26 +430,26 @@ export default function Units() {
           message: 'تم حذف الوحدة بنجاح'
         })
       } else {
-        // في حالة فشل الحذف، نعيد الوحدة للقائمة
-        fetchData()
-        setError(data.error || 'خطأ في حذف الوحدة')
+        // إعادة تحميل البيانات لإظهار الوحدة مرة أخرى
+        await fetchData()
+        setError(data.error || 'خطأ في حذف الوحدة. قد تكون الوحدة مرتبطة بعقد قائم.')
         setSuccess(null)
         addNotification({
           type: 'error',
           title: 'خطأ في الحذف',
-          message: data.error || 'فشل في حذف الوحدة'
+          message: data.error || 'فشل في حذف الوحدة. قد تكون الوحدة مرتبطة بعقد قائم.'
         })
       }
     } catch (err) {
       console.error('Delete unit error:', err)
-      // في حالة فشل الحذف، نعيد الوحدة للقائمة
-      fetchData()
-      setError('خطأ في حذف الوحدة')
+      // إعادة تحميل البيانات لإظهار الوحدة مرة أخرى
+      await fetchData()
+      setError('خطأ في حذف الوحدة. تحقق من اتصال الإنترنت وحاول مرة أخرى.')
       setSuccess(null)
       addNotification({
         type: 'error',
         title: 'خطأ في الحذف',
-        message: 'فشل في حذف الوحدة'
+        message: 'فشل في حذف الوحدة. تحقق من اتصال الإنترنت وحاول مرة أخرى.'
       })
     } finally {
       // إزالة الوحدة من قائمة الحذف
