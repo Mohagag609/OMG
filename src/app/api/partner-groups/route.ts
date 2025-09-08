@@ -5,7 +5,6 @@ const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-
     const partnerGroups = await prisma.partnerGroup.findMany({
       include: {
         partners: {
@@ -14,49 +13,21 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' }
     })
 
-    // Transform the data to match the expected format
-    const transformedGroups = partnerGroups.map(group => ({
-      id: group.id,
-      name: group.name,
-      notes: group.notes,
-      createdAt: group.createdAt,
-      updatedAt: group.updatedAt,
-      partners: group.partners.map(p => ({
-        partnerId: p.partnerId,
-        percent: p.percentage
-      }))
-    }))
-
-    return NextResponse.json({ success: true, data: transformedGroups })
+    return NextResponse.json({ success: true, data: partnerGroups })
   } catch (error) {
     console.error('Error fetching partner groups:', error)
     return NextResponse.json({ success: false, error: 'خطأ في الخادم' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
 
     const { name, notes } = await request.json()
 
