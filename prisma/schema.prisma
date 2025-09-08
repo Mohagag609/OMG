@@ -10,6 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// إعدادات إضافية للعمل مع قواعد البيانات المتعددة
+// Additional settings for working with multiple databases
+
 // Customers - مطابق لـ golden-dataset.json
 model Customer {
   id         String  @id @default(cuid())
