@@ -56,27 +56,27 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
             e.preventDefault()
             setSidebarOpen(!sidebarOpen)
             break
-          case '1':
+          case 'u':
             e.preventDefault()
             router.push('/units')
             break
-          case '2':
+          case 'p':
             e.preventDefault()
             router.push('/partners')
             break
-          case '3':
+          case 'c':
             e.preventDefault()
             router.push('/contracts')
             break
-          case '4':
+          case 't':
             e.preventDefault()
             router.push('/treasury')
             break
-          case '5':
+          case 'i':
             e.preventDefault()
             router.push('/installments')
             break
-          case '6':
+          case 's':
             e.preventDefault()
             router.push('/customers')
             break
