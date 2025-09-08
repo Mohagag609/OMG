@@ -385,7 +385,7 @@ export default function Units() {
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${editingUnit.id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -770,7 +770,7 @@ export default function Units() {
                         }
                       `}
                     >
-                      <td className="py-4 px-6 w-48">
+                      <td className="py-4 px-6 w-32">
                         <div className="text-gray-900 font-bold text-base">{unit.code}</div>
                       </td>
                       <td className="py-4 px-6">
