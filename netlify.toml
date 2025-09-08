@@ -6,7 +6,8 @@
   NODE_VERSION = "18"
   NODE_ENV = "production"
   DATABASE_TYPE = "postgresql-cloud"
-  DATABASE_URL = "postgresql://neondb_owner:npg_vu0XPgA7yJOp@ep-plain-cherry-adwev1j0-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" JWT_SECRET = "estate-management-production-secret-key-change-this"
+  DATABASE_URL = "postgresql://neondb_owner:npg_vu0XPgA7yJOp@ep-plain-cherry-adwev1j0-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
+  JWT_SECRET = "estate-management-production-secret-key-change-this"
   NEXTAUTH_URL = "https://your-app-name.netlify.app"
   NEXTAUTH_SECRET = "nextauth-production-secret-key-change-this"
 
