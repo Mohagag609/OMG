@@ -56,5 +56,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating partner group:', error)
     return NextResponse.json({ success: false, error: 'خطأ في الخادم' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }
