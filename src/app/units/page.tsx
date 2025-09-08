@@ -162,12 +162,24 @@ export default function Units() {
       
       if (unitsData.success) {
         setUnits(unitsData.data)
+        
+        // Extract unit partners from units data
+        const allUnitPartners: any[] = []
+        unitsData.data.forEach((unit: any) => {
+          if (unit.unitPartners && unit.unitPartners.length > 0) {
+            allUnitPartners.push(...unit.unitPartners)
+          }
+        })
+        setUnitPartners(allUnitPartners)
       } else {
         setError(unitsData.error || 'خطأ في تحميل الوحدات')
       }
 
       if (unitPartnersData.success) {
-        setUnitPartners(unitPartnersData.data)
+        // Only set if we don't have unit partners from units data
+        if (allUnitPartners.length === 0) {
+          setUnitPartners(unitPartnersData.data)
+        }
       }
 
       if (contractsData.success) {
@@ -478,7 +490,19 @@ export default function Units() {
   }
 
   const getUnitPartners = (unitId: string) => {
-    return unitPartners.filter(up => up.unitId === unitId)
+    // First try to get from unitPartners state
+    const statePartners = unitPartners.filter(up => up.unitId === unitId)
+    if (statePartners.length > 0) {
+      return statePartners
+    }
+    
+    // If not found in state, try to get from unit data
+    const unit = units.find(u => u.id === unitId)
+    if (unit && (unit as any).unitPartners) {
+      return (unit as any).unitPartners
+    }
+    
+    return []
   }
 
   const getPartnerName = (partnerId: string) => {
@@ -1023,7 +1047,7 @@ export default function Units() {
                           {partners.length > 0 ? (
                             <div>
                               {partners.map((partner, index) => (
-                                <div key={index}>
+                                <div key={index} className="text-gray-800">
                                   {getPartnerName(partner.partnerId)} ({partner.percentage}%)
                                 </div>
                               ))}
@@ -1242,14 +1266,14 @@ export default function Units() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">معلومات الوحدة</h3>
                   <div className="space-y-3">
-                    <div><span className="font-semibold">الاسم:</span> {selectedUnit.name || '-'}</div>
-                    <div><span className="font-semibold">النوع:</span> {selectedUnit.unitType}</div>
-                    <div><span className="font-semibold">المساحة:</span> {selectedUnit.area || '-'}</div>
-                    <div><span className="font-semibold">الطابق:</span> {selectedUnit.floor || '-'}</div>
-                    <div><span className="font-semibold">المبنى:</span> {selectedUnit.building || '-'}</div>
-                    <div><span className="font-semibold">السعر:</span> {formatCurrency(selectedUnit.totalPrice)}</div>
-                    <div><span className="font-semibold">المتبقي:</span> {formatCurrency(calculateRemainingAmount(selectedUnit, contracts, installments, vouchers))}</div>
-                    <div><span className="font-semibold">الحالة:</span> {selectedUnit.status}</div>
+                    <div><span className="font-semibold text-gray-800">الاسم:</span> <span className="text-gray-700">{selectedUnit.name || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-800">النوع:</span> <span className="text-gray-700">{selectedUnit.unitType}</span></div>
+                    <div><span className="font-semibold text-gray-800">المساحة:</span> <span className="text-gray-700">{selectedUnit.area || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-800">الطابق:</span> <span className="text-gray-700">{selectedUnit.floor || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-800">المبنى:</span> <span className="text-gray-700">{selectedUnit.building || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-800">السعر:</span> <span className="text-gray-700">{formatCurrency(selectedUnit.totalPrice)}</span></div>
+                    <div><span className="font-semibold text-gray-800">المتبقي:</span> <span className="text-gray-700">{formatCurrency(calculateRemainingAmount(selectedUnit, contracts, installments, vouchers))}</span></div>
+                    <div><span className="font-semibold text-gray-800">الحالة:</span> <span className="text-gray-700">{selectedUnit.status}</span></div>
                   </div>
                 </div>
                 
@@ -1259,7 +1283,7 @@ export default function Units() {
                     {getUnitPartners(selectedUnit.id).map((partner, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <span className="font-semibold">{getPartnerName(partner.partnerId)}</span>
+                          <span className="font-semibold text-gray-800">{getPartnerName(partner.partnerId)}</span>
                           <span className="text-gray-600 mr-2">({partner.percentage}%)</span>
                         </div>
                         <div className="flex items-center space-x-2 space-x-reverse">
@@ -1269,7 +1293,7 @@ export default function Units() {
                             max="100"
                             step="0.1"
                             defaultValue={partner.percentage}
-                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-800"
                             onBlur={(e) => {
                               const newPercentage = parseFloat(e.target.value)
                               if (newPercentage !== partner.percentage) {

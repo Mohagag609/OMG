@@ -45,7 +45,15 @@ export async function GET(request: NextRequest) {
         where: whereClause,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        include: {
+          unitPartners: {
+            where: { deletedAt: null },
+            include: {
+              partner: true
+            }
+          }
+        }
       }),
       prisma.unit.count({ where: whereClause })
     ])
