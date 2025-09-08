@@ -601,11 +601,30 @@ export default function Installments() {
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            {groupByUnit ? (
-              // Grouped view
-              <div className="space-y-4">
-                {Object.entries(groupedInstallments).map(([unitId, unitInstallments]) => {
+          {filteredInstallments.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl text-gray-400">📋</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">لا توجد أقساط</h3>
+              <p className="text-gray-500 mb-6">لم يتم إنشاء أي أقساط بعد. ابدأ بإنشاء عقد جديد</p>
+              <div className="flex items-center justify-center space-x-4 space-x-reverse">
+                <ModernButton onClick={() => router.push('/contracts')}>
+                  <span className="mr-2">📄</span>
+                  إدارة العقود
+                </ModernButton>
+                <ModernButton variant="secondary" onClick={() => router.push('/units')}>
+                  <span className="mr-2">🏠</span>
+                  إدارة الوحدات
+                </ModernButton>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              {groupByUnit ? (
+                // Grouped view
+                <div className="space-y-4">
+                  {Object.entries(groupedInstallments).map(([unitId, unitInstallments]) => {
                   const summary = getUnitSummary(unitInstallments)
                   const isExpanded = expandedUnits.has(unitId)
                   
@@ -792,7 +811,8 @@ export default function Installments() {
                 </tbody>
               </table>
             )}
-          </div>
+            </div>
+          )}
         </ModernCard>
       </div>
 

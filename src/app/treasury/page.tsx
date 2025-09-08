@@ -496,25 +496,39 @@ export default function Treasury() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {safes.map((safe) => (
-              <div key={safe.id} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{safe.name}</h3>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(safe)}>
-                      ✏️
-                    </ModernButton>
-                    <ModernButton size="sm" variant="danger" onClick={() => handleDeleteSafe(safe.id)}>
-                      🗑️
-                    </ModernButton>
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-green-600 mb-2">{formatCurrency(safe.balance)}</div>
-                <div className="text-sm text-gray-600">آخر تحديث: {formatDate(safe.updatedAt || new Date())}</div>
+          {safes.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl text-gray-400">💰</span>
               </div>
-            ))}
-          </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">لا توجد خزائن</h3>
+              <p className="text-gray-500 mb-6">ابدأ بإنشاء خزنة جديدة لإدارة أموالك</p>
+              <ModernButton onClick={() => setShowAddSafeModal(true)}>
+                <span className="mr-2">➕</span>
+                إضافة خزنة جديدة
+              </ModernButton>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {safes.map((safe) => (
+                <div key={safe.id} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">{safe.name}</h3>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(safe)}>
+                        ✏️
+                      </ModernButton>
+                      <ModernButton size="sm" variant="danger" onClick={() => handleDeleteSafe(safe.id)}>
+                        🗑️
+                      </ModernButton>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 mb-2">{formatCurrency(safe.balance)}</div>
+                  <div className="text-sm text-gray-600">آخر تحديث: {formatDate(safe.updatedAt || new Date())}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </ModernCard>
 
         {/* Recent Transfers */}
@@ -526,40 +540,54 @@ export default function Treasury() {
             </ModernButton>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">من</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">إلى</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الوصف</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">التاريخ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.slice(0, 10).map((transfer) => (
-                  <tr key={transfer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{transfer.fromSafeId}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{transfer.toSafeId}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-blue-600">{formatCurrency(transfer.amount)}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600 max-w-xs truncate">{transfer.description || '-'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{formatDate(transfer.createdAt || new Date())}</div>
-                    </td>
+          {transfers.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl text-gray-400">🔄</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">لا توجد تحويلات</h3>
+              <p className="text-gray-500 mb-6">لم يتم تنفيذ أي تحويلات بين الخزائن بعد</p>
+              <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
+                <span className="mr-2">🔄</span>
+                تسجيل تحويل جديد
+              </ModernButton>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">من</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">إلى</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">الوصف</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">التاريخ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {transfers.slice(0, 10).map((transfer) => (
+                    <tr key={transfer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900">{transfer.fromSafeId}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900">{transfer.toSafeId}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-semibold text-blue-600">{formatCurrency(transfer.amount)}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-gray-600 max-w-xs truncate">{transfer.description || '-'}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-gray-600">{formatDate(transfer.createdAt || new Date())}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </ModernCard>
       </div>
 
