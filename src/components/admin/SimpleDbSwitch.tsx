@@ -41,12 +41,17 @@ export default function SimpleDbSwitch() {
       console.log('📡 Response status:', response.status)
       console.log('📡 Response ok:', response.ok)
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
       const data = await response.json()
       console.log('📦 Response data:', data)
+      
+      if (!response.ok) {
+        setResult({
+          success: false,
+          message: data.message || `خطأ HTTP: ${response.status}`
+        })
+        return
+      }
+      
       setResult(data)
     } catch (error) {
       console.error('❌ خطأ في الطلب:', error)
@@ -88,9 +93,12 @@ export default function SimpleDbSwitch() {
             value={formData.adminKey}
             onChange={(e) => setFormData(prev => ({ ...prev, adminKey: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="أدخل مفتاح الأدمن"
+            placeholder="admin-setup-key-change-me"
             required
           />
+          <p className="mt-1 text-sm text-gray-500">
+            استخدم: <code className="bg-gray-100 px-1 rounded">admin-setup-key-change-me</code>
+          </p>
         </div>
 
         {/* Database Type */}
