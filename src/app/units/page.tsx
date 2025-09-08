@@ -770,7 +770,7 @@ export default function Units() {
                         }
                       `}
                     >
-                      <td className="py-4 px-6 w-32">
+                      <td className="py-4 px-6 w-40">
                         <div className="text-gray-900 font-bold text-base truncate" title={unit.code}>{unit.code}</div>
                       </td>
                       <td className="py-4 px-6">
