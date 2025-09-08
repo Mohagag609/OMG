@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import JSZip from 'jszip'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,14 +25,36 @@ export async function POST(request: NextRequest) {
     console.log('Database type detected:', { isSQLite, isPostgreSQL, isNeon })
 
     // Read file content
-    const fileContent = await file.text()
+    const fileContent = await file.arrayBuffer()
     let jsonData
 
     try {
-      jsonData = JSON.parse(fileContent)
+      // Check if it's a ZIP file
+      if (file.name.endsWith('.zip')) {
+        console.log('Processing ZIP file...')
+        const zip = new JSZip()
+        const zipContent = await zip.loadAsync(fileContent)
+        
+        // Look for data.json in the ZIP
+        const dataFile = zipContent.file('data.json')
+        if (!dataFile) {
+          return NextResponse.json(
+            { error: 'ملف ZIP لا يحتوي على data.json' },
+            { status: 400 }
+          )
+        }
+        
+        const jsonContent = await dataFile.async('text')
+        jsonData = JSON.parse(jsonContent)
+      } else {
+        // Handle direct JSON file
+        const textContent = new TextDecoder().decode(fileContent)
+        jsonData = JSON.parse(textContent)
+      }
     } catch (error) {
+      console.error('File parsing error:', error)
       return NextResponse.json(
-        { error: 'ملف غير صالح. يجب أن يكون ملف JSON صحيح' },
+        { error: 'ملف غير صالح. يجب أن يكون ملف JSON أو ZIP صحيح' },
         { status: 400 }
       )
     }
@@ -83,7 +106,7 @@ export async function POST(request: NextRequest) {
         try {
           await prisma.user.create({
             data: {
-              id: isSQLite ? undefined : user.id,
+              id: user.id,
               username: user.username,
               password: user.password,
               email: user.email,
