@@ -1,0 +1,37 @@
+{
+  "extends": [
+    "next/core-web-vitals"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "prefer-const": "error",
+    "no-var": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "build/",
+    "dist/",
+    "coverage/",
+    "*.config.js",
+    "*.config.ts"
+  ]
+}
