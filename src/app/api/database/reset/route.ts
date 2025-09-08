@@ -15,43 +15,56 @@ export async function POST(request: NextRequest) {
     console.log(`Starting database reset: ${resetType}`)
 
     if (resetType === 'data') {
-      // Reset data only - keep schema
-      await prisma.$executeRaw`TRUNCATE TABLE "audit_logs" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "partner_groups" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "partner_debts" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "broker_dues" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "unit_partners" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "transfers" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "vouchers" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "partners" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "safes" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "installments" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "contracts" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "brokers" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "customers" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "units" CASCADE`
-      await prisma.$executeRaw`TRUNCATE TABLE "users" CASCADE`
-      
-      // Reset sequences
-      await prisma.$executeRaw`ALTER SEQUENCE "users_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "units_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "customers_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "brokers_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "contracts_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "installments_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "safes_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "partners_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "vouchers_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "transfers_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "unit_partners_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "broker_dues_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "partner_debts_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "partner_groups_id_seq" RESTART WITH 1`
-      await prisma.$executeRaw`ALTER SEQUENCE "audit_logs_id_seq" RESTART WITH 1`
+      // Reset data only - delete all records using Prisma
+      try {
+        // Delete in correct order to respect foreign key constraints
+        await prisma.auditLog.deleteMany()
+        await prisma.partnerGroupPartner.deleteMany()
+        await prisma.partnerGroup.deleteMany()
+        await prisma.partnerDebt.deleteMany()
+        await prisma.brokerDue.deleteMany()
+        await prisma.unitPartner.deleteMany()
+        await prisma.transfer.deleteMany()
+        await prisma.voucher.deleteMany()
+        await prisma.partner.deleteMany()
+        await prisma.safe.deleteMany()
+        await prisma.installment.deleteMany()
+        await prisma.contract.deleteMany()
+        await prisma.broker.deleteMany()
+        await prisma.customer.deleteMany()
+        await prisma.unit.deleteMany()
+        await prisma.user.deleteMany()
+        
+        console.log('Data reset completed successfully')
+      } catch (error) {
+        console.log('Some tables may not exist, continuing...', error)
+        // Try alternative approach with raw SQL
+        try {
+          await prisma.$executeRaw`TRUNCATE TABLE "audit_logs" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "partner_group_partners" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "partner_groups" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "partner_debts" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "broker_dues" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "unit_partners" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "transfers" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "vouchers" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "partners" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "safes" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "installments" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "contracts" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "brokers" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "customers" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "units" CASCADE`
+          await prisma.$executeRaw`TRUNCATE TABLE "users" CASCADE`
+        } catch (sqlError) {
+          console.log('SQL truncate also failed, some tables may not exist:', sqlError)
+        }
+      }
 
     } else if (resetType === 'schema') {
       // Reset schema - drop and recreate tables
       await prisma.$executeRaw`DROP TABLE IF EXISTS "audit_logs" CASCADE`
+      await prisma.$executeRaw`DROP TABLE IF EXISTS "partner_group_partners" CASCADE`
       await prisma.$executeRaw`DROP TABLE IF EXISTS "partner_groups" CASCADE`
       await prisma.$executeRaw`DROP TABLE IF EXISTS "partner_debts" CASCADE`
       await prisma.$executeRaw`DROP TABLE IF EXISTS "broker_dues" CASCADE`
