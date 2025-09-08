@@ -3,7 +3,7 @@
  * Database Manager - Switch between Local and Cloud PostgreSQL
  */
 
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 class DatabaseManager {
     constructor() {
@@ -292,4 +292,4 @@ class DatabaseManager {
 // إنشاء مثيل واحد من مدير قاعدة البيانات
 const dbManager = new DatabaseManager();
 
-module.exports = dbManager;
+export default dbManager;
