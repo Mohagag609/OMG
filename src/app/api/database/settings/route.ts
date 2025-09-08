@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (type !== 'sqlite' && type !== 'postgresql') {
+    if (type !== 'sqlite' && type !== 'postgresql' && type !== 'postgresql-local' && type !== 'postgresql-cloud') {
       return NextResponse.json(
         { success: false, error: 'نوع قاعدة البيانات غير صحيح' },
         { status: 400 }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (type === 'postgresql' && !connectionString.startsWith('postgresql://')) {
+    if ((type === 'postgresql' || type === 'postgresql-local' || type === 'postgresql-cloud') && !connectionString.startsWith('postgresql://')) {
       return NextResponse.json(
         { success: false, error: 'رابط PostgreSQL يجب أن يبدأ بـ postgresql://' },
         { status: 400 }
