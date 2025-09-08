@@ -45,6 +45,10 @@ export default function UnitPartnersManagement() {
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedPartnerId, setSelectedPartnerId] = useState('')
+  const [partnerPercentage, setPartnerPercentage] = useState('')
+  const [addingPartner, setAddingPartner] = useState(false)
   
   const router = useRouter()
   const params = useParams()
@@ -141,6 +145,90 @@ export default function UnitPartnersManagement() {
     }
   }
 
+  const handleAddPartner = async () => {
+    if (!selectedPartnerId || !partnerPercentage) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: 'يرجى اختيار الشريك وإدخال النسبة'
+      })
+      return
+    }
+
+    const percentage = parseFloat(partnerPercentage)
+    if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: 'النسبة يجب أن تكون بين 1 و 100'
+      })
+      return
+    }
+
+    // التحقق من أن مجموع النسب لا يتجاوز 100%
+    const currentTotal = unitPartners.reduce((sum, up) => sum + up.percentage, 0)
+    if (currentTotal + percentage > 100) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: `مجموع النسب سيتجاوز 100%. النسبة المتاحة: ${100 - currentTotal}%`
+      })
+      return
+    }
+
+    setAddingPartner(true)
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/unit-partners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          unitId: unit?.id,
+          partnerId: selectedPartnerId,
+          percentage: percentage
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        addNotification({
+          type: 'success',
+          title: 'تم الإضافة',
+          message: 'تم إضافة الشريك للوحدة بنجاح'
+        })
+        // إعادة تحميل البيانات
+        fetchUnitData(params.id as string)
+        // إغلاق modal وإعادة تعيين الحقول
+        setShowAddModal(false)
+        setSelectedPartnerId('')
+        setPartnerPercentage('')
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ',
+          message: data.error || 'فشل في إضافة الشريك'
+        })
+      }
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: 'حدث خطأ في إضافة الشريك'
+      })
+    } finally {
+      setAddingPartner(false)
+    }
+  }
+
+  const getAvailablePartners = () => {
+    const usedPartnerIds = unitPartners.map(up => up.partnerId)
+    return partners.filter(partner => !usedPartnerIds.includes(partner.id))
+  }
+
   if (loading) {
     return (
       <Layout title="إدارة شركاء الوحدة" subtitle="إدارة الشركاء المرتبطين بالوحدة" icon="👥">
@@ -218,8 +306,17 @@ export default function UnitPartnersManagement() {
         <ModernCard>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">الشركاء المرتبطين</h3>
-            <div className="text-sm text-gray-600">
-              إجمالي النسب: {unitPartners.reduce((sum, up) => sum + up.percentage, 0)}%
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="text-sm text-gray-600">
+                إجمالي النسب: {unitPartners.reduce((sum, up) => sum + up.percentage, 0)}%
+              </div>
+              <ModernButton 
+                size="sm" 
+                onClick={() => setShowAddModal(true)}
+                disabled={getAvailablePartners().length === 0}
+              >
+                ➕ إضافة شريك
+              </ModernButton>
             </div>
           </div>
           
@@ -274,13 +371,100 @@ export default function UnitPartnersManagement() {
               <div className="text-gray-400 text-6xl mb-4">👥</div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">لا يوجد شركاء</h3>
               <p className="text-gray-500 mb-6">هذه الوحدة لا تحتوي على شركاء مرتبطين</p>
-              <ModernButton>
+              <ModernButton onClick={() => setShowAddModal(true)}>
                 إضافة شريك جديد
               </ModernButton>
             </div>
           )}
         </ModernCard>
       </div>
+
+      {/* Add Partner Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">إضافة شريك جديد</h3>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false)
+                    setSelectedPartnerId('')
+                    setPartnerPercentage('')
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    اختيار الشريك
+                  </label>
+                  <select
+                    value={selectedPartnerId}
+                    onChange={(e) => setSelectedPartnerId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">اختر شريك...</option>
+                    {getAvailablePartners().map((partner) => (
+                      <option key={partner.id} value={partner.id}>
+                        {partner.name}
+                      </option>
+                    ))}
+                  </select>
+                  {getAvailablePartners().length === 0 && (
+                    <p className="text-sm text-yellow-600 mt-1">
+                      جميع الشركاء مرتبطين بهذه الوحدة بالفعل
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    نسبة الملكية (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={partnerPercentage}
+                    onChange={(e) => setPartnerPercentage(e.target.value)}
+                    placeholder="أدخل النسبة..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    النسبة المتاحة: {100 - unitPartners.reduce((sum, up) => sum + up.percentage, 0)}%
+                  </p>
+                </div>
+
+                <div className="flex space-x-3 space-x-reverse pt-4">
+                  <ModernButton
+                    variant="secondary"
+                    onClick={() => {
+                      setShowAddModal(false)
+                      setSelectedPartnerId('')
+                      setPartnerPercentage('')
+                    }}
+                    className="flex-1"
+                  >
+                    إلغاء
+                  </ModernButton>
+                  <ModernButton
+                    onClick={handleAddPartner}
+                    disabled={addingPartner || !selectedPartnerId || !partnerPercentage}
+                    className="flex-1"
+                  >
+                    {addingPartner ? 'جاري الإضافة...' : 'إضافة الشريك'}
+                  </ModernButton>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <NotificationSystem 
         notifications={notifications} 
