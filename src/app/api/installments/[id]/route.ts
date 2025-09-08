@@ -89,21 +89,6 @@ export async function PUT(
     const body = await request.json()
     const { unitId, amount, dueDate, status, notes } = body
 
-    // Validation
-    if (!unitId || !amount || !dueDate) {
-      return NextResponse.json(
-        { success: false, error: 'جميع الحقول المطلوبة يجب أن تكون مملوءة' },
-        { status: 400 }
-      )
-    }
-
-    if (amount <= 0) {
-      return NextResponse.json(
-        { success: false, error: 'المبلغ يجب أن يكون أكبر من صفر' },
-        { status: 400 }
-      )
-    }
-
     // Check if installment exists
     const existingInstallment = await prisma.installment.findUnique({
       where: { id: params.id }
@@ -116,28 +101,50 @@ export async function PUT(
       )
     }
 
-    // Check if unit exists
-    const unit = await prisma.unit.findUnique({
-      where: { id: unitId }
-    })
+    // Prepare update data - only update provided fields
+    const updateData: any = {}
+    
+    if (unitId !== undefined) {
+      // Check if unit exists
+      const unit = await prisma.unit.findUnique({
+        where: { id: unitId }
+      })
 
-    if (!unit) {
-      return NextResponse.json(
-        { success: false, error: 'الوحدة غير موجودة' },
-        { status: 400 }
-      )
+      if (!unit) {
+        return NextResponse.json(
+          { success: false, error: 'الوحدة غير موجودة' },
+          { status: 400 }
+        )
+      }
+      updateData.unitId = unitId
+    }
+
+    if (amount !== undefined) {
+      if (amount <= 0) {
+        return NextResponse.json(
+          { success: false, error: 'المبلغ يجب أن يكون أكبر من صفر' },
+          { status: 400 }
+        )
+      }
+      updateData.amount = amount
+    }
+
+    if (dueDate !== undefined) {
+      updateData.dueDate = new Date(dueDate)
+    }
+
+    if (status !== undefined) {
+      updateData.status = status
+    }
+
+    if (notes !== undefined) {
+      updateData.notes = notes
     }
 
     // Update installment
     const installment = await prisma.installment.update({
       where: { id: params.id },
-      data: {
-        unitId,
-        amount,
-        dueDate: new Date(dueDate),
-        status,
-        notes
-      },
+      data: updateData,
       include: {
         unit: true
       }
