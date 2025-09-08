@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Safe, Transfer } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -71,6 +73,7 @@ export default function Treasury() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
   const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newSafe, setNewSafe] = useState({
     name: '',
     balance: ''
@@ -90,6 +93,10 @@ export default function Treasury() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
           case 'n':
             e.preventDefault()
             setShowAddSafeModal(true)
@@ -110,7 +117,7 @@ export default function Treasury() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [sidebarOpen])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -409,40 +416,46 @@ export default function Treasury() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">💰</span>
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">💰</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">إدارة الخزينة</h1>
+                  <p className="text-gray-600">نظام متطور لإدارة الخزائن والمعاملات</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة الخزينة</h1>
-                <p className="text-gray-600">نظام متطور لإدارة الخزائن والمعاملات</p>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <ModernButton onClick={() => setShowAddSafeModal(true)}>
+                  <span className="mr-2">➕</span>
+                  إضافة خزنة جديدة
+                  <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
+                </ModernButton>
+                <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
+                  <span className="mr-2">🔄</span>
+                  تحويل بين الخزائن
+                  <span className="mr-2 text-xs opacity-70">Ctrl+T</span>
+                </ModernButton>
+                <ModernButton variant="secondary" onClick={() => router.push('/')}>
+                  العودة للرئيسية
+                </ModernButton>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton onClick={() => setShowAddSafeModal(true)}>
-                <span className="mr-2">➕</span>
-                إضافة خزنة جديدة
-                <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-              </ModernButton>
-              <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
-                <span className="mr-2">🔄</span>
-                تحويل بين الخزائن
-                <span className="mr-2 text-xs opacity-70">Ctrl+T</span>
-              </ModernButton>
-              <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                العودة للرئيسية
-              </ModernButton>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <ModernCard className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
@@ -752,10 +765,11 @@ export default function Treasury() {
         </div>
       )}
       
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
+        <NotificationSystem 
+          notifications={notifications} 
+          onRemove={removeNotification} 
+        />
+      </div>
     </div>
   )
 }
