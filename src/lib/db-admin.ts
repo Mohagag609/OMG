@@ -329,15 +329,22 @@ export async function handleInitOrSwitch(payload: InitOrSwitchPayload): Promise<
       }
       logs.push('✅ تم توليد Prisma Client')
       
+      // Try migrate deploy first, if it fails, use db push
       const migrateResult = await runPrisma('npx prisma migrate deploy', { DATABASE_URL: targetUrl })
       if (!migrateResult.success) {
-        return {
-          ok: false,
-          message: `فشل في تطبيق المهاجرات: ${migrateResult.error}`,
-          logs
+        console.log('⚠️ migrate deploy فشل، جاري استخدام db push...')
+        const pushResult = await runPrisma('npx prisma db push', { DATABASE_URL: targetUrl })
+        if (!pushResult.success) {
+          return {
+            ok: false,
+            message: `فشل في تطبيق المهاجرات: ${migrateResult.error} و db push: ${pushResult.error}`,
+            logs
+          }
         }
+        logs.push('✅ تم تطبيق المهاجرات باستخدام db push')
+      } else {
+        logs.push('✅ تم تطبيق المهاجرات')
       }
-      logs.push('✅ تم تطبيق المهاجرات')
       
       // Optional seed
       if (seed) {
@@ -399,14 +406,19 @@ export async function handleWipe(payload: WipePayload): Promise<AdminResponse> {
     // Re-run migrations to recreate schema
     const migrateResult = await runPrisma('npx prisma migrate deploy', { DATABASE_URL: targetUrl })
     if (!migrateResult.success) {
-      return {
-        ok: false,
-        message: `تم مسح البيانات لكن فشل في إعادة إنشاء الجداول: ${migrateResult.error}`,
-        logs
+      console.log('⚠️ migrate deploy فشل، جاري استخدام db push...')
+      const pushResult = await runPrisma('npx prisma db push', { DATABASE_URL: targetUrl })
+      if (!pushResult.success) {
+        return {
+          ok: false,
+          message: `تم مسح البيانات لكن فشل في إعادة إنشاء الجداول: ${migrateResult.error} و db push: ${pushResult.error}`,
+          logs
+        }
       }
+      logs.push('✅ تم إعادة إنشاء الجداول باستخدام db push')
+    } else {
+      logs.push('✅ تم إعادة إنشاء الجداول')
     }
-    
-    logs.push('✅ تم إعادة إنشاء الجداول')
     
     return {
       ok: true,
