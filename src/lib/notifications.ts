@@ -18,8 +18,7 @@ export async function createNotification(data: NotificationData): Promise<void> 
       data: {
         type: data.type,
         title: data.title,
-        message: data.message,
-        userId: null
+        message: data.message
       }
     })
   } catch (error) {
