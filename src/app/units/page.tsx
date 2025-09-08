@@ -127,27 +127,19 @@ export default function Units() {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
     fetchData()
-  }, [router])
+  }, [])
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      
       const [unitsResponse, unitPartnersResponse, contractsResponse, installmentsResponse, vouchersResponse, partnersResponse, partnerGroupsResponse] = await Promise.all([
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/installments', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/vouchers', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/units'),
+        fetch('/api/unit-partners'),
+        fetch('/api/contracts'),
+        fetch('/api/installments'),
+        fetch('/api/vouchers'),
+        fetch('/api/partners'),
+        fetch('/api/partner-groups')
       ])
       
       const [unitsData, unitPartnersData, contractsData, installmentsData, vouchersData, partnersData, partnerGroupsData] = await Promise.all([
@@ -275,12 +267,10 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/units', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -364,12 +354,10 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${editingUnit.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -424,10 +412,9 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${unitId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -707,12 +694,10 @@ export default function Units() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/unit-partners', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           unitId: selectedUnit.id,
@@ -751,10 +736,9 @@ export default function Units() {
     if (!confirm('هل أنت متأكد من حذف هذا الشريك من الوحدة؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/unit-partners/${unitPartnerId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -793,12 +777,10 @@ export default function Units() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/unit-partners/${unitPartnerId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ percentage: newPercentage })
       })
