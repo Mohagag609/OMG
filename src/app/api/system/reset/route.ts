@@ -214,6 +214,16 @@ export async function POST(request: NextRequest) {
       console.log('Complete reset completed')
     }
 
+    // Clear Prisma cache and reconnect
+    console.log('Clearing Prisma cache...')
+    await prisma.$disconnect()
+    
+    // Wait a moment for connections to close
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Reconnect to database
+    await prisma.$connect()
+    
     console.log(`Database reset completed: ${resetType}`)
 
     return NextResponse.json({
@@ -221,7 +231,14 @@ export async function POST(request: NextRequest) {
       message: `تم إعادة ضبط قاعدة البيانات بنجاح (${resetType})`,
       databaseType: isSQLite ? 'SQLite' : 'PostgreSQL',
       isNeon: isNeon,
-      resetType: resetType
+      resetType: resetType,
+      requiresRestart: false, // We handled the cache clearing
+      instructions: [
+        'تم مسح البيانات بنجاح',
+        'تم تحديث cache قاعدة البيانات',
+        'يمكنك الآن استخدام النظام بشكل طبيعي',
+        'لا حاجة لإعادة تشغيل الخادم'
+      ]
     })
 
   } catch (error) {

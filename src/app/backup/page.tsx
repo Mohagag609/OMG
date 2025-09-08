@@ -196,7 +196,26 @@ export default function BackupNewPage() {
 
       if (response.ok) {
         const result = await response.json()
-        addNotification(`تم إعادة ضبط قاعدة البيانات بنجاح (${result.resetType})`, 'success')
+        
+        // Show detailed success message
+        let successMessage = `تم إعادة ضبط قاعدة البيانات بنجاح (${result.resetType})`
+        if (result.instructions) {
+          successMessage += '\n\n' + result.instructions.join('\n')
+        }
+        
+        addNotification(successMessage, 'success')
+        
+        // Clear browser cache and reload data
+        if (typeof window !== 'undefined') {
+          // Clear localStorage cache
+          localStorage.removeItem('cachedData')
+          
+          // Force reload of all data
+          setTimeout(() => {
+            window.location.reload()
+          }, 2000)
+        }
+        
         fetchBackupFiles()
       } else {
         const error = await response.json()
@@ -205,6 +224,38 @@ export default function BackupNewPage() {
     } catch (error) {
       console.error('Reset error:', error)
       addNotification('حدث خطأ أثناء إعادة ضبط قاعدة البيانات', 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Clear cache function
+  const clearCache = async () => {
+    setIsLoading(true)
+    try {
+      // Clear browser cache
+      if (typeof window !== 'undefined') {
+        localStorage.clear()
+        sessionStorage.clear()
+        
+        // Clear service worker cache if exists
+        if ('caches' in window) {
+          const cacheNames = await caches.keys()
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          )
+        }
+      }
+      
+      addNotification('تم مسح cache المتصفح بنجاح', 'success')
+      
+      // Reload page to refresh all data
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+    } catch (error) {
+      console.error('Cache clear error:', error)
+      addNotification('حدث خطأ أثناء مسح cache', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -358,11 +409,28 @@ export default function BackupNewPage() {
             <ModernCard className="p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">معلومات النظام</h2>
               
-              <div className="space-y-2 text-sm text-gray-600">
-                <p><strong>نوع قاعدة البيانات:</strong> PostgreSQL (Neon)</p>
-                <p><strong>حالة الاتصال:</strong> متصل</p>
-                <p><strong>عدد النسخ الاحتياطية:</strong> {backupFiles.length}</p>
-                <p><strong>آخر تحديث:</strong> {new Date().toLocaleDateString('ar-EG')}</p>
+              <div className="space-y-4">
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><strong>نوع قاعدة البيانات:</strong> PostgreSQL (Neon)</p>
+                  <p><strong>حالة الاتصال:</strong> متصل</p>
+                  <p><strong>عدد النسخ الاحتياطية:</strong> {backupFiles.length}</p>
+                  <p><strong>آخر تحديث:</strong> {new Date().toLocaleDateString('ar-EG')}</p>
+                </div>
+                
+                <div className="pt-4 border-t border-gray-200">
+                  <ModernButton
+                    onClick={clearCache}
+                    disabled={isLoading}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    {isLoading ? 'جاري المسح...' : 'مسح Cache المتصفح'}
+                  </ModernButton>
+                  <p className="text-xs text-gray-500 mt-2">
+                    يمسح cache المتصفح ويعيد تحميل الصفحة
+                  </p>
+                </div>
               </div>
             </ModernCard>
           </div>
