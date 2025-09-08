@@ -16,12 +16,12 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
-  // Close sidebar on route change and when returning to dashboard
+  // Handle sidebar state based on route
   useEffect(() => {
     const handleRouteChange = () => {
-      // Always close sidebar when returning to dashboard
+      // Always open sidebar on dashboard, close on mobile
       if (window.location.pathname === '/') {
-        setSidebarOpen(false)
+        setSidebarOpen(window.innerWidth >= 1024)
       } else if (window.innerWidth < 1024) {
         setSidebarOpen(false)
       }
@@ -34,7 +34,7 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
       return originalPush.apply(router, args)
     }
 
-    // Also close sidebar when component mounts (dashboard load)
+    // Set initial state when component mounts
     handleRouteChange()
 
     return () => {
@@ -45,33 +45,38 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle shortcuts when not in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
           case 'b':
             e.preventDefault()
             setSidebarOpen(!sidebarOpen)
             break
-          case 'n':
+          case '1':
             e.preventDefault()
             router.push('/units')
             break
-          case 'p':
+          case '2':
             e.preventDefault()
             router.push('/partners')
             break
-          case 'c':
+          case '3':
             e.preventDefault()
             router.push('/contracts')
             break
-          case 't':
+          case '4':
             e.preventDefault()
             router.push('/treasury')
             break
-          case 'i':
+          case '5':
             e.preventDefault()
             router.push('/installments')
             break
-          case 's':
+          case '6':
             e.preventDefault()
             router.push('/customers')
             break

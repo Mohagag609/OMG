@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SidebarToggle from './SidebarToggle'
+import NavigationButtons from './NavigationButtons'
 
 interface HeaderProps {
   title: string
@@ -43,16 +44,13 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
 
           {/* Right side - Actions and user menu */}
           <div className="flex items-center space-x-3 space-x-reverse">
+            {/* Navigation Buttons - Only show on non-dashboard pages */}
+            {title !== 'لوحة التحكم' && (
+              <NavigationButtons />
+            )}
+            
             {/* Quick Actions */}
             <div className="hidden md:flex items-center space-x-2 space-x-reverse">
-              <button
-                onClick={() => router.push('/')}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
-                title="العودة للرئيسية"
-              >
-                <span className="text-gray-600">🏠</span>
-              </button>
-              
               <button
                 onClick={() => window.location.reload()}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"

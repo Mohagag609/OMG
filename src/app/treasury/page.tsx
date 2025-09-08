@@ -92,6 +92,11 @@ export default function Treasury() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle shortcuts when not in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
           case 'b':
