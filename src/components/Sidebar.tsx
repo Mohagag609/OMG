@@ -84,6 +84,12 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       icon: '💾',
       path: '/backup',
       description: 'إدارة النسخ الاحتياطية'
+    },
+    {
+      title: 'نظام النسخ الاحتياطية',
+      icon: '🔄',
+      path: '/backup-system',
+      description: 'نظام متقدم للنسخ الاحتياطية والاستعادة'
     }
   ]
 
