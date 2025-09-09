@@ -70,8 +70,35 @@ export default function Login() {
         
         <div style={{ 
           marginTop: '16px', 
-          textAlign: 'center'
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
         }}>
+          <button
+            onClick={() => router.push('/forgot-password')}
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            🔐 نسيت كلمة المرور؟
+          </button>
+          
           <button
             onClick={() => router.push('/admin')}
             style={{

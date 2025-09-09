@@ -67,14 +67,20 @@ export default function AdminPage() {
     role: 'admin',
     adminKey: ''
   })
+  const [adminKey, setAdminKey] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
   const router = useRouter()
   const { addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
     // Check if this is first time access (no users in database)
     checkFirstTimeAccess()
+    
+    // Check admin authentication from localStorage
+    const adminAuth = localStorage.getItem('adminAuth')
+    setIsAdminAuthenticated(adminAuth === 'true')
   }, [router])
 
   const checkFirstTimeAccess = async () => {
@@ -90,14 +96,16 @@ export default function AdminPage() {
           setIsAuthenticated(true)
           setShowCreateForm(true)
         } else {
-          // Users exist - require admin URL
+          // Users exist - check admin auth
           const adminAuth = localStorage.getItem('adminAuth')
           if (adminAuth === 'true') {
             setIsAuthenticated(true)
+            setIsAdminAuthenticated(true)
             fetchUsers()
           } else {
-            // Redirect to login page
-            router.push('/login')
+            // Show admin key input instead of redirecting
+            setIsAuthenticated(true)
+            setShowCreateForm(false)
           }
         }
       } else {
@@ -111,20 +119,6 @@ export default function AdminPage() {
       setIsAuthenticated(true)
       setShowCreateForm(true)
     }
-  }
-
-  // Show loading while checking authentication
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl">👑</span>
-          </div>
-          <p className="text-gray-600">جاري التحقق من الصلاحيات...</p>
-        </div>
-      </div>
-    )
   }
 
   const fetchUsers = async () => {
@@ -212,6 +206,21 @@ export default function AdminPage() {
     }
   }
 
+  const handleAdminKeySubmit = () => {
+    const correctAdminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'admin123'
+    if (adminKey === correctAdminKey) {
+      localStorage.setItem('adminAuth', 'true')
+      setIsAdminAuthenticated(true)
+      fetchUsers()
+    } else {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في المفتاح السري',
+        message: 'المفتاح السري غير صحيح'
+      })
+    }
+  }
+
   const handleCleanup = async () => {
     if (!confirm('هل أنت متأكد من تنظيف النظام وحذف البيانات الافتراضية؟')) {
       return
@@ -250,6 +259,20 @@ export default function AdminPage() {
     }
   }
 
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl">👑</span>
+          </div>
+          <p className="text-gray-600">جاري التحقق من الصلاحيات...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -262,39 +285,27 @@ export default function AdminPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">لوحة الإدارة</h1>
-                <p className="text-gray-600">إدارة المستخدمين والنظام</p>
+                <p className="text-gray-600">إدارة المستخدمين وإعدادات النظام</p>
               </div>
             </div>
-
             <div className="flex items-center space-x-3 space-x-reverse">
-              {!isFirstTime && (
-                <ModernButton
-                  onClick={handleCleanup}
-                  variant="danger"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
-                </ModernButton>
-              )}
-              {!isFirstTime && (
-                <ModernButton
-                  onClick={() => {
-                    localStorage.removeItem('adminAuth')
-                    router.push('/login')
-                  }}
-                  variant="secondary"
-                >
-                  تسجيل الخروج
-                </ModernButton>
-              )}
-              {isFirstTime && (
-                <ModernButton
-                  onClick={() => router.push('/login')}
-                  variant="secondary"
-                >
-                  العودة لتسجيل الدخول
-                </ModernButton>
-              )}
+              <ModernButton
+                onClick={() => router.push('/')}
+                variant="secondary"
+                size="sm"
+              >
+                العودة للوحة التحكم
+              </ModernButton>
+              <ModernButton
+                onClick={() => {
+                  localStorage.removeItem('adminAuth')
+                  router.push('/login')
+                }}
+                variant="danger"
+                size="sm"
+              >
+                تسجيل الخروج
+              </ModernButton>
             </div>
           </div>
         </div>
@@ -302,59 +313,75 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* First Time Welcome Message */}
+        {/* First Time Setup Message */}
         {isFirstTime && (
-          <ModernCard className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">🚀</span>
+          <ModernCard className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">🚀</span>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">مرحباً بك في النظام!</h2>
-                <p className="text-gray-600">هذا هو الوصول الأول للنظام. يرجى إنشاء المستخدم الأول للبدء.</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">مرحباً بك في النظام</h2>
+              <p className="text-gray-600 mb-4">هذه هي المرة الأولى لتشغيل النظام. يرجى إنشاء المستخدم الأول</p>
+            </div>
+          </ModernCard>
+        )}
+
+        {/* Admin Key Input */}
+        {!isFirstTime && users.length > 0 && !isAdminAuthenticated && (
+          <ModernCard className="mb-8 bg-gradient-to-r from-red-50 to-pink-50 border-red-200">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">🔐</span>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">الوصول للوحة الإدارة</h2>
+              <p className="text-gray-600 mb-4">أدخل المفتاح السري للوصول للوحة الإدارة</p>
+              <div className="max-w-md mx-auto">
+                <input
+                  type="password"
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+                  placeholder="أدخل المفتاح السري"
+                />
+                <ModernButton
+                  onClick={handleAdminKeySubmit}
+                  variant="danger"
+                  className="w-full"
+                >
+                  الوصول للوحة الإدارة
+                </ModernButton>
               </div>
             </div>
           </ModernCard>
         )}
 
-        {/* Users Management */}
-        <ModernCard className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">إدارة المستخدمين</h2>
-            <ModernButton
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              variant="success"
-            >
-              {showCreateForm ? 'إلغاء' : '+ إضافة مستخدم جديد'}
-            </ModernButton>
-          </div>
-
-          {/* Create User Form */}
-          {showCreateForm && (
-            <form onSubmit={handleCreateUser} className="mb-6 p-4 bg-gray-50 rounded-xl">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">إنشاء مستخدم جديد</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* User Creation Form */}
+        {showCreateForm && (
+          <ModernCard className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">إنشاء مستخدم جديد</h2>
+            <form onSubmit={handleCreateUser} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    اسم المستخدم
+                    اسم المستخدم *
                   </label>
                   <input
                     type="text"
                     value={newUser.username}
                     onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    كلمة المرور
+                    كلمة المرور *
                   </label>
                   <input
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -366,7 +393,7 @@ export default function AdminPage() {
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -376,37 +403,14 @@ export default function AdminPage() {
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="admin">مدير</option>
                     <option value="user">مستخدم</option>
                   </select>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    المفتاح السري للإدارة
-                  </label>
-                  <input
-                    type="password"
-                    value={newUser.adminKey}
-                    onChange={(e) => setNewUser({ ...newUser, adminKey: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="أدخل المفتاح السري لإنشاء المستخدم"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    المفتاح السري مطلوب لإنشاء مستخدمين جدد
-                  </p>
-                </div>
               </div>
-              <div className="mt-4 flex space-x-3 space-x-reverse">
-                <ModernButton
-                  type="submit"
-                  disabled={isLoading}
-                  variant="success"
-                >
-                  {isLoading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
-                </ModernButton>
+              <div className="flex justify-end space-x-3 space-x-reverse">
                 <ModernButton
                   type="button"
                   onClick={() => setShowCreateForm(false)}
@@ -414,87 +418,115 @@ export default function AdminPage() {
                 >
                   إلغاء
                 </ModernButton>
+                <ModernButton
+                  type="submit"
+                  disabled={isLoading}
+                  variant="primary"
+                >
+                  {isLoading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
+                </ModernButton>
               </div>
             </form>
-          )}
+          </ModernCard>
+        )}
 
-          {/* Users List */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    اسم المستخدم
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    البريد الإلكتروني
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الدور
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    تاريخ الإنشاء
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.username}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.email || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {user.role === 'admin' ? 'مدير' : 'مستخدم'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString('ar-EG')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={isLoading}
-                      >
-                        حذف
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </ModernCard>
+        {/* Users Management */}
+        {isAdminAuthenticated && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">إدارة المستخدمين</h2>
+              <div className="flex space-x-3 space-x-reverse">
+                <ModernButton
+                  onClick={() => setShowCreateForm(true)}
+                  variant="primary"
+                >
+                  إضافة مستخدم جديد
+                </ModernButton>
+                <ModernButton
+                  onClick={handleCleanup}
+                  variant="danger"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري التنظيف...' : 'تنظيف النظام'}
+                </ModernButton>
+              </div>
+            </div>
 
-        {/* System Info */}
-        <ModernCard>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">معلومات النظام</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">إجمالي المستخدمين</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">حالة النظام</p>
-              <p className="text-2xl font-bold text-green-600">نشط</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">المفتاح السري</p>
-              <p className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                ********
-              </p>
-            </div>
-          </div>
-        </ModernCard>
+            <ModernCard>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">اسم المستخدم</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">البريد الإلكتروني</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">الدور</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">تاريخ الإنشاء</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-gray-900">{user.username}</td>
+                        <td className="py-3 px-4 text-gray-600">{user.email || '-'}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.role === 'admin' 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {user.role === 'admin' ? 'مدير' : 'مستخدم'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {new Date(user.createdAt).toLocaleDateString('ar-EG')}
+                        </td>
+                        <td className="py-3 px-4">
+                          <ModernButton
+                            onClick={() => handleDeleteUser(user.id)}
+                            variant="danger"
+                            size="sm"
+                            disabled={isLoading}
+                          >
+                            حذف
+                          </ModernButton>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {users.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    لا يوجد مستخدمين في النظام
+                  </div>
+                )}
+              </div>
+            </ModernCard>
+
+            {/* System Info */}
+            <ModernCard className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">معلومات النظام</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+                  <div className="text-sm text-gray-600">إجمالي المستخدمين</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {users.filter(u => u.isActive).length}
+                  </div>
+                  <div className="text-sm text-gray-600">المستخدمين النشطين</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {users.filter(u => u.role === 'admin').length}
+                  </div>
+                  <div className="text-sm text-gray-600">المديرين</div>
+                </div>
+              </div>
+            </ModernCard>
+          </>
+        )}
       </div>
     </div>
   )

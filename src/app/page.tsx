@@ -132,7 +132,8 @@ export default function Dashboard() {
     { title: 'عقد جديد', icon: '📋', color: 'bg-gradient-to-r from-purple-100 to-purple-200', onClick: () => router.push('/contracts') },
     { title: 'سمسار', icon: '🤝', color: 'bg-gradient-to-r from-yellow-100 to-yellow-200', onClick: () => router.push('/brokers') },
     { title: 'شركاء', icon: '👥', color: 'bg-gradient-to-r from-indigo-100 to-indigo-200', onClick: () => router.push('/partners') },
-    { title: 'خزينة', icon: '💰', color: 'bg-gradient-to-r from-pink-100 to-pink-200', onClick: () => router.push('/treasury') }
+    { title: 'خزينة', icon: '💰', color: 'bg-gradient-to-r from-pink-100 to-pink-200', onClick: () => router.push('/treasury') },
+    { title: 'الإعدادات', icon: '⚙️', color: 'bg-gradient-to-r from-gray-100 to-gray-200', onClick: () => router.push('/settings') }
   ]
 
   const navigationItems = [
