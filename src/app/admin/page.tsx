@@ -231,7 +231,7 @@ export default function AdminPage() {
         addNotification({
           type: 'success',
           title: 'تم تنظيف النظام',
-          message: `تم تنظيف النظام وإنشاء مستخدم admin جديد. تم حذف ${result.deletedCustomers} عميل`
+          message: `تم تنظيف النظام وحذف جميع المستخدمين. تم حذف ${result.deletedCustomers} عميل`
         })
         fetchUsers()
       } else {

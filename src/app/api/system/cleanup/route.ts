@@ -11,20 +11,6 @@ export async function POST(request: NextRequest) {
     await prisma.user.deleteMany({})
     console.log('✅ Deleted all existing users')
 
-    // Create new admin user
-    const bcrypt = require('bcryptjs')
-    const hashedPassword = await bcrypt.hash('admin123', 12)
-    
-    const newAdmin = await prisma.user.create({
-      data: {
-        username: 'admin',
-        password: hashedPassword,
-        email: 'admin@system.local',
-        role: 'admin'
-      }
-    })
-    console.log('✅ Created new admin user')
-
     // Delete any sample data if exists
     const sampleData = await prisma.customer.findMany({
       where: {
@@ -73,8 +59,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'System cleanup completed successfully. New admin user created.',
-      createdAdmin: true,
+      message: 'System cleanup completed successfully. All users deleted.',
+      createdAdmin: false,
       deletedCustomers: sampleData.length + testData.length
     })
 
