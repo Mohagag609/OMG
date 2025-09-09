@@ -98,7 +98,9 @@ export default function BackupSystem() {
           message: 'تم تصدير البيانات بنجاح'
         })
       } else {
-        throw new Error('فشل في إنشاء النسخة الاحتياطية')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.details || errorData.error || 'فشل في إنشاء النسخة الاحتياطية'
+        throw new Error(errorMessage)
       }
     } catch (error) {
       console.error('Export error:', error)

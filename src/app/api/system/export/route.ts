@@ -90,21 +90,42 @@ async function runExport(options: { outputDir?: string; batchSize?: number } = {
           continue
         }
 
-        // Fetch all records
-        const records = await model.findMany()
+        // Fetch all records with error handling
+        let records = []
+        try {
+          records = await model.findMany()
+        } catch (queryError) {
+          console.error(`❌ Query error for ${modelName}:`, queryError)
+          records = []
+        }
+
         const count = records.length
         totalRecords += count
         modelStats[modelName] = count
 
         console.log(`✅ ${modelName}: ${count} records`)
 
-        // Write to NDJSON file
-        const filePath = path.join(dataDir, `${modelName}.ndjson`)
-        const content = records.map((record: any) => JSON.stringify(record)).join('\n')
-        fs.writeFileSync(filePath, content)
+        // Write to NDJSON file with error handling
+        if (count > 0) {
+          try {
+            const filePath = path.join(dataDir, `${modelName}.ndjson`)
+            const content = records.map((record: any) => {
+              try {
+                return JSON.stringify(record)
+              } catch (jsonError) {
+                console.error(`❌ JSON stringify error for record in ${modelName}:`, jsonError)
+                return JSON.stringify({ error: 'Failed to serialize record', id: record.id || 'unknown' })
+              }
+            }).join('\n')
+            fs.writeFileSync(filePath, content)
+          } catch (writeError) {
+            console.error(`❌ File write error for ${modelName}:`, writeError)
+          }
+        }
 
       } catch (error) {
         console.error(`❌ Error exporting ${modelName}:`, error)
+        modelStats[modelName] = 0
         // Continue with other models
       }
     }
@@ -131,18 +152,27 @@ async function runExport(options: { outputDir?: string; batchSize?: number } = {
 
     // Create tar.gz archive
     const archivePath = `${tempDir}.tar.gz`
-    await tar.create(
-      {
-        gzip: true,
-        file: archivePath,
-        cwd: tempDir,
-        filter: (path) => !path.includes('node_modules')
-      },
-      ['.']
-    )
+    try {
+      await tar.create(
+        {
+          gzip: true,
+          file: archivePath,
+          cwd: tempDir,
+          filter: (path) => !path.includes('node_modules')
+        },
+        ['.']
+      )
+    } catch (tarError) {
+      console.error('❌ Error creating tar archive:', tarError)
+      throw new Error(`Failed to create archive: ${tarError instanceof Error ? tarError.message : 'Unknown error'}`)
+    }
 
     // Clean up temp directory
-    fs.rmSync(tempDir, { recursive: true, force: true })
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    } catch (cleanupError) {
+      console.warn('⚠️ Could not clean up temp directory:', cleanupError)
+    }
 
     console.log(`✅ Export completed: ${archivePath}`)
     console.log(`📊 Archive size: ${(fs.statSync(archivePath).size / 1024 / 1024).toFixed(2)} MB`)
@@ -164,7 +194,13 @@ export async function POST(request: NextRequest) {
     console.log('🚀 Starting backup export via API...')
     
     // Parse request body for options
-    const body = await request.json().catch(() => ({}))
+    let body: any = {}
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.log('⚠️ Could not parse request body, using defaults')
+      body = {}
+    }
     const { outputDir = '/tmp/backups' } = body
 
     // Ensure output directory exists
@@ -187,12 +223,22 @@ export async function POST(request: NextRequest) {
 
     // For large files, consider returning a download URL instead
     // For now, we'll return the file directly
-    const fileBuffer = fs.readFileSync(archivePath)
+    let fileBuffer: Buffer
+    try {
+      fileBuffer = fs.readFileSync(archivePath)
+    } catch (readError) {
+      console.error('❌ Error reading archive file:', readError)
+      throw new Error(`Failed to read archive file: ${readError instanceof Error ? readError.message : 'Unknown error'}`)
+    }
     
     // Clean up the file after reading
-    fs.unlinkSync(archivePath)
+    try {
+      fs.unlinkSync(archivePath)
+    } catch (deleteError) {
+      console.warn('⚠️ Could not delete archive file:', deleteError)
+    }
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(fileBuffer as any, {
       headers: {
         'Content-Type': 'application/gzip',
         'Content-Disposition': `attachment; filename="${fileName}"`,
