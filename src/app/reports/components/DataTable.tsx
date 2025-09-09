@@ -20,7 +20,7 @@ import {
   PaginationState
 } from '@tanstack/react-table'
 import { reportColumns, formatValue, getStatusColor, calculateTotals } from '../../../lib/reports/transformers'
-import { ExportMenu } from './ExportMenu'
+import ExportMenu from './ExportMenu'
 import { PrintButton } from './PrintButton'
 
 interface DataTableProps {
