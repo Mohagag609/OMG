@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { DashboardKPIs } from '../../types'
 import { formatCurrency, formatDate } from '../../utils/formatting'
 import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
+import ReportBuilder from './builder/ReportBuilder'
+import DataTable from './components/DataTable'
+import { printReport } from './components/PrintButton'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -63,6 +66,15 @@ export default function Reports() {
     to: new Date().toISOString().split('T')[0]
   })
   
+  // حالة نظام التقارير الجديد
+  const [currentReport, setCurrentReport] = useState<{
+    type: string
+    data: any[]
+    filters: any
+    title: string
+  } | null>(null)
+  const [reportLoading, setReportLoading] = useState(false)
+  
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -95,6 +107,116 @@ export default function Reports() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // دوال نظام التقارير الجديد
+  const handleReportGenerated = (reportType: string, data: any[], filters: any) => {
+    const reportTitles: Record<string, string> = {
+      installments: 'تقرير الأقساط',
+      payments: 'تقرير التحصيلات',
+      aging: 'تحليل المتأخرات'
+    }
+    
+    setCurrentReport({
+      type: reportType,
+      data,
+      filters,
+      title: reportTitles[reportType] || 'تقرير'
+    })
+  }
+
+  const handleExport = async (format: string) => {
+    if (!currentReport) return
+
+    try {
+      const token = localStorage.getItem('authToken')
+      let response: Response
+
+      switch (format) {
+        case 'excel':
+          response = await fetch('/api/export/excel', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: currentReport.title,
+              data: currentReport.data,
+              reportType: currentReport.type,
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.xlsx`
+            })
+          })
+          break
+
+        case 'csv':
+          response = await fetch('/api/export/csv', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: currentReport.title,
+              data: currentReport.data,
+              reportType: currentReport.type,
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.csv`
+            })
+          })
+          break
+
+        case 'pdf':
+          response = await fetch('/api/export/pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: currentReport.title,
+              data: currentReport.data,
+              reportType: currentReport.type,
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.pdf`
+            })
+          })
+          break
+
+        default:
+          throw new Error('صيغة التصدير غير مدعومة')
+      }
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.${format}`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        addNotification({
+          type: 'success',
+          title: 'تم التصدير بنجاح',
+          message: `تم تصدير التقرير بصيغة ${format.toUpperCase()}`
+        })
+      } else {
+        throw new Error('فشل في تصدير التقرير')
+      }
+    } catch (err) {
+      console.error('Export error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التصدير',
+        message: 'فشل في تصدير التقرير'
+      })
+    }
+  }
+
+  const handlePrint = () => {
+    if (!currentReport) return
+    printReport(currentReport.data, currentReport.type, currentReport.title)
   }
 
   const generateReport = async (reportType: string) => {
@@ -217,8 +339,8 @@ export default function Reports() {
                 <span className="text-white text-xl">📊</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">التقارير والإحصائيات</h1>
-                <p className="text-gray-600">نظام متطور لإنتاج التقارير الشاملة</p>
+                <h1 className="text-2xl font-bold text-gray-900">نظام التقارير الاحترافي</h1>
+                <p className="text-gray-600">بناء وتشغيل التقارير الديناميكية مع إمكانيات التصدير والطباعة المتقدمة</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 space-x-reverse">
@@ -232,6 +354,47 @@ export default function Reports() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* نظام التقارير الجديد */}
+        <div className="mb-8">
+          <ReportBuilder
+            onReportGenerated={handleReportGenerated}
+            onLoadingChange={setReportLoading}
+          />
+        </div>
+
+        {/* مؤشر التحميل */}
+        {reportLoading && (
+          <ModernCard className="mb-8">
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-semibold text-gray-700">جاري إنشاء التقرير...</h3>
+              <p className="text-gray-500">يرجى الانتظار</p>
+            </div>
+          </ModernCard>
+        )}
+
+        {/* عرض التقرير */}
+        {currentReport && !reportLoading && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">نتائج التقرير</h2>
+              <button
+                onClick={() => setCurrentReport(null)}
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+              >
+                ✕ إغلاق التقرير
+              </button>
+            </div>
+            <DataTable
+              data={currentReport.data}
+              reportType={currentReport.type}
+              title={currentReport.title}
+              onExport={handleExport}
+              onPrint={handlePrint}
+            />
+          </div>
+        )}
+
         {/* Date Range Filter */}
         <ModernCard className="mb-8">
           <div className="flex items-center justify-between">
@@ -315,7 +478,7 @@ export default function Reports() {
 
         {/* Reports Grid */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">التقارير المتاحة</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">التقارير السريعة (الطرق التقليدية)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {reports.map((report, index) => (
               <ReportCard
