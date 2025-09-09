@@ -7,19 +7,23 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🧹 Starting system cleanup...')
 
-    // Delete default admin user if exists
-    const defaultAdmin = await prisma.user.findFirst({
-      where: {
-        username: 'admin'
+    // Delete all existing users first
+    await prisma.user.deleteMany({})
+    console.log('✅ Deleted all existing users')
+
+    // Create new admin user
+    const bcrypt = require('bcryptjs')
+    const hashedPassword = await bcrypt.hash('admin123', 12)
+    
+    const newAdmin = await prisma.user.create({
+      data: {
+        username: 'admin',
+        password: hashedPassword,
+        email: 'admin@system.local',
+        role: 'admin'
       }
     })
-
-    if (defaultAdmin) {
-      await prisma.user.delete({
-        where: { id: defaultAdmin.id }
-      })
-      console.log('✅ Deleted default admin user')
-    }
+    console.log('✅ Created new admin user')
 
     // Delete any sample data if exists
     const sampleData = await prisma.customer.findMany({
@@ -69,8 +73,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'System cleanup completed successfully',
-      deletedUsers: defaultAdmin ? 1 : 0,
+      message: 'System cleanup completed successfully. New admin user created.',
+      createdAdmin: true,
       deletedCustomers: sampleData.length + testData.length
     })
 

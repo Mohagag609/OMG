@@ -67,12 +67,34 @@ export default function AdminPage() {
     role: 'admin',
     adminKey: ''
   })
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const { addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    // Check admin authentication
+    const adminAuth = localStorage.getItem('adminAuth')
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true)
+      fetchUsers()
+    } else {
+      router.push('/admin-auth')
+    }
+  }, [router])
+
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl">👑</span>
+          </div>
+          <p className="text-gray-600">جاري التحقق من الصلاحيات...</p>
+        </div>
+      </div>
+    )
+  }
 
   const fetchUsers = async () => {
     try {
@@ -179,7 +201,7 @@ export default function AdminPage() {
         addNotification({
           type: 'success',
           title: 'تم تنظيف النظام',
-          message: `تم حذف ${result.deletedUsers} مستخدم و ${result.deletedCustomers} عميل`
+          message: `تم تنظيف النظام وإنشاء مستخدم admin جديد. تم حذف ${result.deletedCustomers} عميل`
         })
         fetchUsers()
       } else {
@@ -222,10 +244,13 @@ export default function AdminPage() {
                 {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
               </ModernButton>
               <ModernButton
-                onClick={() => router.push('/login')}
+                onClick={() => {
+                  localStorage.removeItem('adminAuth')
+                  router.push('/login')
+                }}
                 variant="secondary"
               >
-                العودة لتسجيل الدخول
+                تسجيل الخروج
               </ModernButton>
             </div>
           </div>
@@ -406,8 +431,8 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">المفتاح السري</p>
-              <p className="text-sm font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                ADMIN_SECRET_2024
+              <p className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                ********
               </p>
             </div>
           </div>
