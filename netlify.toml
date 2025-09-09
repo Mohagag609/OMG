@@ -1,50 +1,14 @@
 [build]
-  command = "npm run build:cloud"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
 
-# متغيرات البيئة لـ Netlify
-[context.production.environment]
-  DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  NEON_DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  NODE_ENV = "production"
-  JWT_SECRET = "your-super-strong-production-jwt-secret-here"
-  API_BASE_URL = "https://jovial-gelato-c1393b.netlify.app/api"
-  NEXT_PUBLIC_API_URL = "https://jovial-gelato-c1393b.netlify.app/api"
-  DB_MODE = "cloud"
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
-[context.deploy-preview.environment]
-  DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  NEON_DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  NODE_ENV = "production"
-  JWT_SECRET = "your-super-strong-production-jwt-secret-here"
-  API_BASE_URL = "https://jovial-gelato-c1393b.netlify.app/api"
-  NEXT_PUBLIC_API_URL = "https://jovial-gelato-c1393b.netlify.app/api"
-  DB_MODE = "cloud"
-
-# إعدادات إضافية
-[functions]
-  directory = "netlify/functions"
-
-# إعادة التوجيه
-[[redirects]]
-  from = "/api/*"
-  to = "/api/:splat"
-  status = 200
-
-# Headers للأمان
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-# إعدادات Prisma
 [build.processing]
   skip_processing = false
 
@@ -55,3 +19,9 @@
 [build.processing.js]
   bundle = true
   minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true

@@ -3,8 +3,30 @@ const { PrismaClient } = require('@prisma/client')
 async function setupDatabase() {
   console.log('Setting up database...')
 
+  // في بيئة الإنتاج (Netlify)، استخدم DATABASE_URL مباشرة
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      console.log('🔍 إعداد قاعدة البيانات للإنتاج...')
+      
+      const prisma = new PrismaClient()
+      await prisma.$queryRaw`SELECT 1`
+      console.log('✅ قاعدة البيانات متاحة')
+      await prisma.$disconnect()
+
+      // تطبيق Schema
+      const { execSync } = require('child_process')
+      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+
+      console.log('✅ تم إعداد قاعدة البيانات بنجاح!')
+      return
+    } catch (error) {
+      console.error('❌ فشل في إعداد قاعدة البيانات:', error.message)
+      process.exit(1)
+    }
+  }
+
+  // في بيئة التطوير، جرب المحلية أولاً ثم السحابية
   try {
-    // محاولة الاتصال بقاعدة البيانات المحلية أولاً
     console.log('🔍 محاولة الاتصال بقاعدة البيانات المحلية...')
     
     const localPrisma = new PrismaClient({
@@ -15,12 +37,10 @@ async function setupDatabase() {
       }
     })
 
-    // اختبار الاتصال المحلي
     await localPrisma.$queryRaw`SELECT 1`
     console.log('✅ قاعدة البيانات المحلية متاحة')
     await localPrisma.$disconnect()
 
-    // تطبيق Schema على قاعدة البيانات المحلية
     const { execSync } = require('child_process')
     execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
 
@@ -30,7 +50,6 @@ async function setupDatabase() {
     console.log('⚠️ قاعدة البيانات المحلية غير متاحة، محاولة الاتصال بالسحابية...')
     
     try {
-      // محاولة الاتصال بقاعدة البيانات السحابية
       const cloudPrisma = new PrismaClient({
         datasources: {
           db: {
@@ -39,12 +58,10 @@ async function setupDatabase() {
         }
       })
 
-      // اختبار الاتصال السحابي
       await cloudPrisma.$queryRaw`SELECT 1`
       console.log('✅ قاعدة البيانات السحابية (Neon) متاحة')
       await cloudPrisma.$disconnect()
 
-      // تطبيق Schema على قاعدة البيانات السحابية
       const { execSync } = require('child_process')
       process.env.DATABASE_URL = process.env.NEON_DATABASE_URL
       execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
