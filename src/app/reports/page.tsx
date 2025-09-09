@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '../../utils/formatting'
 import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
 import ReportBuilder from './builder/ReportBuilder'
 import DataTable from './components/DataTable'
+import ReportPreview from './components/ReportPreview'
 import { printReport } from './components/PrintButton'
 
 // Modern UI Components
@@ -72,8 +73,11 @@ export default function Reports() {
     data: any[]
     filters: any
     title: string
+    columns: any[]
+    summary?: any
   } | null>(null)
   const [reportLoading, setReportLoading] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -114,21 +118,30 @@ export default function Reports() {
     const reportTitles: Record<string, string> = {
       installments: 'تقرير الأقساط',
       payments: 'تقرير التحصيلات',
-      aging: 'تحليل المتأخرات'
+      aging: 'تحليل المتأخرات',
+      customers: 'تقرير العملاء',
+      units: 'تقرير الوحدات',
+      financial: 'التقرير المالي'
     }
     
-    setCurrentReport({
+    const report: any = {
       type: reportType,
       data,
       filters,
-      title: reportTitles[reportType] || 'تقرير'
-    })
+      title: reportTitles[reportType] || 'تقرير',
+      columns: [], // سيتم تحديدها من API
+      summary: {} // سيتم حسابها من API
+    }
+    
+    setCurrentReport(report)
+    setShowPreview(true)
   }
 
   const handleExport = async (format: string) => {
     if (!currentReport) return
 
     try {
+      setReportLoading(true)
       const token = localStorage.getItem('authToken')
       let response: Response
 
@@ -211,12 +224,28 @@ export default function Reports() {
         title: 'خطأ في التصدير',
         message: 'فشل في تصدير التقرير'
       })
+    } finally {
+      setReportLoading(false)
     }
   }
 
   const handlePrint = () => {
     if (!currentReport) return
     printReport(currentReport.data, currentReport.type, currentReport.title)
+  }
+
+  const handleClosePreview = () => {
+    setShowPreview(false)
+  }
+
+  const handleConfirmReport = () => {
+    setShowPreview(false)
+  }
+
+  const handleReset = () => {
+    setCurrentReport(null)
+    setShowPreview(false)
+    setError(null)
   }
 
   const generateReport = async (reportType: string) => {
@@ -344,6 +373,11 @@ export default function Reports() {
               </div>
             </div>
             <div className="flex items-center space-x-3 space-x-reverse">
+              {currentReport && (
+                <ModernButton variant="secondary" onClick={handleReset}>
+                  تقرير جديد
+                </ModernButton>
+              )}
               <ModernButton variant="secondary" onClick={() => router.push('/')}>
                 العودة للرئيسية
               </ModernButton>
@@ -373,13 +407,24 @@ export default function Reports() {
           </ModernCard>
         )}
 
+        {/* Report Preview Modal */}
+        {showPreview && currentReport && (
+          <ReportPreview
+            report={currentReport}
+            onClose={handleClosePreview}
+            onConfirm={handleConfirmReport}
+            onExport={handleExport}
+            onPrint={handlePrint}
+          />
+        )}
+
         {/* عرض التقرير */}
-        {currentReport && !reportLoading && (
+        {currentReport && !showPreview && !reportLoading && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">نتائج التقرير</h2>
               <button
-                onClick={() => setCurrentReport(null)}
+                onClick={handleReset}
                 className="text-sm text-gray-500 hover:text-gray-700 font-medium"
               >
                 ✕ إغلاق التقرير

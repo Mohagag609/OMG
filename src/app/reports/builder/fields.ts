@@ -175,6 +175,118 @@ export const reportDefinitions: ReportDefinition[] = [
       from: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
       to: new Date().toISOString().split('T')[0]
     }
+  },
+  
+  {
+    id: 'customers',
+    name: 'تقرير العملاء',
+    description: 'عرض بيانات العملاء والعقود المرتبطة',
+    icon: '👥',
+    color: 'from-purple-500 to-purple-600',
+    filters: [
+      {
+        key: 'status',
+        label: 'الحالة',
+        type: 'select',
+        options: [
+          { value: 'نشط', label: 'نشط' },
+          { value: 'غير نشط', label: 'غير نشط' }
+        ]
+      },
+      {
+        key: 'from',
+        label: 'من تاريخ',
+        type: 'date',
+        required: false
+      },
+      {
+        key: 'to',
+        label: 'إلى تاريخ',
+        type: 'date',
+        required: false
+      },
+      {
+        key: 'q',
+        label: 'بحث نصي',
+        type: 'text',
+        placeholder: 'ابحث في اسم العميل أو رقم الهاتف'
+      }
+    ]
+  },
+  
+  {
+    id: 'units',
+    name: 'تقرير الوحدات',
+    description: 'عرض الوحدات المتاحة والمباعة',
+    icon: '🏠',
+    color: 'from-indigo-500 to-indigo-600',
+    filters: [
+      {
+        key: 'status',
+        label: 'الحالة',
+        type: 'select',
+        options: [
+          { value: 'متاحة', label: 'متاحة' },
+          { value: 'مباعة', label: 'مباعة' },
+          { value: 'محجوزة', label: 'محجوزة' }
+        ]
+      },
+      {
+        key: 'unitType',
+        label: 'نوع الوحدة',
+        type: 'select',
+        options: [
+          { value: 'سكني', label: 'سكني' },
+          { value: 'تجاري', label: 'تجاري' },
+          { value: 'إداري', label: 'إداري' }
+        ]
+      },
+      {
+        key: 'building',
+        label: 'المبنى',
+        type: 'text',
+        placeholder: 'اسم المبنى'
+      },
+      {
+        key: 'q',
+        label: 'بحث نصي',
+        type: 'text',
+        placeholder: 'ابحث في كود الوحدة أو الوصف'
+      }
+    ]
+  },
+  
+  {
+    id: 'financial',
+    name: 'التقرير المالي',
+    description: 'ملخص شامل للوضع المالي',
+    icon: '📈',
+    color: 'from-emerald-500 to-emerald-600',
+    filters: [
+      {
+        key: 'from',
+        label: 'من تاريخ',
+        type: 'date',
+        required: true
+      },
+      {
+        key: 'to',
+        label: 'إلى تاريخ',
+        type: 'date',
+        required: true
+      },
+      {
+        key: 'safeId',
+        label: 'الخزينة',
+        type: 'select',
+        placeholder: 'اختر الخزينة',
+        options: [] // سيتم تحميلها ديناميكياً
+      }
+    ],
+    defaultFilters: {
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+      to: new Date().toISOString().split('T')[0]
+    }
   }
 ]
 
