@@ -27,20 +27,17 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
       }
     }
 
-    // Listen for route changes
-    const originalPush = router.push
-    router.push = (...args) => {
-      handleRouteChange()
-      return originalPush.apply(router, args)
-    }
-
     // Set initial state when component mounts
     handleRouteChange()
 
-    return () => {
-      router.push = originalPush
+    // Listen for window resize
+    const handleResize = () => {
+      handleRouteChange()
     }
-  }, [router])
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
