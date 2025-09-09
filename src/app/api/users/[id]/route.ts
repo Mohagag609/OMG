@@ -19,7 +19,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: 'User not found'
+          error: 'المستخدم غير موجود'
         },
         { status: 404 }
       )
@@ -32,15 +32,15 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'تم حذف المستخدم بنجاح'
     })
   } catch (error) {
     console.error('Error deleting user:', error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to delete user',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'فشل في حذف المستخدم',
+        details: error instanceof Error ? error.message : 'خطأ غير معروف'
       },
       { status: 500 }
     )
@@ -65,7 +65,7 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: 'User not found'
+          error: 'المستخدم غير موجود'
         },
         { status: 404 }
       )
@@ -91,15 +91,15 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       user,
-      message: 'User updated successfully'
+      message: 'تم تحديث المستخدم بنجاح'
     })
   } catch (error) {
     console.error('Error updating user:', error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to update user',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'فشل في تحديث المستخدم',
+        details: error instanceof Error ? error.message : 'خطأ غير معروف'
       },
       { status: 500 }
     )

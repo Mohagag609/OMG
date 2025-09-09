@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin key
-    const correctAdminKey = process.env.ADMIN_CREATION_KEY || 'admin123'
+    const correctAdminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'ADMIN_SECRET_2024'
     if (adminKey !== correctAdminKey) {
       return NextResponse.json(
-        { error: 'المفتاح السري غير صحيح' },
+        { error: 'المفتاح السري للإدارة غير صحيح. يرجى التحقق من المفتاح السري' },
         { status: 401 }
       )
     }

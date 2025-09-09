@@ -152,13 +152,28 @@ export default function AdminPage() {
         addNotification({
           type: 'success',
           title: 'تم إنشاء المستخدم',
-          message: 'تم إنشاء المستخدم بنجاح'
+          message: `تم إنشاء المستخدم "${newUser.username}" بنجاح`
         })
         setShowCreateForm(false)
         setNewUser({ username: '', password: '', email: '', role: 'admin', adminKey: '' })
         fetchUsers()
       } else {
-        throw new Error(result.error || 'فشل في إنشاء المستخدم')
+        // Handle specific error cases
+        if (response.status === 400) {
+          addNotification({
+            type: 'error',
+            title: 'بيانات غير صحيحة',
+            message: result.error || 'يرجى التحقق من البيانات المدخلة'
+          })
+        } else if (response.status === 409) {
+          addNotification({
+            type: 'error',
+            title: 'المستخدم موجود بالفعل',
+            message: 'اسم المستخدم المدخل موجود بالفعل في النظام'
+          })
+        } else {
+          throw new Error(result.error || 'فشل في إنشاء المستخدم')
+        }
       }
     } catch (error) {
       console.error('Create user error:', error)
@@ -192,7 +207,21 @@ export default function AdminPage() {
         fetchUsers()
       } else {
         const result = await response.json()
-        throw new Error(result.error || 'فشل في حذف المستخدم')
+        if (response.status === 404) {
+          addNotification({
+            type: 'error',
+            title: 'المستخدم غير موجود',
+            message: 'المستخدم المطلوب حذفه غير موجود في النظام'
+          })
+        } else if (response.status === 403) {
+          addNotification({
+            type: 'error',
+            title: 'غير مسموح',
+            message: 'لا يمكن حذف هذا المستخدم'
+          })
+        } else {
+          throw new Error(result.error || 'فشل في حذف المستخدم')
+        }
       }
     } catch (error) {
       console.error('Delete user error:', error)
@@ -207,16 +236,21 @@ export default function AdminPage() {
   }
 
   const handleAdminKeySubmit = () => {
-    const correctAdminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'admin123'
+    const correctAdminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'ADMIN_SECRET_2024'
     if (adminKey === correctAdminKey) {
+      addNotification({
+        type: 'success',
+        title: 'تم التحقق بنجاح',
+        message: 'تم التحقق من المفتاح السري بنجاح. مرحباً بك في لوحة الإدارة'
+      })
       localStorage.setItem('adminAuth', 'true')
       setIsAdminAuthenticated(true)
       fetchUsers()
     } else {
       addNotification({
         type: 'error',
-        title: 'خطأ في المفتاح السري',
-        message: 'المفتاح السري غير صحيح'
+        title: 'المفتاح السري غير صحيح',
+        message: 'المفتاح السري المدخل غير صحيح. يرجى التحقق من المفتاح السري للإدارة'
       })
     }
   }
@@ -241,11 +275,19 @@ export default function AdminPage() {
         addNotification({
           type: 'success',
           title: 'تم تنظيف النظام',
-          message: `تم تنظيف النظام وحذف جميع المستخدمين. تم حذف ${result.deletedCustomers} عميل`
+          message: `تم تنظيف النظام بنجاح. تم حذف ${result.deletedUsers || 0} مستخدم و ${result.deletedCustomers || 0} عميل`
         })
         fetchUsers()
       } else {
-        throw new Error(result.error || 'فشل في تنظيف النظام')
+        if (response.status === 403) {
+          addNotification({
+            type: 'error',
+            title: 'غير مسموح',
+            message: 'ليس لديك صلاحية لتنظيف النظام'
+          })
+        } else {
+          throw new Error(result.error || 'فشل في تنظيف النظام')
+        }
       }
     } catch (error) {
       console.error('Cleanup error:', error)

@@ -28,8 +28,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch users',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'فشل في جلب المستخدمين',
+        details: error instanceof Error ? error.message : 'خطأ غير معروف'
       },
       { status: 500 }
     )
@@ -46,19 +46,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Username and password are required'
+          error: 'اسم المستخدم وكلمة المرور مطلوبان'
         },
         { status: 400 }
       )
     }
 
     // Check admin key for user creation
-    const requiredAdminKey = process.env.ADMIN_CREATION_KEY || 'ADMIN_SECRET_2024'
+    const requiredAdminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'ADMIN_SECRET_2024'
     if (!adminKey || adminKey !== requiredAdminKey) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid admin key. User creation is restricted.'
+          error: 'المفتاح السري للإدارة غير صحيح. إنشاء المستخدمين مقيد'
         },
         { status: 403 }
       )
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Username already exists'
+          error: 'اسم المستخدم موجود بالفعل'
         },
-        { status: 400 }
+        { status: 409 }
       )
     }
 
@@ -102,15 +102,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user,
-      message: 'User created successfully'
+      message: 'تم إنشاء المستخدم بنجاح'
     })
   } catch (error) {
     console.error('Error creating user:', error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to create user',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'فشل في إنشاء المستخدم',
+        details: error instanceof Error ? error.message : 'خطأ غير معروف'
       },
       { status: 500 }
     )

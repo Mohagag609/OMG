@@ -90,11 +90,26 @@ export default function ForgotPasswordPage() {
         addNotification({
           type: 'success',
           title: 'تم التحقق بنجاح',
-          message: 'يمكنك الآن إعادة تعيين كلمة المرور'
+          message: 'تم التحقق من البيانات بنجاح. يمكنك الآن إعادة تعيين كلمة المرور'
         })
         setStep('reset')
       } else {
-        throw new Error(result.error || 'فشل في التحقق')
+        // Handle specific error cases
+        if (response.status === 404) {
+          addNotification({
+            type: 'error',
+            title: 'المستخدم غير موجود',
+            message: 'اسم المستخدم المدخل غير موجود في النظام. يرجى التحقق من اسم المستخدم'
+          })
+        } else if (response.status === 401) {
+          addNotification({
+            type: 'error',
+            title: 'المفتاح السري غير صحيح',
+            message: 'المفتاح السري للإدارة غير صحيح. يرجى التحقق من المفتاح السري'
+          })
+        } else {
+          throw new Error(result.error || 'فشل في التحقق')
+        }
       }
     } catch (error) {
       console.error('Verify error:', error)
