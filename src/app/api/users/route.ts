@@ -39,7 +39,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, password, email, role = 'user' } = body
+    const { username, password, email, role = 'user', adminKey } = body
 
     // Validate required fields
     if (!username || !password) {
@@ -49,6 +49,18 @@ export async function POST(request: NextRequest) {
           error: 'Username and password are required'
         },
         { status: 400 }
+      )
+    }
+
+    // Check admin key for user creation
+    const requiredAdminKey = process.env.ADMIN_CREATION_KEY || 'ADMIN_SECRET_2024'
+    if (!adminKey || adminKey !== requiredAdminKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid admin key. User creation is restricted.'
+        },
+        { status: 403 }
       )
     }
 

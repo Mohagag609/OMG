@@ -64,7 +64,8 @@ export default function AdminPage() {
     username: '',
     password: '',
     email: '',
-    role: 'admin'
+    role: 'admin',
+    adminKey: ''
   })
   const router = useRouter()
   const { addNotification, removeNotification } = useNotifications()
@@ -107,7 +108,7 @@ export default function AdminPage() {
           message: 'تم إنشاء المستخدم بنجاح'
         })
         setShowCreateForm(false)
-        setNewUser({ username: '', password: '', email: '', role: 'admin' })
+        setNewUser({ username: '', password: '', email: '', role: 'admin', adminKey: '' })
         fetchUsers()
       } else {
         throw new Error(result.error || 'فشل في إنشاء المستخدم')
@@ -158,6 +159,44 @@ export default function AdminPage() {
     }
   }
 
+  const handleCleanup = async () => {
+    if (!confirm('هل أنت متأكد من تنظيف النظام وحذف البيانات الافتراضية؟')) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/system/cleanup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        addNotification({
+          type: 'success',
+          title: 'تم تنظيف النظام',
+          message: `تم حذف ${result.deletedUsers} مستخدم و ${result.deletedCustomers} عميل`
+        })
+        fetchUsers()
+      } else {
+        throw new Error(result.error || 'فشل في تنظيف النظام')
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التنظيف',
+        message: error instanceof Error ? error.message : 'فشل في تنظيف النظام'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -175,6 +214,13 @@ export default function AdminPage() {
             </div>
 
             <div className="flex items-center space-x-3 space-x-reverse">
+              <ModernButton
+                onClick={handleCleanup}
+                variant="danger"
+                disabled={isLoading}
+              >
+                {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
+              </ModernButton>
               <ModernButton
                 onClick={() => router.push('/login')}
                 variant="secondary"
@@ -252,6 +298,22 @@ export default function AdminPage() {
                     <option value="admin">مدير</option>
                     <option value="user">مستخدم</option>
                   </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    المفتاح السري للإدارة
+                  </label>
+                  <input
+                    type="password"
+                    value={newUser.adminKey}
+                    onChange={(e) => setNewUser({ ...newUser, adminKey: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="أدخل المفتاح السري لإنشاء المستخدم"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    المفتاح السري مطلوب لإنشاء مستخدمين جدد
+                  </p>
                 </div>
               </div>
               <div className="mt-4 flex space-x-3 space-x-reverse">
@@ -333,7 +395,7 @@ export default function AdminPage() {
         {/* System Info */}
         <ModernCard>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">معلومات النظام</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-600">إجمالي المستخدمين</p>
               <p className="text-2xl font-bold text-gray-900">{users.length}</p>
@@ -341,6 +403,12 @@ export default function AdminPage() {
             <div>
               <p className="text-sm text-gray-600">حالة النظام</p>
               <p className="text-2xl font-bold text-green-600">نشط</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">المفتاح السري</p>
+              <p className="text-sm font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                ADMIN_SECRET_2024
+              </p>
             </div>
           </div>
         </ModernCard>
