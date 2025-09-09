@@ -68,6 +68,7 @@ export default function AdminPage() {
     adminKey: ''
   })
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isDirectAccess, setIsDirectAccess] = useState(false)
   const router = useRouter()
   const { addNotification, removeNotification } = useNotifications()
 
@@ -77,9 +78,41 @@ export default function AdminPage() {
   }, [router])
 
   const checkFirstTimeAccess = async () => {
-    // Always allow access to admin panel - no password required
-    setIsAuthenticated(true)
-    fetchUsers()
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        const users = data.users || []
+        
+        // Check if there are any admin users
+        const adminUsers = users.filter(user => user.role === 'admin')
+        
+        if (adminUsers.length === 0) {
+          // No admin users - allow direct access
+          setIsDirectAccess(true)
+          setIsAuthenticated(true)
+          fetchUsers()
+        } else {
+          // Admin users exist - require password
+          const adminAuth = localStorage.getItem('adminAuth')
+          if (adminAuth === 'true') {
+            setIsAuthenticated(true)
+            fetchUsers()
+          } else {
+            router.push('/admin-auth')
+          }
+        }
+      } else {
+        // Error fetching users - allow access for first time setup
+        setIsAuthenticated(true)
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error('Error checking users:', error)
+      // Error - allow access for first time setup
+      setIsAuthenticated(true)
+      fetchUsers()
+    }
   }
 
   // Show loading while checking authentication
@@ -236,19 +269,34 @@ export default function AdminPage() {
             </div>
 
             <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton
-                onClick={handleCleanup}
-                variant="danger"
-                disabled={isLoading}
-              >
-                {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
-              </ModernButton>
-              <ModernButton
-                onClick={() => router.push('/login')}
-                variant="secondary"
-              >
-                العودة لتسجيل الدخول
-              </ModernButton>
+              {!isDirectAccess && (
+                <ModernButton
+                  onClick={handleCleanup}
+                  variant="danger"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
+                </ModernButton>
+              )}
+              {!isDirectAccess && (
+                <ModernButton
+                  onClick={() => {
+                    localStorage.removeItem('adminAuth')
+                    router.push('/login')
+                  }}
+                  variant="secondary"
+                >
+                  تسجيل الخروج
+                </ModernButton>
+              )}
+              {isDirectAccess && (
+                <ModernButton
+                  onClick={() => router.push('/login')}
+                  variant="secondary"
+                >
+                  العودة لتسجيل الدخول
+                </ModernButton>
+              )}
             </div>
           </div>
         </div>
@@ -256,6 +304,20 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Direct Access Message */}
+        {isDirectAccess && (
+          <ModernCard className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🔓</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">وصول مباشر للوحة الإدارة</h2>
+                <p className="text-gray-600">لا يوجد مستخدمين إداريين في النظام. يمكنك الآن إنشاء المستخدمين وإدارة النظام.</p>
+              </div>
+            </div>
+          </ModernCard>
+        )}
 
         {/* Users Management */}
         <ModernCard className="mb-8">
