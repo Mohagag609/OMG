@@ -6,11 +6,10 @@ import * as tar from 'tar'
 
 // Simple database config for API use
 const getDatabaseConfig = () => {
-  const databaseType = process.env.DATABASE_TYPE as 'postgresql-cloud' | 'postgresql-local' | 'sqlite'
+  const databaseType = (process.env.DATABASE_TYPE || 'postgresql-cloud') as 'postgresql-cloud' | 'postgresql-local' | 'sqlite'
 
-  if (!databaseType) {
-    throw new Error('DATABASE_TYPE environment variable is required')
-  }
+  console.log('🔍 Database type from env:', process.env.DATABASE_TYPE)
+  console.log('🔍 Using database type:', databaseType)
 
   let url: string
   let provider: 'postgresql' | 'sqlite'
@@ -33,6 +32,8 @@ const getDatabaseConfig = () => {
   }
 
   if (!url) {
+    console.error(`❌ Database URL not found for type: ${databaseType}`)
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('DATABASE')))
     throw new Error(`Database URL not found for type: ${databaseType}`)
   }
 
@@ -201,12 +202,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Export API failed:', error)
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to create backup',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     )

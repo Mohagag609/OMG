@@ -4,11 +4,10 @@ import { z } from 'zod'
 
 // Simple database config for API use
 const getDatabaseConfig = () => {
-  const databaseType = process.env.DATABASE_TYPE as 'postgresql-cloud' | 'postgresql-local' | 'sqlite'
+  const databaseType = (process.env.DATABASE_TYPE || 'postgresql-cloud') as 'postgresql-cloud' | 'postgresql-local' | 'sqlite'
 
-  if (!databaseType) {
-    throw new Error('DATABASE_TYPE environment variable is required')
-  }
+  console.log('🔍 Database type from env:', process.env.DATABASE_TYPE)
+  console.log('🔍 Using database type:', databaseType)
 
   let url: string
   let provider: 'postgresql' | 'sqlite'

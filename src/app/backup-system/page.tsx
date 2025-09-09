@@ -102,10 +102,11 @@ export default function BackupSystem() {
       }
     } catch (error) {
       console.error('Export error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',
-        message: 'فشل في إنشاء النسخة الاحتياطية'
+        message: `فشل في إنشاء النسخة الاحتياطية: ${errorMessage}`
       })
     } finally {
       setIsLoading(false)
