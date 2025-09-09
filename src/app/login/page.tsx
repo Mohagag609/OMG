@@ -81,6 +81,35 @@ export default function Login() {
           <p style={{ margin: '4px 0', color: 'rgb(15, 23, 42)' }}>اسم المستخدم: <strong style={{ color: 'rgb(59, 130, 246)' }}>admin</strong></p>
           <p style={{ margin: '4px 0', color: 'rgb(15, 23, 42)' }}>كلمة المرور: <strong style={{ color: 'rgb(59, 130, 246)' }}>admin123</strong></p>
         </div>
+        
+        <div style={{ 
+          marginTop: '16px', 
+          textAlign: 'center'
+        }}>
+          <button
+            onClick={() => router.push('/admin')}
+            style={{
+              background: 'linear-gradient(135deg, #dc2626, #ec4899)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            👑 لوحة الإدارة
+          </button>
+        </div>
       </div>
     </div>
   )

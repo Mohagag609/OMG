@@ -189,7 +189,9 @@ export async function POST(request: NextRequest) {
       mode: result.mode,
       deletedCounts: result.deletedCounts,
       totalDeleted: Object.values(result.deletedCounts).reduce((a, b) => a + b, 0),
-      message: `Database wiped successfully using ${mode} mode`
+      message: `Database wiped successfully using ${mode} mode`,
+      redirectToLogin: true,
+      adminUrl: process.env.ADMIN_URL || '/admin'
     })
 
   } catch (error) {

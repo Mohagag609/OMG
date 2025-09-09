@@ -208,6 +208,18 @@ export default function BackupSystem() {
           title: 'تم مسح البيانات',
           message: result.message
         })
+        
+        // إذا كان هناك إعادة توجيه مطلوبة
+        if (result.redirectToLogin) {
+          // مسح البيانات المحلية
+          localStorage.clear()
+          sessionStorage.clear()
+          
+          // إعادة توجيه لشاشة الدخول
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 2000)
+        }
       } else {
         throw new Error(result.details || 'فشل في مسح البيانات')
       }
