@@ -68,19 +68,49 @@ export default function AdminPage() {
     adminKey: ''
   })
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isFirstTime, setIsFirstTime] = useState(false)
   const router = useRouter()
   const { addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    // Check admin authentication
-    const adminAuth = localStorage.getItem('adminAuth')
-    if (adminAuth === 'true') {
+    // Check if this is first time access (no users in database)
+    checkFirstTimeAccess()
+  }, [router])
+
+  const checkFirstTimeAccess = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        const users = data.users || []
+        
+        if (users.length === 0) {
+          // First time access - no authentication required
+          setIsFirstTime(true)
+          setIsAuthenticated(true)
+          fetchUsers()
+        } else {
+          // Users exist - require authentication
+          const adminAuth = localStorage.getItem('adminAuth')
+          if (adminAuth === 'true') {
+            setIsAuthenticated(true)
+            fetchUsers()
+          } else {
+            router.push('/admin-auth')
+          }
+        }
+      } else {
+        // Error fetching users - allow access for first time setup
+        setIsAuthenticated(true)
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error('Error checking users:', error)
+      // Error - allow access for first time setup
       setIsAuthenticated(true)
       fetchUsers()
-    } else {
-      router.push('/admin-auth')
     }
-  }, [router])
+  }
 
   // Show loading while checking authentication
   if (!isAuthenticated) {
@@ -236,22 +266,34 @@ export default function AdminPage() {
             </div>
 
             <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton
-                onClick={handleCleanup}
-                variant="danger"
-                disabled={isLoading}
-              >
-                {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
-              </ModernButton>
-              <ModernButton
-                onClick={() => {
-                  localStorage.removeItem('adminAuth')
-                  router.push('/login')
-                }}
-                variant="secondary"
-              >
-                تسجيل الخروج
-              </ModernButton>
+              {!isFirstTime && (
+                <ModernButton
+                  onClick={handleCleanup}
+                  variant="danger"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري التنظيف...' : '🧹 تنظيف النظام'}
+                </ModernButton>
+              )}
+              {!isFirstTime && (
+                <ModernButton
+                  onClick={() => {
+                    localStorage.removeItem('adminAuth')
+                    router.push('/login')
+                  }}
+                  variant="secondary"
+                >
+                  تسجيل الخروج
+                </ModernButton>
+              )}
+              {isFirstTime && (
+                <ModernButton
+                  onClick={() => router.push('/login')}
+                  variant="secondary"
+                >
+                  العودة لتسجيل الدخول
+                </ModernButton>
+              )}
             </div>
           </div>
         </div>
@@ -259,6 +301,21 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* First Time Welcome Message */}
+        {isFirstTime && (
+          <ModernCard className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🎉</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">مرحباً بك في النظام!</h2>
+                <p className="text-gray-600">هذا هو الوصول الأول للنظام. يمكنك الآن إنشاء المستخدمين وإدارة النظام.</p>
+              </div>
+            </div>
+          </ModernCard>
+        )}
+
         {/* Users Management */}
         <ModernCard className="mb-8">
           <div className="flex items-center justify-between mb-6">
