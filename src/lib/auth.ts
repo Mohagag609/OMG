@@ -111,38 +111,8 @@ export function requireAuth(requiredRole: string = 'user') {
   }
 }
 
-// Create default users
+// Create default users - DISABLED
 export async function createDefaultUsers(): Promise<void> {
-  try {
-    // Create admin user
-    await prisma.user.upsert({
-      where: { username: 'admin' },
-      update: { password: await hashPassword('admin123') },
-      create: {
-        username: 'admin',
-        password: await hashPassword('admin123'),
-        email: 'admin@example.com',
-        fullName: 'مدير النظام',
-        role: 'admin'
-      }
-    })
-    
-    // Create regular user
-    await prisma.user.upsert({
-      where: { username: 'user' },
-      update: { password: await hashPassword('user123') },
-      create: {
-        username: 'user',
-        password: await hashPassword('user123'),
-        email: 'user@example.com',
-        fullName: 'مستخدم عادي',
-        role: 'user'
-      }
-    })
-    
-    console.log('✅ Default users created successfully')
-  } catch (error) {
-    console.error('❌ Error creating default users:', error)
-    throw error
-  }
+  // No default users created - admin panel is open access
+  console.log('No default users created - admin panel is open access')
 }
