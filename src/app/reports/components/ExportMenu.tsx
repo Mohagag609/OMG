@@ -12,7 +12,7 @@ interface ExportMenuProps {
   onExport: (format: string) => void
 }
 
-export function ExportMenu({ onExport }: ExportMenuProps) {
+export default function ExportMenu({ onExport }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const handleExport = (format: string) => {

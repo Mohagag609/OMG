@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import ExportMenu from './ExportMenu'
-import PrintButton from './PrintButton'
+import { PrintButton } from './PrintButton'
 
 interface ReportPreviewProps {
   report: {
