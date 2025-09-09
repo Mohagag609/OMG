@@ -142,17 +142,6 @@ const SystemPage = () => {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  const handleBackup = async () => {
-    try {
-      addNotification('info', 'جاري إنشاء نسخة احتياطية...')
-      // Add backup logic here
-      setTimeout(() => {
-        addNotification('success', 'تم إنشاء النسخة الاحتياطية بنجاح')
-      }, 2000)
-    } catch (error) {
-      addNotification('error', 'خطأ في إنشاء النسخة الاحتياطية')
-    }
-  }
 
   const handleOptimize = async () => {
     try {
@@ -333,18 +322,9 @@ const SystemPage = () => {
           {/* System Actions */}
           <ModernCard className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">إجراءات النظام</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <ModernButton
-                onClick={handleBackup}
-                className="flex items-center justify-center space-x-2 space-x-reverse"
-              >
-                <span>💾</span>
-                <span>إنشاء نسخة احتياطية</span>
-              </ModernButton>
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <ModernButton
                 onClick={() => router.push('/backup-system')}
-                variant="success"
                 className="flex items-center justify-center space-x-2 space-x-reverse"
               >
                 <span>🔄</span>
