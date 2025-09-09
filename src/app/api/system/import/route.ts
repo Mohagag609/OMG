@@ -1,18 +1,221 @@
 import { NextRequest, NextResponse } from 'next/server'
-// Import the import function directly
+import { PrismaClient } from '@prisma/client'
+import { z } from 'zod'
+import * as fs from 'fs'
+import * as path from 'path'
+import * as tar from 'tar'
+
+// Simple database config for API use
+const getDatabaseConfig = () => {
+  const databaseType = process.env.DATABASE_TYPE as 'postgresql-cloud' | 'postgresql-local' | 'sqlite'
+
+  if (!databaseType) {
+    throw new Error('DATABASE_TYPE environment variable is required')
+  }
+
+  let url: string
+  let provider: 'postgresql' | 'sqlite'
+
+  switch (databaseType) {
+    case 'postgresql-cloud':
+      url = process.env.DATABASE_URL_POSTGRES_CLOUD || process.env.DATABASE_URL || ''
+      provider = 'postgresql'
+      break
+    case 'postgresql-local':
+      url = process.env.DATABASE_URL_POSTGRES_LOCAL || process.env.DATABASE_URL || ''
+      provider = 'postgresql'
+      break
+    case 'sqlite':
+      url = process.env.DATABASE_URL_SQLITE || process.env.DATABASE_URL || ''
+      provider = 'sqlite'
+      break
+    default:
+      throw new Error(`Unsupported DATABASE_TYPE: ${databaseType}`)
+  }
+
+  if (!url) {
+    throw new Error(`Database URL not found for type: ${databaseType}`)
+  }
+
+  return { type: databaseType, url, provider }
+}
+
+// Models to import (in correct order to respect foreign key constraints)
+const MODELS = [
+  'User', 'Customer', 'Unit', 'Contract', 'Installment', 'Voucher', 'Safe',
+  'Partner', 'Broker', 'Transfer'
+]
+
 async function runImport(archivePath: string, options: { dryRun?: boolean; mode?: 'replace' | 'upsert'; batchSize?: number } = {}): Promise<{
   success: boolean
   dryRun: boolean
   stats: Record<string, number>
   warnings: string[]
 }> {
-  // This is a simplified version for API use
-  // In production, you might want to move this to a shared utility
-  throw new Error('Import functionality not available in API mode. Use CLI scripts instead.')
+  const { dryRun = false, mode = 'replace', batchSize = 1000 } = options
+  
+  console.log(`🚀 Starting database import (${dryRun ? 'dry run' : 'live'})...`)
+  
+  const config = getDatabaseConfig()
+  console.log(`📊 Database type: ${config.type}`)
+  console.log(`🔗 Provider: ${config.provider}`)
+  
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: config.url
+      }
+    }
+  })
+
+  try {
+    // Extract archive
+    const extractDir = path.join('/tmp', `import-${Date.now()}`)
+    if (!fs.existsSync(extractDir)) {
+      fs.mkdirSync(extractDir, { recursive: true })
+    }
+
+    await tar.extract({
+      file: archivePath,
+      cwd: extractDir
+    })
+
+    // Read manifest
+    const manifestPath = path.join(extractDir, 'manifest.json')
+    if (!fs.existsSync(manifestPath)) {
+      throw new Error('Manifest file not found in backup')
+    }
+
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+    console.log(`📋 Backup info: ${manifest.totalRecords} records from ${Object.keys(manifest.models).length} models`)
+
+    // Validate schema compatibility
+    if (manifest.database.provider !== config.provider) {
+      throw new Error(`Schema provider mismatch: backup is ${manifest.database.provider}, current is ${config.provider}`)
+    }
+
+    const stats: Record<string, number> = {}
+    const warnings: string[] = []
+
+    if (mode === 'replace') {
+      // Clear existing data first
+      console.log('🗑️ Clearing existing data...')
+      
+      for (const modelName of MODELS.reverse()) { // Reverse order for deletion
+        try {
+          const model = (prisma as any)[modelName.toLowerCase()]
+          if (!model) continue
+
+          if (!dryRun) {
+            const result = await model.deleteMany({})
+            console.log(`✅ Cleared ${modelName}: ${result.count} records`)
+          } else {
+            const count = await model.count()
+            console.log(`🔍 Would clear ${modelName}: ${count} records`)
+          }
+        } catch (error) {
+          console.error(`❌ Error clearing ${modelName}:`, error)
+          warnings.push(`Failed to clear ${modelName}: ${error}`)
+        }
+      }
+    }
+
+    // Import data
+    for (const modelName of MODELS) {
+      try {
+        const filePath = path.join(extractDir, 'data', `${modelName}.ndjson`)
+        if (!fs.existsSync(filePath)) {
+          console.log(`⚠️  No data file for ${modelName}`)
+          continue
+        }
+
+        const content = fs.readFileSync(filePath, 'utf8')
+        const lines = content.trim().split('\n').filter(line => line.trim())
+        
+        if (lines.length === 0) {
+          console.log(`📦 ${modelName}: No records to import`)
+          stats[modelName] = 0
+          continue
+        }
+
+        console.log(`📦 Importing ${modelName}: ${lines.length} records`)
+
+        if (dryRun) {
+          stats[modelName] = lines.length
+          console.log(`🔍 Would import ${modelName}: ${lines.length} records`)
+          continue
+        }
+
+        // Parse and import records in batches
+        const model = (prisma as any)[modelName.toLowerCase()]
+        if (!model) {
+          console.log(`⚠️  Model ${modelName} not found in Prisma client`)
+          stats[modelName] = 0
+          continue
+        }
+
+        let imported = 0
+        for (let i = 0; i < lines.length; i += batchSize) {
+          const batch = lines.slice(i, i + batchSize)
+          const records = batch.map((line: string) => JSON.parse(line))
+
+          if (mode === 'upsert') {
+            // Use upsert for each record
+            for (const record of records) {
+              try {
+                await model.upsert({
+                  where: { id: record.id },
+                  update: record,
+                  create: record
+                })
+                imported++
+              } catch (error) {
+                console.error(`❌ Error upserting record in ${modelName}:`, error)
+                warnings.push(`Failed to upsert record in ${modelName}: ${error}`)
+              }
+            }
+          } else {
+            // Use createMany for replace mode
+            try {
+              await model.createMany({
+                data: records,
+                skipDuplicates: true
+              })
+              imported += records.length
+            } catch (error) {
+              console.error(`❌ Error creating records in ${modelName}:`, error)
+              warnings.push(`Failed to create records in ${modelName}: ${error}`)
+            }
+          }
+        }
+
+        stats[modelName] = imported
+        console.log(`✅ ${modelName}: ${imported} records imported`)
+
+      } catch (error) {
+        console.error(`❌ Error importing ${modelName}:`, error)
+        stats[modelName] = 0
+        warnings.push(`Failed to import ${modelName}: ${error}`)
+      }
+    }
+
+    // Clean up
+    fs.rmSync(extractDir, { recursive: true, force: true })
+
+    const totalImported = Object.values(stats).reduce((a, b) => a + b, 0)
+    console.log(`✅ Import ${dryRun ? 'dry run' : 'completed'}! Total records: ${totalImported}`)
+
+    return {
+      success: true,
+      dryRun,
+      stats,
+      warnings
+    }
+
+  } finally {
+    await prisma.$disconnect()
+  }
 }
-import { z } from 'zod'
-import * as fs from 'fs'
-import * as path from 'path'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
