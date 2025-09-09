@@ -73,7 +73,7 @@ export default function Login() {
           textAlign: 'center'
         }}>
           <button
-            onClick={() => router.push('/setup')}
+            onClick={() => router.push('/admin')}
             style={{
               background: 'linear-gradient(135deg, #dc2626, #ec4899)',
               color: 'white',
