@@ -29,10 +29,11 @@ async function setupDatabase() {
   try {
     console.log('🔍 محاولة الاتصال بقاعدة البيانات المحلية...')
     
+    // استخدام SQLite للتطوير المحلي
     const localPrisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.DATABASE_URL
+          url: "file:./dev.db"
         }
       }
     })
@@ -42,7 +43,17 @@ async function setupDatabase() {
     await localPrisma.$disconnect()
 
     const { execSync } = require('child_process')
+    // تغيير provider مؤقتاً للتطوير المحلي
+    const fs = require('fs')
+    const schemaPath = 'prisma/schema.prisma'
+    const schema = fs.readFileSync(schemaPath, 'utf8')
+    const tempSchema = schema.replace('provider = "postgresql"', 'provider = "sqlite"')
+    fs.writeFileSync(schemaPath, tempSchema)
+    
     execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+    
+    // استعادة PostgreSQL
+    fs.writeFileSync(schemaPath, schema)
 
     console.log('✅ تم إعداد قاعدة البيانات المحلية بنجاح!')
 
