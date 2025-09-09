@@ -96,7 +96,8 @@ export default function AdminPage() {
             setIsAuthenticated(true)
             fetchUsers()
           } else {
-            router.push('/admin-auth')
+            // Redirect to login page
+            router.push('/login')
           }
         }
       } else {
