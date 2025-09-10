@@ -173,6 +173,10 @@ async function saveDatabaseSettings(settings: any) {
     }
     console.log('Prisma db push completed.');
 
+    // 5. Create the configuration flag file
+    const flagPath = path.join(process.cwd(), '.db_configured');
+    await fs.writeFile(flagPath, new Date().toISOString());
+    console.log('Database configuration flag file created.');
 
     return NextResponse.json({ message: 'Settings saved successfully. Please restart the server to apply changes.' });
 
