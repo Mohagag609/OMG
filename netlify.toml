@@ -18,7 +18,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["@prisma/client", "prisma"]
+  external_node_modules = ["@prisma/client", "prisma", "sqlite3", "pg"]
 
 [[headers]]
   for = "/*"
