@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// اختيارياً ممكن نستخدم Enums لاحقاً، هنسيب الحقول String لتوافق أسرع
+
+model Customer {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String?  @unique
+  nationalId String?  @unique
+  address    String?
+  status     String   @default("نشط")
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  contracts  Contract[]
+
+  @@map("customers")
+}
+
+model Unit {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String?
+  unitType     String        @default("سكني")
+  area         String?
+  floor        String?
+  building     String?
+  totalPrice   Float         @default(0)
+  status       String        @default("متاحة")
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  contracts    Contract[]
+  installments Installment[]
+  vouchers     Voucher[]
+  unitPartners UnitPartner[]
+
+  @@map("units")
+}
+
+model Partner {
+  id                    String                @id @default(cuid())
+  name                  String
+  phone                 String?
+  notes                 String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  deletedAt             DateTime?
+
+  unitPartners          UnitPartner[]
+  partnerDebts          PartnerDebt[]
+  partnerGroupPartners  PartnerGroupPartner[]
+
+  @@map("partners")
+}
+
+model UnitPartner {
+  id         String   @id @default(cuid())
+  unitId     String
+  partnerId  String
+  percentage Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  unit    Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([unitId, partnerId])
+  @@map("unit_partners")
+}
+
+model Broker {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  phone     String?
+  notes     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+
+  brokerDues BrokerDue[]
+
+  @@map("brokers")
+}
+
+model Contract {
+  id                 String   @id @default(cuid())
+  unitId             String
+  customerId         String
+  start              DateTime
+  totalPrice         Float
+  discountAmount     Float    @default(0)
+  brokerId           String?
+  brokerPercent      Float    @default(0)
+  brokerAmount       Float    @default(0)
+  commissionSafeId   String?
+  downPaymentSafeId  String?
+  maintenanceDeposit Float    @default(0)
+  installmentType    String   @default("شهري")
+  installmentCount   Int      @default(0)
+  extraAnnual        Int      @default(0)
+  annualPaymentValue Float    @default(0)
+  downPayment        Float    @default(0)
+  paymentType        String   @default("installment")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  deletedAt          DateTime?
+
+  unit            Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  broker          Broker?  @relation(fields: [brokerId], references: [id], onDelete: SetNull)
+  commissionSafe  Safe?    @relation("CommissionSafe", fields: [commissionSafeId], references: [id], onDelete: SetNull)
+  downPaymentSafe Safe?    @relation("DownPaymentSafe", fields: [downPaymentSafeId], references: [id], onDelete: SetNull)
+
+  @@map("contracts")
+}
+
+model Installment {
+  id        String   @id @default(cuid())
+  unitId    String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@map("installments")
+}
+
+model PartnerDebt {
+  id        String   @id @default(cuid())
+  partnerId String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@map("partner_debts")
+}
+
+model Safe {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  balance   Float     @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  vouchers      Voucher[]
+  transfersFrom Transfer[] @relation("TransferFrom")
+  transfersTo   Transfer[] @relation("TransferTo")
+
+  CommissionSafeContracts  Contract[] @relation("CommissionSafe")
+  DownPaymentSafeContracts Contract[] @relation("DownPaymentSafe")
+
+  @@map("safes")
+}
+
+model Transfer {
+  id          String   @id @default(cuid())
+  fromSafeId  String
+  toSafeId    String
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  fromSafe Safe @relation("TransferFrom", fields: [fromSafeId], references: [id], onDelete: Cascade)
+  toSafe   Safe @relation("TransferTo", fields: [toSafeId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
+}
+
+model Voucher {
+  id           String    @id @default(cuid())
+  type         String
+  date         DateTime
+  amount       Float
+  safeId       String
+  description  String
+  payer        String?
+  beneficiary  String?
+  unitId       String?
+  contractId   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  safe     Safe      @relation(fields: [safeId], references: [id], onDelete: Cascade)
+  unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+
+  @@map("vouchers")
+}
+
+model BrokerDue {
+  id        String   @id @default(cuid())
+  brokerId  String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("معلق")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  broker Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@map("broker_dues")
+}
+
+model PartnerGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  partners PartnerGroupPartner[]
+
+  @@map("partner_groups")
+}
+
+model PartnerGroupPartner {
+  id              String   @id @default(cuid())
+  partnerGroupId  String
+  partnerId       String
+  percentage      Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  partnerGroup PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
+  partner      Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([partnerGroupId, partnerId])
+  @@map("partner_group_partners")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  oldValues   String?
+  newValues   String?
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+model KeyVal {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@map("keyval")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  email     String?  @unique
+  fullName  String?
+  role      String   @default("user")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  type            String
+  title           String
+  message         String
+  category        String
+  acknowledged    Boolean   @default(false)
+  acknowledgedAt  DateTime?
+  acknowledgedBy  String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  data            String?
+
+  @@map("notifications")
+}
