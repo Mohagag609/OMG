@@ -5,7 +5,7 @@ const nextConfig = {
     unoptimized: true
   },
   experimental: {
-    serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken']
+    serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken', 'sqlite3', 'pg']
   },
   webpack: (config, { isServer }) => {
     // Don't externalize bcryptjs and jsonwebtoken for server-side
