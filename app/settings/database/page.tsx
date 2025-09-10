@@ -19,9 +19,18 @@ export default function DatabaseSettingsPage() {
 
   useEffect(() => {
     fetch('/api/settings/database').then(r=>r.json()).then(data=>{
-      // ممكن نضبط dbType حسب PRISMA_SCHEMA_PATH
-      if (data?.dbTypeHint === 'sqlite') setDbType('sqlite')
-      else setDbType('postgres-local')
+      // في بيئة الإنتاج، استخدم PostgreSQL
+      if (process.env.NODE_ENV === 'production') {
+        setDbType('postgres-cloud')
+        setForm(prev => ({
+          ...prev,
+          pgUrl: process.env.DATABASE_URL || ''
+        }))
+      } else if (data?.dbTypeHint === 'sqlite') {
+        setDbType('sqlite')
+      } else {
+        setDbType('postgres-local')
+      }
     })
   }, [])
 
@@ -40,6 +49,16 @@ export default function DatabaseSettingsPage() {
   return (
     <div style={{maxWidth: 800, margin: '24px auto', padding: 16}}>
       <h1>إعدادات قاعدة البيانات</h1>
+      
+      {process.env.NODE_ENV === 'production' && process.env.DATABASE_URL && (
+        <div style={{background: '#d4edda', border: '1px solid #c3e6cb', padding: 16, borderRadius: 8, marginBottom: 24}}>
+          <h3>✅ التطبيق جاهز للعمل!</h3>
+          <p>قاعدة البيانات متصلة ومُعدة. يمكنك الآن استخدام التطبيق.</p>
+          <a href="/dashboard" style={{display: 'inline-block', padding: '8px 16px', background: '#007bff', color: 'white', textDecoration: 'none', borderRadius: 4}}>
+            الذهاب إلى لوحة التحكم
+          </a>
+        </div>
+      )}
 
       <label>نوع قاعدة البيانات</label>
       <select value={dbType} onChange={e=>setDbType(e.target.value as DbType)}>
