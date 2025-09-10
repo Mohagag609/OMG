@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useNotifications } from './NotificationSystem'
 
 // Interfaces
@@ -58,6 +59,7 @@ export function Settings({ onSettingsChange }: SettingsProps) {
   const [dbTestResult, setDbTestResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [isTestingDb, setIsTestingDb] = useState(false)
   const [isSavingDb, setIsSavingDb] = useState(false)
+  const router = useRouter()
 
   const { addNotification } = useNotifications()
 
@@ -162,7 +164,11 @@ export function Settings({ onSettingsChange }: SettingsProps) {
       })
       const data = await res.json()
       if (res.ok) {
-        addNotification({ type: 'success', title: 'تم حفظ إعدادات قاعدة البيانات', message: 'يرجى إعادة تشغيل الخادم لتطبيق التغييرات.' })
+        addNotification({ type: 'success', title: 'تم حفظ الإعدادات بنجاح', message: 'جاري إعادة توجيهك إلى صفحة تسجيل الدخول...' })
+        // Use a timeout to allow the user to see the message before redirecting
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
       } else {
         addNotification({ type: 'error', title: 'فشل حفظ الإعدادات', message: data.error || data.message })
       }
