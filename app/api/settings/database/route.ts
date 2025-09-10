@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { testConnection } from '@/util/db'
+import { testConnection } from '../../../util/db'
 
 type DbType = 'sqlite'|'postgres-local'|'postgres-cloud'
 
