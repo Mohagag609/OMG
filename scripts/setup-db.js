@@ -4,13 +4,16 @@ async function setupDatabase() {
   console.log('Setting up database...')
 
   // في بيئة الإنتاج (Netlify/Vercel)، استخدم DATABASE_URL مباشرة
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.NETLIFY) {
     try {
       console.log('🔍 إعداد قاعدة البيانات للإنتاج...')
       
-      // تحديد نوع قاعدة البيانات من PRISMA_SCHEMA_PATH
-      const schemaPath = process.env.PRISMA_SCHEMA_PATH || 'prisma/schema.postgres.prisma'
+      // في بيئة Netlify، استخدم PostgreSQL دائماً
+      const schemaPath = process.env.NETLIFY ? 'prisma/schema.postgres.prisma' : (process.env.PRISMA_SCHEMA_PATH || 'prisma/schema.postgres.prisma')
       const isSqlite = schemaPath.includes('sqlite')
+      
+      console.log(`🌐 بيئة النشر: ${process.env.NETLIFY ? 'Netlify' : 'Production'}`)
+      console.log(`📁 مسار السكيما: ${schemaPath}`)
       
       const prisma = new PrismaClient()
       await prisma.$queryRaw`SELECT 1`
@@ -19,11 +22,19 @@ async function setupDatabase() {
 
       // تطبيق Schema باستخدام الملف الصحيح
       const { execSync } = require('child_process')
-      const migrateCmd = isSqlite 
-        ? 'npx prisma migrate deploy --schema=prisma/schema.sqlite.prisma'
-        : 'npx prisma migrate deploy --schema=prisma/schema.postgres.prisma'
       
-      execSync(migrateCmd, { stdio: 'inherit' })
+      // في بيئة Netlify، استخدم db push بدلاً من migrate deploy
+      if (process.env.NETLIFY) {
+        console.log('🌐 بيئة Netlify - استخدام db push')
+        const pushCmd = 'npx prisma db push --schema=prisma/schema.postgres.prisma --accept-data-loss'
+        execSync(pushCmd, { stdio: 'inherit' })
+      } else {
+        const migrateCmd = isSqlite 
+          ? 'npx prisma migrate deploy --schema=prisma/schema.sqlite.prisma'
+          : 'npx prisma migrate deploy --schema=prisma/schema.postgres.prisma'
+        
+        execSync(migrateCmd, { stdio: 'inherit' })
+      }
 
       console.log('✅ تم إعداد قاعدة البيانات بنجاح!')
       return

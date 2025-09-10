@@ -1,9 +1,12 @@
 [build]
-  command = "npx prisma generate --schema=prisma/schema.postgres.prisma && npm run build"
+  command = "PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma generate --schema=prisma/schema.postgres.prisma && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
+  PRISMA_SCHEMA_PATH = "prisma/schema.postgres.prisma"
+  NODE_ENV = "production"
+  DB_MODE = "cloud"
 
 [[redirects]]
   from = "/*"
