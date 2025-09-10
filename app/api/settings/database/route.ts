@@ -19,8 +19,6 @@ function isServerless() {
 }
 
 export async function GET() {
-  // رجّع الاختيارات المحفوظة من Settings/KeyVal لو متاحة
-  // مبدئياً رجّع من env
   return NextResponse.json({
     dbTypeHint: process.env.PRISMA_SCHEMA_PATH?.includes('sqlite') ? 'sqlite' : 'postgres',
     databaseUrlPreview: process.env.DATABASE_URL ? 'configured' : 'missing'
@@ -65,7 +63,6 @@ export async function POST(req: Request) {
         `SETUP_COMPLETE="true"`
       ].join('\n')
       
-      // محاولة كتابة .env.local
       fs.writeFileSync(envPath, envContent, { encoding: 'utf-8' })
 
       const dbPushCmd = provider === 'sqlite'
@@ -75,7 +72,6 @@ export async function POST(req: Request) {
         ? 'npx prisma generate --schema=prisma/schema.sqlite.prisma'
         : 'npx prisma generate --schema=prisma/schema.postgres.prisma'
 
-      // تعيين متغيرات البيئة قبل التشغيل
       process.env.DATABASE_URL = dbUrl
 
       execSync(dbPushCmd, { stdio: 'inherit' })
@@ -83,7 +79,6 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ ok: true, message: 'تم الحفظ والتجهيز بنجاح.' })
     } catch (writeError: any) {
-      // إذا فشلت الكتابة (مثل في البيئات السحابية)، ارجع envToSet
       if (writeError.code === 'EROFS' || writeError.message?.includes('read-only')) {
         return NextResponse.json({
           ok: true,
