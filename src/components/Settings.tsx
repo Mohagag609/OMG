@@ -23,6 +23,7 @@ interface DbSettings {
   password: string
   database: string
   filePath: string // For SQLite
+  ssl: boolean // For PostgreSQL
 }
 
 interface SettingsProps {
@@ -51,7 +52,8 @@ export function Settings({ onSettingsChange }: SettingsProps) {
     user: '',
     password: '',
     database: '',
-    filePath: 'prisma/dev.db'
+    filePath: 'prisma/dev.db',
+    ssl: false
   })
   const [dbTestResult, setDbTestResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [isTestingDb, setIsTestingDb] = useState(false)
@@ -234,6 +236,17 @@ export function Settings({ onSettingsChange }: SettingsProps) {
               <div className="form-group"><label>المستخدم</label><input type="text" name="user" value={dbSettings.user} onChange={handleDbInputChange} className="input"/></div>
               <div className="form-group"><label>كلمة المرور</label><input type="password" name="password" value={dbSettings.password} onChange={handleDbInputChange} className="input"/></div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}><label>اسم القاعدة</label><input type="text" name="database" value={dbSettings.database} onChange={handleDbInputChange} className="input"/></div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    name="ssl"
+                    checked={dbSettings.ssl}
+                    onChange={(e) => setDbSettings(prev => ({ ...prev, ssl: e.target.checked }))}
+                  />
+                  تفعيل اتصال آمن (SSL)
+                </label>
+              </div>
             </div>
           )}
 
@@ -282,6 +295,7 @@ function parseDatabaseUrl(provider: string, url: string): Partial<DbSettings> {
       settings.user = parsed.username
       settings.password = parsed.password
       settings.database = parsed.pathname.slice(1)
+      settings.ssl = parsed.searchParams.get('sslmode') === 'require'
     } catch (e) {
       console.error("Invalid PostgreSQL URL, couldn't parse:", url)
     }
@@ -293,7 +307,11 @@ function parseDatabaseUrl(provider: string, url: string): Partial<DbSettings> {
 
 function constructDatabaseUrl(settings: DbSettings): string {
   if (settings.provider === 'postgresql') {
-    return `postgresql://${settings.user}:${settings.password}@${settings.host}:${settings.port}/${settings.database}`
+    let url = `postgresql://${settings.user}:${settings.password}@${settings.host}:${settings.port}/${settings.database}`
+    if (settings.ssl) {
+      url += '?sslmode=require'
+    }
+    return url
   } else {
     // Ensure it starts with "file:"
     return settings.filePath.startsWith('file:') ? settings.filePath : `file:${settings.filePath}`
