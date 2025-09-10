@@ -15,10 +15,9 @@ try {
   const generateCmd = `npx prisma generate --schema=${schemaPath}`
   execSync(generateCmd, { stdio: 'inherit' })
 
-  // تشغيل prisma migrate deploy
-  console.log('🔄 تطبيق migrations...')
-  const migrateCmd = `npx prisma migrate deploy --schema=${schemaPath}`
-  execSync(migrateCmd, { stdio: 'inherit' })
+  // ملاحظة: migrate deploy يحتاج إلى DATABASE_URL
+  // في مرحلة البناء، نحتاج فقط إلى generate
+  console.log('ℹ️ تم تخطي migrate deploy (يحتاج إلى DATABASE_URL)')
 
   // تشغيل next build
   console.log('🏗️ بناء التطبيق...')

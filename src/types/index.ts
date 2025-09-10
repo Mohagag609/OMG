@@ -56,7 +56,6 @@ export interface Contract {
   start: Date | string
   totalPrice: number
   discountAmount: number
-  brokerName?: string | null
   brokerPercent: number
   brokerAmount: number
   commissionSafeId?: string | null
@@ -134,7 +133,8 @@ export interface Voucher {
   description: string
   payer?: string | null
   beneficiary?: string | null
-  linkedRef?: string | null
+  unitId?: string | null
+  contractId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
