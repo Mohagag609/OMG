@@ -12,12 +12,12 @@ try {
 
   // تشغيل prisma generate مع السكيما الصحيحة
   console.log('📦 توليد Prisma Client...')
-  const generateCmd = `PRISMA_SCHEMA_PATH=${schemaPath} npx prisma generate`
+  const generateCmd = `npx prisma generate --schema=${schemaPath}`
   execSync(generateCmd, { stdio: 'inherit' })
 
   // تشغيل prisma migrate deploy
   console.log('🔄 تطبيق migrations...')
-  const migrateCmd = `PRISMA_SCHEMA_PATH=${schemaPath} npx prisma migrate deploy`
+  const migrateCmd = `npx prisma migrate deploy --schema=${schemaPath}`
   execSync(migrateCmd, { stdio: 'inherit' })
 
   // تشغيل next build

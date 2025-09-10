@@ -20,8 +20,8 @@ async function setupDatabase() {
       // تطبيق Schema باستخدام الملف الصحيح
       const { execSync } = require('child_process')
       const migrateCmd = isSqlite 
-        ? 'PRISMA_SCHEMA_PATH=prisma/schema.sqlite.prisma npx prisma migrate deploy'
-        : 'PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma migrate deploy'
+        ? 'npx prisma migrate deploy --schema=prisma/schema.sqlite.prisma'
+        : 'npx prisma migrate deploy --schema=prisma/schema.postgres.prisma'
       
       execSync(migrateCmd, { stdio: 'inherit' })
 
@@ -52,8 +52,9 @@ async function setupDatabase() {
     await localPrisma.$disconnect()
 
     const { execSync } = require('child_process')
-    // استخدام schema.sqlite.prisma
-    execSync('PRISMA_SCHEMA_PATH=prisma/schema.sqlite.prisma npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+    // استخدام schema.sqlite.prisma مع DATABASE_URL
+    process.env.DATABASE_URL = "file:./dev.db"
+    execSync('npx prisma db push --schema=prisma/schema.sqlite.prisma --accept-data-loss', { stdio: 'inherit' })
 
     console.log('✅ تم إعداد قاعدة البيانات المحلية بنجاح!')
 
@@ -75,7 +76,7 @@ async function setupDatabase() {
 
       const { execSync } = require('child_process')
       // استخدام schema.postgres.prisma
-      execSync('PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+      execSync('npx prisma db push --schema=prisma/schema.postgres.prisma --accept-data-loss', { stdio: 'inherit' })
 
       console.log('✅ تم إعداد قاعدة البيانات السحابية بنجاح!')
 

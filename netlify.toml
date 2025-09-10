@@ -1,5 +1,5 @@
 [build]
-  command = "PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma generate && PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma migrate deploy && npm run build"
+  command = "npx prisma generate --schema=prisma/schema.postgres.prisma && npx prisma migrate deploy --schema=prisma/schema.postgres.prisma && npm run build"
   publish = ".next"
 
 [build.environment]
