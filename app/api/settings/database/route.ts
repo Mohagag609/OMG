@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { testConnection } from '../../../util/db'
 
 type DbType = 'sqlite'|'postgres-local'|'postgres-cloud'
 
@@ -16,6 +15,19 @@ function buildDatabaseUrl(dbType: DbType, form: any) {
 
 function isServerless() {
   return !!process.env.VERCEL || !!process.env.NETLIFY
+}
+
+async function testConnection(provider: 'sqlite'|'postgres', url: string) {
+  try {
+    if (provider === 'sqlite') {
+      return url.startsWith('file:')
+    } else {
+      const u = new URL(url)
+      return !!u.hostname && !!u.pathname.replace('/', '')
+    }
+  } catch {
+    return false
+  }
 }
 
 export async function GET() {
