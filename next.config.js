@@ -8,6 +8,9 @@ const nextConfig = {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken', 'sqlite3', 'pg']
   },
   webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('sqlite3', 'pg');
+    }
     // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {
       config.externals = config.externals.filter(external =>
