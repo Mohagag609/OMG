@@ -3,19 +3,22 @@ const { execSync } = require('child_process')
 console.log('🔧 إعداد البناء للإنتاج...')
 
 try {
-  // تأكد من أن Prisma schema يستخدم PostgreSQL
-  const fs = require('fs')
-  const schemaPath = 'prisma/schema.prisma'
-  const schema = fs.readFileSync(schemaPath, 'utf8')
+  // تحديد نوع قاعدة البيانات من متغيرات البيئة
+  const schemaPath = process.env.PRISMA_SCHEMA_PATH || 'prisma/schema.postgres.prisma'
+  const isSqlite = schemaPath.includes('sqlite')
   
-  if (!schema.includes('provider = "postgresql"')) {
-    console.log('❌ Prisma schema يجب أن يستخدم PostgreSQL للإنتاج')
-    process.exit(1)
-  }
+  console.log(`📊 استخدام قاعدة البيانات: ${isSqlite ? 'SQLite' : 'PostgreSQL'}`)
+  console.log(`📁 مسار السكيما: ${schemaPath}`)
 
-  // تشغيل prisma generate
+  // تشغيل prisma generate مع السكيما الصحيحة
   console.log('📦 توليد Prisma Client...')
-  execSync('npx prisma generate', { stdio: 'inherit' })
+  const generateCmd = `PRISMA_SCHEMA_PATH=${schemaPath} npx prisma generate`
+  execSync(generateCmd, { stdio: 'inherit' })
+
+  // تشغيل prisma migrate deploy
+  console.log('🔄 تطبيق migrations...')
+  const migrateCmd = `PRISMA_SCHEMA_PATH=${schemaPath} npx prisma migrate deploy`
+  execSync(migrateCmd, { stdio: 'inherit' })
 
   // تشغيل next build
   console.log('🏗️ بناء التطبيق...')
@@ -24,5 +27,6 @@ try {
   console.log('✅ تم البناء بنجاح!')
 } catch (error) {
   console.error('❌ فشل في البناء:', error.message)
+  console.log('💡 تأكد من إعداد متغيرات البيئة: DATABASE_URL و PRISMA_SCHEMA_PATH')
   process.exit(1)
 }

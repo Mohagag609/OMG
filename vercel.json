@@ -1,0 +1,12 @@
+{
+  "buildCommand": "PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma generate && PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma migrate deploy && npm run build",
+  "outputDirectory": ".next",
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "PRISMA_SCHEMA_PATH": "prisma/schema.postgres.prisma"
+  }
+}

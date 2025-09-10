@@ -90,6 +90,7 @@ model Broker {
   updatedAt DateTime    @updatedAt
   deletedAt DateTime?
 
+  contracts  Contract[]
   brokerDues BrokerDue[]
 
   @@map("brokers")
@@ -123,6 +124,7 @@ model Contract {
   broker          Broker?  @relation(fields: [brokerId], references: [id], onDelete: SetNull)
   commissionSafe  Safe?    @relation("CommissionSafe", fields: [commissionSafeId], references: [id], onDelete: SetNull)
   downPaymentSafe Safe?    @relation("DownPaymentSafe", fields: [downPaymentSafeId], references: [id], onDelete: SetNull)
+  vouchers        Voucher[]
 
   @@map("contracts")
 }

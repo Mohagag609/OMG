@@ -65,14 +65,17 @@ export async function POST(req: Request) {
     ].join('\n')
     fs.writeFileSync(envPath, envContent, { encoding: 'utf-8' })
 
-    const migrateCmd = provider === 'sqlite'
-      ? 'PRISMA_SCHEMA_PATH=prisma/schema.sqlite.prisma npx prisma migrate deploy'
-      : 'PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma migrate deploy'
+    const dbPushCmd = provider === 'sqlite'
+      ? `npx prisma db push --schema=prisma/schema.sqlite.prisma --accept-data-loss`
+      : `npx prisma db push --schema=prisma/schema.postgres.prisma --accept-data-loss`
     const generateCmd = provider === 'sqlite'
-      ? 'PRISMA_SCHEMA_PATH=prisma/schema.sqlite.prisma npx prisma generate'
-      : 'PRISMA_SCHEMA_PATH=prisma/schema.postgres.prisma npx prisma generate'
+      ? 'npx prisma generate --schema=prisma/schema.sqlite.prisma'
+      : 'npx prisma generate --schema=prisma/schema.postgres.prisma'
 
-    execSync(migrateCmd, { stdio: 'inherit' })
+    // تعيين متغيرات البيئة قبل التشغيل
+    process.env.DATABASE_URL = dbUrl
+
+    execSync(dbPushCmd, { stdio: 'inherit' })
     execSync(generateCmd, { stdio: 'inherit' })
 
     // اختياري: خزّن نسخة JSON من الإعدادات في جدول Settings/KeyVal
