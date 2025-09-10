@@ -42,7 +42,7 @@
     "backup:wipe": "ts-node --project tsconfig.backup.json scripts/backup/wipe.ts soft",
     "test:connections": "node scripts/test-connections.js",
     "test:connections:quick": "node scripts/test-connections.js quick",
-    "postinstall": "npx prisma generate --schema=prisma/schema.sqlite.prisma && node scripts/setup-db.js",
+    "postinstall": "node scripts/postinstall.js",
     "deploy:netlify": "npm run build:cloud && netlify deploy --prod",
     "deploy:vercel": "npm run build:cloud && vercel --prod",
     "deploy:render": "npm run build:cloud",
