@@ -53,35 +53,51 @@ export async function POST(req: Request) {
     }
 
     // على سيرفر عادي أو تطوير محلي: احفظ .env.local وشغّل migrate/generate
-    const fs = await import('node:fs')
-    const path = await import('node:path')
-    const { execSync } = await import('node:child_process')
+    try {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const { execSync } = await import('node:child_process')
 
-    const envPath = path.join(process.cwd(), '.env.local')
-    const envContent = [
-      `DATABASE_URL="${dbUrl}"`,
-      `PRISMA_SCHEMA_PATH="${schemaPath}"`,
-      `SETUP_COMPLETE="true"`
-    ].join('\n')
-    fs.writeFileSync(envPath, envContent, { encoding: 'utf-8' })
+      const envPath = path.join(process.cwd(), '.env.local')
+      const envContent = [
+        `DATABASE_URL="${dbUrl}"`,
+        `PRISMA_SCHEMA_PATH="${schemaPath}"`,
+        `SETUP_COMPLETE="true"`
+      ].join('\n')
+      
+      // محاولة كتابة .env.local
+      fs.writeFileSync(envPath, envContent, { encoding: 'utf-8' })
 
-    const dbPushCmd = provider === 'sqlite'
-      ? `npx prisma db push --schema=prisma/schema.sqlite.prisma --accept-data-loss`
-      : `npx prisma db push --schema=prisma/schema.postgres.prisma --accept-data-loss`
-    const generateCmd = provider === 'sqlite'
-      ? 'npx prisma generate --schema=prisma/schema.sqlite.prisma'
-      : 'npx prisma generate --schema=prisma/schema.postgres.prisma'
+      const dbPushCmd = provider === 'sqlite'
+        ? `npx prisma db push --schema=prisma/schema.sqlite.prisma --accept-data-loss`
+        : `npx prisma db push --schema=prisma/schema.postgres.prisma --accept-data-loss`
+      const generateCmd = provider === 'sqlite'
+        ? 'npx prisma generate --schema=prisma/schema.sqlite.prisma'
+        : 'npx prisma generate --schema=prisma/schema.postgres.prisma'
 
-    // تعيين متغيرات البيئة قبل التشغيل
-    process.env.DATABASE_URL = dbUrl
+      // تعيين متغيرات البيئة قبل التشغيل
+      process.env.DATABASE_URL = dbUrl
 
-    execSync(dbPushCmd, { stdio: 'inherit' })
-    execSync(generateCmd, { stdio: 'inherit' })
+      execSync(dbPushCmd, { stdio: 'inherit' })
+      execSync(generateCmd, { stdio: 'inherit' })
 
-    // اختياري: خزّن نسخة JSON من الإعدادات في جدول Settings/KeyVal
-    // سيبها TODO هنا لك إن احتجت
-
-    return NextResponse.json({ ok: true, message: 'تم الحفظ والتجهيز بنجاح.' })
+      return NextResponse.json({ ok: true, message: 'تم الحفظ والتجهيز بنجاح.' })
+    } catch (writeError: any) {
+      // إذا فشلت الكتابة (مثل في البيئات السحابية)، ارجع envToSet
+      if (writeError.code === 'EROFS' || writeError.message?.includes('read-only')) {
+        return NextResponse.json({
+          ok: true,
+          nextSteps: 'لوحة المتغيرات ثم إعادة النشر',
+          envToSet: {
+            DATABASE_URL: dbUrl,
+            PRISMA_SCHEMA_PATH: schemaPath,
+            SETUP_COMPLETE: 'true'
+          },
+          migrateHint: 'شغّل prisma migrate deploy في مرحلة البناء'
+        })
+      }
+      throw writeError
+    }
   } catch (e:any) {
     return NextResponse.json({ ok: false, error: e.message || 'unexpected error' }, { status: 500 })
   }
