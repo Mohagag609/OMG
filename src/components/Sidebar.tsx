@@ -84,6 +84,12 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       icon: '💾',
       path: '/backup',
       description: 'إدارة النسخ الاحتياطية'
+    },
+    {
+      title: 'الإعدادات',
+      icon: '⚙️',
+      path: '/settings',
+      description: 'إعدادات النظام والتطبيق'
     }
   ]
 
