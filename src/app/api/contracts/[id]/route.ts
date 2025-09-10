@@ -89,10 +89,10 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount } = body
+    const { unitId, customerId, start, totalPrice, discountAmount, commissionSafeId, brokerAmount } = body
 
     // Validate contract data
-    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount })
+    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, commissionSafeId, brokerAmount })
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors.join(', ') },
@@ -145,7 +145,6 @@ export async function PUT(
         start: new Date(start),
         totalPrice,
         discountAmount,
-        brokerName,
         commissionSafeId,
         brokerAmount
       },

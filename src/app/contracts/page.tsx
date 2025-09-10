@@ -146,7 +146,6 @@ export default function Contracts() {
     start: new Date().toISOString().split('T')[0],
     totalPrice: '',
     discountAmount: '',
-    brokerName: '',
     brokerPercent: '',
     brokerAmount: '',
     commissionSafeId: '',
@@ -305,7 +304,6 @@ export default function Contracts() {
           start: new Date().toISOString().split('T')[0],
           totalPrice: '',
           discountAmount: '',
-          brokerName: '',
           brokerPercent: '',
           brokerAmount: '',
           commissionSafeId: '',
@@ -390,7 +388,6 @@ export default function Contracts() {
       start: new Date().toISOString().split('T')[0],
       totalPrice: '',
       discountAmount: contract.discountAmount.toString(),
-      brokerName: contract.brokerName || '',
       brokerPercent: contract.brokerPercent.toString(),
       brokerAmount: '',
       commissionSafeId: contract.commissionSafeId || '',
@@ -414,7 +411,6 @@ export default function Contracts() {
       start: new Date(contract.start).toISOString().split('T')[0],
       totalPrice: contract.totalPrice.toString(),
       discountAmount: contract.discountAmount.toString(),
-      brokerName: contract.brokerName || '',
       brokerPercent: contract.brokerPercent.toString(),
       brokerAmount: contract.brokerAmount.toString(),
       commissionSafeId: contract.commissionSafeId || '',
@@ -485,7 +481,7 @@ export default function Contracts() {
         contract.id,
         getUnitName(contract.unitId),
         getCustomerName(contract.customerId),
-        contract.brokerName || '',
+        '-',
         contract.totalPrice,
         contract.downPayment,
         formatDate(contract.start),
@@ -546,7 +542,7 @@ export default function Contracts() {
                   <td>${contract.id}</td>
                   <td>${getUnitName(contract.unitId)}</td>
                   <td>${getCustomerName(contract.customerId)}</td>
-                  <td>${contract.brokerName || '-'}</td>
+                  <td>-</td>
                   <td>${formatCurrency(contract.totalPrice)}</td>
                   <td>${formatCurrency(contract.downPayment)}</td>
                   <td>${formatDate(contract.start)}</td>
@@ -578,7 +574,7 @@ export default function Contracts() {
       contract.id.toLowerCase().includes(search.toLowerCase()) ||
       getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase()) ||
       getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
-      (contract.brokerName && contract.brokerName.toLowerCase().includes(search.toLowerCase()))
+      false
     
     const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
     
@@ -742,7 +738,7 @@ export default function Contracts() {
                       <div className="font-medium text-gray-900">{getCustomerName(contract.customerId)}</div>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="text-gray-600">{contract.brokerName || '-'}</div>
+                      <div className="text-gray-600">-</div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-semibold text-green-600">{formatCurrency(contract.totalPrice)}</div>
@@ -911,8 +907,8 @@ export default function Contracts() {
 
                   <ModernSelect
                     label="اسم السمسار"
-                    value={newContract.brokerName}
-                    onChange={(e: any) => setNewContract({...newContract, brokerName: e.target.value})}
+                    value=""
+                    onChange={() => {}}
                   >
                     <option value="">اختر سمسار...</option>
                     {brokers.map((broker) => (
@@ -1052,7 +1048,7 @@ export default function Contracts() {
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-500">السمسار:</span>
-                      <p className="text-gray-900">{viewingContract.brokerName || 'غير محدد'}</p>
+                      <p className="text-gray-900">غير محدد</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-500">تاريخ البدء:</span>

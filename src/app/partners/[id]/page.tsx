@@ -171,7 +171,7 @@ export default function PartnerDetails() {
     vouchers.forEach(voucher => {
       // Find unit partner by voucher's linked reference or unit relation
       const unitPartner = unitPartners.find(up => 
-        up.unitId === voucher.linkedRef || 
+        up.unitId === voucher.unitId || 
         (voucher.unit && up.unitId === voucher.unit.id)
       )
       if (unitPartner) {

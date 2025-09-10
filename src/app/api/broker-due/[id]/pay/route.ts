@@ -104,7 +104,8 @@ export async function POST(
           safeId: safeId,
           description: `دفع عمولة سمسار ${brokerDue.broker.name}`,
           beneficiary: brokerDue.broker.name,
-          linkedRef: brokerDue.id
+          unitId: null,
+          contractId: null
         }
       })
 

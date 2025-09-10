@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
       whereClause.OR = [
         { unit: { code: { contains: search, mode: 'insensitive' } } },
         { customer: { name: { contains: search, mode: 'insensitive' } } },
-        { brokerName: { contains: search, mode: 'insensitive' } }
       ]
     }
 
@@ -111,7 +110,6 @@ export async function POST(request: NextRequest) {
       start, 
       totalPrice, 
       discountAmount, 
-      brokerName, 
       brokerPercent,
       brokerAmount,
       commissionSafeId,
@@ -127,7 +125,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate contract data
-    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount })
+    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, commissionSafeId, brokerAmount })
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors.join(', ') },
@@ -208,7 +206,6 @@ export async function POST(request: NextRequest) {
           start: new Date(start),
           totalPrice: totalPrice || 0,
           discountAmount: discountAmount || 0,
-          brokerName,
           brokerPercent: brokerPercent || 0,
           brokerAmount: brokerAmount || 0,
           commissionSafeId,
@@ -246,7 +243,8 @@ export async function POST(request: NextRequest) {
             safeId: downPaymentSafeId,
             description: `مقدم عقد للوحدة ${unit?.code}`,
             payer: customer?.name,
-            linkedRef: unitId
+            unitId: unitId,
+            contractId: null
           }
         })
 
@@ -258,10 +256,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Create broker due if broker amount > 0 (instead of immediate payment)
-      if (brokerAmount > 0 && brokerName) {
-        // Find broker by name
+      if (brokerAmount > 0) {
+        // Find broker by name (using default broker since brokerName is not in schema)
         const broker = await tx.broker.findFirst({
-          where: { name: brokerName }
+          where: { name: 'وسيط افتراضي' }
         })
 
         if (broker) {

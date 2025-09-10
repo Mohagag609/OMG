@@ -88,7 +88,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { type, date, amount, safeId, description, payer, beneficiary, linkedRef } = body
+    const { type, date, amount, safeId, description, payer, beneficiary, unitId, contractId } = body
 
     // Validation
     if (!type || !date || !amount || !safeId || !description) {
@@ -137,14 +137,27 @@ export async function PUT(
     }
 
     // Check if linked unit exists (if provided)
-    if (linkedRef) {
+    if (unitId) {
       const unit = await prisma.unit.findUnique({
-        where: { id: linkedRef }
+        where: { id: unitId }
       })
 
       if (!unit) {
         return NextResponse.json(
           { success: false, error: 'الوحدة المرتبطة غير موجودة' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (contractId) {
+      const contract = await prisma.contract.findUnique({
+        where: { id: contractId }
+      })
+
+      if (!contract) {
+        return NextResponse.json(
+          { success: false, error: 'العقد المرتبط غير موجود' },
           { status: 400 }
         )
       }
@@ -161,7 +174,8 @@ export async function PUT(
         description,
         payer,
         beneficiary,
-        linkedRef
+        unitId,
+        contractId
       },
       include: {
         safe: true,
