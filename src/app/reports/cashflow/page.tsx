@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useNotifications } from '../../components/NotificationSystem'
+import { useNotifications } from '../../../components/NotificationSystem'
 
 // Modern Card Component
 const ModernCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
