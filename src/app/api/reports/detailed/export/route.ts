@@ -168,7 +168,6 @@ export async function GET(request: NextRequest) {
       worksheet.addRow({
         ...row,
         installmentDate: new Date(row.installmentDate).toLocaleDateString('ar-EG'),
-        dueDate: new Date(row.dueDate).toLocaleDateString('ar-EG'),
         installmentAmount: row.installmentAmount
       })
     })
