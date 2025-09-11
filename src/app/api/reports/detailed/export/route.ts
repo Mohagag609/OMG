@@ -107,7 +107,10 @@ export async function GET(request: NextRequest) {
       const unit = installment.unit
       const unitPartners = unit.unitPartners
       const contract = unit.contracts[0] || {}
-      const customer = contract.customer || null
+      // جلب بيانات العميل من customerId
+      const customer = contract.customerId ? 
+        await prisma.customer.findUnique({ where: { id: contract.customerId } }) : 
+        null
 
       // دمج اسم الوحدة ورقم الدور ورقم المبنى في عمود واحد
       const unitFullName = `${unit.name || unit.code} - الدور ${unit.floor || 'غير محدد'} - المبنى ${unit.building || 'غير محدد'}`
