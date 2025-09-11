@@ -46,7 +46,7 @@
     "deploy:digitalocean": "npm run build:cloud"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@prisma/client": "^6.16.0",
     "@react-pdf/renderer": "^4.3.0",
     "@sparticuz/chromium": "^138.0.2",
     "@tanstack/react-table": "^8.21.3",
@@ -83,7 +83,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "prisma": "^6.15.0",
+    "prisma": "^6.16.0",
     "ts-node": "^10.9.0"
   }
 }
