@@ -58,20 +58,29 @@ export async function GET(request: NextRequest) {
         const unit = unitPartner.unit
         const percentage = unitPartner.percentage
 
-        // حساب الأقساط الشهرية
+        // حساب الأقساط المدفوعة فقط
         let monthlyInstallment = 0
         let annualInstallment = 0
 
-        for (const contract of unit.contracts) {
-          if (contract.installmentType === 'شهري' && contract.installmentCount > 0) {
-            // حساب القسط الشهري
-            const remainingAmount = contract.totalPrice - contract.discountAmount - contract.downPayment
-            monthlyInstallment = remainingAmount / contract.installmentCount
-            
-            // حساب القسط السنوي الإضافي
-            if (contract.extraAnnual > 0) {
-              annualInstallment = contract.annualPaymentValue || 0
-            }
+        // جلب الأقساط المدفوعة لهذه الوحدة
+        const paidInstallments = unit.installments.filter(installment => 
+          installment.status === 'مدفوع'
+        )
+
+        if (paidInstallments.length > 0) {
+          // حساب متوسط القسط المدفوع
+          const totalPaidAmount = paidInstallments.reduce((sum, installment) => sum + installment.amount, 0)
+          const averageInstallment = totalPaidAmount / paidInstallments.length
+          
+          // تحديد نوع القسط بناءً على الملاحظات
+          const monthlyCount = paidInstallments.filter(i => 
+            i.notes && i.notes.includes('شهري')
+          ).length
+          
+          if (monthlyCount > 0) {
+            monthlyInstallment = averageInstallment
+          } else {
+            annualInstallment = averageInstallment
           }
         }
 
