@@ -80,6 +80,12 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       description: 'التقارير والإحصائيات'
     },
     {
+      title: 'تدفقات الشركاء',
+      icon: '💰',
+      path: '/reports/cashflow',
+      description: 'تقرير التدفقات النقدية للشركاء'
+    },
+    {
       title: 'النسخ الاحتياطية',
       icon: '🔄',
       path: '/backup-system',
