@@ -120,9 +120,11 @@ export async function GET(request: NextRequest) {
         // إضافة سطر لكل شريك
         for (const unitPartner of unitPartners) {
           // جلب مجموعة الشركاء
-          const partnerGroup = unitPartner.partner.partnerGroupId ? 
-            await prisma.partnerGroup.findUnique({ where: { id: unitPartner.partner.partnerGroupId } }) : 
-            null
+          const partnerGroupRelation = await prisma.partnerGroupPartner.findFirst({
+            where: { partnerId: unitPartner.partner.id },
+            include: { partnerGroup: true }
+          })
+          const partnerGroup = partnerGroupRelation?.partnerGroup || null
           
           reportData.push({
             unitFullName: unitFullName,
