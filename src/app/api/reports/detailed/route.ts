@@ -125,7 +125,12 @@ export async function GET(request: NextRequest) {
     const paidAmount = filteredInstallments.filter(i => i.status === 'مدفوع').reduce((sum, i) => sum + i.amount, 0)
 
     // تجميع حسب الشريك
-    const partnerStats = {}
+    const partnerStats: Record<string, {
+      totalAmount: number
+      paidAmount: number
+      installments: number
+    }> = {}
+    
     reportData.forEach(row => {
       if (row.partnerName !== 'لا يوجد شريك') {
         if (!partnerStats[row.partnerName]) {

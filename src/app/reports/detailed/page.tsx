@@ -94,11 +94,11 @@ export default function DetailedReportPage() {
         setReportData(data.data.report)
         setStats(data.data.stats)
       } else {
-        addNotification('خطأ في جلب التقرير', 'error')
+        addNotification({ title: 'خطأ', message: 'خطأ في جلب التقرير', type: 'error' })
       }
     } catch (error) {
       console.error('Error fetching report:', error)
-      addNotification('خطأ في جلب التقرير', 'error')
+      addNotification({ title: 'خطأ', message: 'خطأ في جلب التقرير', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -124,10 +124,10 @@ export default function DetailedReportPage() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-      addNotification('تم تصدير التقرير بنجاح', 'success')
+      addNotification({ title: 'نجح', message: 'تم تصدير التقرير بنجاح', type: 'success' })
     } catch (error) {
       console.error('Error exporting report:', error)
-      addNotification('خطأ في تصدير التقرير', 'error')
+      addNotification({ title: 'خطأ', message: 'خطأ في تصدير التقرير', type: 'error' })
     }
   }
 
