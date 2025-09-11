@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react'
 import { useNotifications } from '../../../components/NotificationSystem'
 
 interface DetailedReportData {
-  unitName: string
-  partnerName: string
-  percentage: number
+  unitFullName: string
   unitType: string
-  paymentType: string
+  customerName: string
+  partnerName: string
+  partnerGroupName: string
   installmentDate: string
   installmentAmount: number
+  paidAmount: number
+  remainingAmount: number
   isPaid: boolean
-  dueDate: string
-  totalInstallments: number
   status: string
   notes?: string
 }
@@ -264,45 +264,37 @@ export default function DetailedReportPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم الوحدة</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم الشريك</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسبة</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم الوحدة - الدور - المبنى</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع الوحدة</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع الدفعة</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم العميل</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم الشريك</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مجموعة الشركاء</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ القسط</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">قيمة القسط</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المدفوع</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مستحق الدفع</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد الأقساط</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المتبقي</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.map((row, index) => (
                   <tr key={index} className={row.isPaid ? 'bg-green-50' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unitName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.partnerName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.percentage}%</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unitFullName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unitType}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.paymentType}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.customerName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.partnerName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.partnerGroupName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(row.installmentDate).toLocaleDateString('ar-EG')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {row.installmentAmount.toLocaleString()} ج.م
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        row.isPaid 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {row.isPaid ? 'نعم' : 'لا'}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {row.paidAmount.toLocaleString()} ج.م
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(row.dueDate).toLocaleDateString('ar-EG')}
+                      {row.remainingAmount.toLocaleString()} ج.م
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.totalInstallments}</td>
                   </tr>
                 ))}
               </tbody>

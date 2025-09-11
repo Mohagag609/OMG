@@ -44,17 +44,16 @@ async function generateDetailedInstallmentReport() {
     console.log('')
 
     // رؤوس الأعمدة
-    console.log('اسم الوحدة'.padEnd(15) + 
+    console.log('اسم الوحدة - الدور - المبنى'.padEnd(35) + 
+                'نوع الوحدة'.padEnd(15) + 
+                'اسم العميل'.padEnd(20) + 
                 'اسم الشريك'.padEnd(20) + 
-                'النسبة'.padEnd(8) + 
-                'نوع الوحدة'.padEnd(12) + 
-                'نوع الدفعة'.padEnd(12) + 
-                'تاريخ القسط'.padEnd(12) + 
-                'قيمة القسط'.padEnd(12) + 
-                'المدفوع'.padEnd(8) + 
-                'مستحق الدفع'.padEnd(12) + 
-                'عدد الأقساط'.padEnd(12))
-    console.log('-'.repeat(120))
+                'مجموعة الشركاء'.padEnd(20) + 
+                'تاريخ القسط'.padEnd(15) + 
+                'قيمة القسط'.padEnd(15) + 
+                'المدفوع'.padEnd(15) + 
+                'المتبقي'.padEnd(15))
+    console.log('-'.repeat(150))
 
     // تجميع البيانات حسب الوحدة والشريك
     const reportData = []
@@ -62,37 +61,49 @@ async function generateDetailedInstallmentReport() {
     for (const installment of installments) {
       const unit = installment.unit
       const unitPartners = unit.unitPartners
+      const contract = unit.contracts[0] || {}
+      const customer = contract.customer || null
+
+      // دمج اسم الوحدة ورقم الدور ورقم المبنى في عمود واحد
+      const unitFullName = `${unit.name || unit.code} - الدور ${unit.floor || 'غير محدد'} - المبنى ${unit.building || 'غير محدد'}`
+
+      // حساب المبلغ المدفوع والمتبقي
+      const installmentAmount = installment.amount
+      const isPaid = installment.status === 'مدفوع'
+      const paidAmount = isPaid ? installmentAmount : 0
+      const remainingAmount = isPaid ? 0 : installmentAmount
 
       // إذا لم تكن هناك شركاء، أضف سطر بدون شريك
       if (unitPartners.length === 0) {
-        const contract = unit.contracts[0] || {}
         reportData.push({
-          unitName: unit.name || unit.code,
-          partnerName: 'لا يوجد شريك',
-          percentage: 0,
+          unitFullName: unitFullName,
           unitType: unit.building || 'غير محدد',
-          paymentType: contract.installmentType || 'غير محدد',
+          customerName: customer?.name || 'لا يوجد عميل',
+          partnerName: 'لا يوجد شريك',
+          partnerGroupName: 'لا يوجد مجموعة',
           installmentDate: installment.dueDate,
-          installmentAmount: installment.amount,
-          isPaid: installment.status === 'مدفوع',
-          dueDate: installment.dueDate,
-          totalInstallments: contract.installmentCount || 0
+          installmentAmount: installmentAmount,
+          paidAmount: paidAmount,
+          remainingAmount: remainingAmount,
+          isPaid: isPaid
         })
       } else {
         // إضافة سطر لكل شريك
         for (const unitPartner of unitPartners) {
-          const contract = unit.contracts[0] || {}
+          // جلب مجموعة الشركاء
+          const partnerGroup = unitPartner.partner.partnerGroup || null
+          
           reportData.push({
-            unitName: unit.name || unit.code,
-            partnerName: unitPartner.partner.name,
-            percentage: unitPartner.percentage,
+            unitFullName: unitFullName,
             unitType: unit.building || 'غير محدد',
-            paymentType: contract.installmentType || 'غير محدد',
+            customerName: customer?.name || 'لا يوجد عميل',
+            partnerName: unitPartner.partner.name,
+            partnerGroupName: partnerGroup?.name || 'لا يوجد مجموعة',
             installmentDate: installment.dueDate,
-            installmentAmount: installment.amount,
-            isPaid: installment.status === 'مدفوع',
-            dueDate: installment.dueDate,
-            totalInstallments: contract.installmentCount || 0
+            installmentAmount: installmentAmount,
+            paidAmount: paidAmount,
+            remainingAmount: remainingAmount,
+            isPaid: isPaid
           })
         }
       }
@@ -100,20 +111,18 @@ async function generateDetailedInstallmentReport() {
 
     // طباعة البيانات
     reportData.forEach(row => {
-      const unitName = (row.unitName || '').substring(0, 14).padEnd(15)
+      const unitFullName = (row.unitFullName || '').substring(0, 34).padEnd(35)
+      const unitType = (row.unitType || '').substring(0, 14).padEnd(15)
+      const customerName = (row.customerName || '').substring(0, 19).padEnd(20)
       const partnerName = (row.partnerName || '').substring(0, 19).padEnd(20)
-      const percentage = `${row.percentage}%`.padEnd(8)
-      const unitType = (row.unitType || '').substring(0, 11).padEnd(12)
-      const paymentType = (row.paymentType || '').substring(0, 11).padEnd(12)
-      const installmentDate = row.installmentDate.toLocaleDateString('ar-EG').padEnd(12)
-      const installmentAmount = `${row.installmentAmount.toLocaleString()} ج.م`.padEnd(12)
-      const isPaid = row.isPaid ? 'نعم' : 'لا'
-      const dueDate = row.dueDate.toLocaleDateString('ar-EG').padEnd(12)
-      const totalInstallments = row.totalInstallments.toString().padEnd(12)
+      const partnerGroupName = (row.partnerGroupName || '').substring(0, 19).padEnd(20)
+      const installmentDate = row.installmentDate.toLocaleDateString('ar-EG').padEnd(15)
+      const installmentAmount = `${row.installmentAmount.toLocaleString()} ج.م`.padEnd(15)
+      const paidAmount = `${row.paidAmount.toLocaleString()} ج.م`.padEnd(15)
+      const remainingAmount = `${row.remainingAmount.toLocaleString()} ج.م`.padEnd(15)
 
-      console.log(unitName + partnerName + percentage + unitType + paymentType + 
-                  installmentDate + installmentAmount + isPaid.padEnd(8) + 
-                  dueDate + totalInstallments)
+      console.log(unitFullName + unitType + customerName + partnerName + partnerGroupName + 
+                  installmentDate + installmentAmount + paidAmount + remainingAmount)
     })
 
     console.log('')

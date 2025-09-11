@@ -79,16 +79,15 @@ export async function GET(request: NextRequest) {
 
     // إعداد الأعمدة
     worksheet.columns = [
-      { header: 'اسم الوحدة', key: 'unitName', width: 20 },
-      { header: 'اسم الشريك', key: 'partnerName', width: 20 },
-      { header: 'النسبة', key: 'percentage', width: 10 },
+      { header: 'اسم الوحدة - الدور - المبنى', key: 'unitFullName', width: 30 },
       { header: 'نوع الوحدة', key: 'unitType', width: 15 },
-      { header: 'نوع الدفعة', key: 'paymentType', width: 15 },
+      { header: 'اسم العميل', key: 'customerName', width: 20 },
+      { header: 'اسم الشريك', key: 'partnerName', width: 20 },
+      { header: 'مجموعة الشركاء', key: 'partnerGroupName', width: 20 },
       { header: 'تاريخ القسط', key: 'installmentDate', width: 15 },
       { header: 'قيمة القسط', key: 'installmentAmount', width: 15 },
-      { header: 'المدفوع', key: 'isPaid', width: 10 },
-      { header: 'مستحق الدفع', key: 'dueDate', width: 15 },
-      { header: 'عدد الأقساط', key: 'totalInstallments', width: 12 },
+      { header: 'المدفوع', key: 'paidAmount', width: 15 },
+      { header: 'المتبقي', key: 'remainingAmount', width: 15 },
       { header: 'الحالة', key: 'status', width: 12 },
       { header: 'ملاحظات', key: 'notes', width: 20 }
     ]
@@ -108,37 +107,48 @@ export async function GET(request: NextRequest) {
       const unit = installment.unit
       const unitPartners = unit.unitPartners
       const contract = unit.contracts[0] || {}
+      const customer = contract.customer || null
+
+      // دمج اسم الوحدة ورقم الدور ورقم المبنى في عمود واحد
+      const unitFullName = `${unit.name || unit.code} - الدور ${unit.floor || 'غير محدد'} - المبنى ${unit.building || 'غير محدد'}`
+
+      // حساب المبلغ المدفوع والمتبقي
+      const installmentAmount = installment.amount
+      const isPaid = installment.status === 'مدفوع'
+      const paidAmount = isPaid ? installmentAmount : 0
+      const remainingAmount = isPaid ? 0 : installmentAmount
 
       // إذا لم تكن هناك شركاء، أضف سطر بدون شريك
       if (unitPartners.length === 0) {
         reportData.push({
-          unitName: unit.name || unit.code,
-          partnerName: 'لا يوجد شريك',
-          percentage: 0,
+          unitFullName: unitFullName,
           unitType: unit.building || 'غير محدد',
-          paymentType: contract.installmentType || 'غير محدد',
+          customerName: customer?.name || 'لا يوجد عميل',
+          partnerName: 'لا يوجد شريك',
+          partnerGroupName: 'لا يوجد مجموعة',
           installmentDate: installment.dueDate,
-          installmentAmount: installment.amount,
-          isPaid: installment.status === 'مدفوع' ? 'نعم' : 'لا',
-          dueDate: installment.dueDate,
-          totalInstallments: contract.installmentCount || 0,
+          installmentAmount: installmentAmount,
+          paidAmount: paidAmount,
+          remainingAmount: remainingAmount,
           status: installment.status,
           notes: installment.notes || ''
         })
       } else {
         // إضافة سطر لكل شريك
         for (const unitPartner of unitPartners) {
+          // جلب مجموعة الشركاء
+          const partnerGroup = unitPartner.partner.partnerGroup || null
+          
           reportData.push({
-            unitName: unit.name || unit.code,
-            partnerName: unitPartner.partner.name,
-            percentage: unitPartner.percentage,
+            unitFullName: unitFullName,
             unitType: unit.building || 'غير محدد',
-            paymentType: contract.installmentType || 'غير محدد',
+            customerName: customer?.name || 'لا يوجد عميل',
+            partnerName: unitPartner.partner.name,
+            partnerGroupName: partnerGroup?.name || 'لا يوجد مجموعة',
             installmentDate: installment.dueDate,
-            installmentAmount: installment.amount,
-            isPaid: installment.status === 'مدفوع' ? 'نعم' : 'لا',
-            dueDate: installment.dueDate,
-            totalInstallments: contract.installmentCount || 0,
+            installmentAmount: installmentAmount,
+            paidAmount: paidAmount,
+            remainingAmount: remainingAmount,
             status: installment.status,
             notes: installment.notes || ''
           })
