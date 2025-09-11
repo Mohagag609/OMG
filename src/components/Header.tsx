@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SidebarToggle from './SidebarToggle'
+import NavigationButtons from './NavigationButtons'
 
 interface HeaderProps {
   title: string
@@ -26,12 +28,7 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
           {/* Left side - Menu button and title */}
           <div className="flex items-center space-x-4 space-x-reverse">
             {/* Menu Toggle Button */}
-            <button
-              onClick={onMenuToggle}
-              className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <span className="text-gray-600 text-lg">☰</span>
-            </button>
+            <SidebarToggle onToggle={onMenuToggle} />
             
             {/* Title */}
             <div className="flex items-center space-x-4 space-x-reverse">
@@ -47,16 +44,25 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
 
           {/* Right side - Actions and user menu */}
           <div className="flex items-center space-x-3 space-x-reverse">
+            {/* Navigation Buttons - Only show on non-dashboard pages */}
+            {title !== 'لوحة التحكم' && (
+              <NavigationButtons />
+            )}
+            
+            {/* System Tab */}
+            <div className="hidden md:flex items-center">
+              <button
+                onClick={() => router.push('/system')}
+                className="flex items-center space-x-2 space-x-reverse px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 hover:scale-105 shadow-lg"
+                title="إدارة النظام"
+              >
+                <span className="text-lg">⚙️</span>
+                <span className="font-medium">النظام</span>
+              </button>
+            </div>
+            
             {/* Quick Actions */}
             <div className="hidden md:flex items-center space-x-2 space-x-reverse">
-              <button
-                onClick={() => router.push('/')}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
-                title="العودة للرئيسية"
-              >
-                <span className="text-gray-600">🏠</span>
-              </button>
-              
               <button
                 onClick={() => window.location.reload()}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"

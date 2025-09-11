@@ -3,7 +3,7 @@
 export interface Customer {
   id: string
   name: string
-  phone: string
+  phone?: string | null
   nationalId?: string | null
   address?: string | null
   status: string
@@ -119,7 +119,7 @@ export interface Transfer {
   fromSafeId: string
   toSafeId: string
   amount: number
-  description?: string
+  description?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
@@ -148,6 +148,8 @@ export interface Broker {
   name: string
   phone?: string | null
   notes?: string | null
+  commissionRate?: number
+  status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null

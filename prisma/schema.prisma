@@ -10,11 +10,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// إعدادات إضافية للعمل مع قواعد البيانات المتعددة
+// Additional settings for working with multiple databases
+
 // Customers - مطابق لـ golden-dataset.json
 model Customer {
   id         String  @id @default(cuid())
   name       String
-  phone      String  @unique
+  phone      String? @unique
   nationalId String? @unique
   address    String?
   status     String  @default("نشط")
@@ -322,7 +325,7 @@ model User {
   password  String
   email     String?  @unique
   fullName  String?
-  role      String   @default("admin")
+  role      String   @default("user")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

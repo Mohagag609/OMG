@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Safe, Transfer } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
+import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -71,6 +74,7 @@ export default function Treasury() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
   const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newSafe, setNewSafe] = useState({
     name: '',
     balance: ''
@@ -88,8 +92,17 @@ export default function Treasury() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle shortcuts when not in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
           case 'n':
             e.preventDefault()
             setShowAddSafeModal(true)
@@ -110,7 +123,7 @@ export default function Treasury() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [sidebarOpen])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -409,40 +422,44 @@ export default function Treasury() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">💰</span>
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">💰</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">إدارة الخزينة</h1>
+                  <p className="text-gray-600">نظام متطور لإدارة الخزائن والمعاملات</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة الخزينة</h1>
-                <p className="text-gray-600">نظام متطور لإدارة الخزائن والمعاملات</p>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <ModernButton onClick={() => setShowAddSafeModal(true)}>
+                  <span className="mr-2">➕</span>
+                  إضافة خزنة جديدة
+                  <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
+                </ModernButton>
+                <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
+                  <span className="mr-2">🔄</span>
+                  تحويل بين الخزائن
+                  <span className="mr-2 text-xs opacity-70">Ctrl+T</span>
+                </ModernButton>
+                <NavigationButtons />
               </div>
-            </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <ModernButton onClick={() => setShowAddSafeModal(true)}>
-                <span className="mr-2">➕</span>
-                إضافة خزنة جديدة
-                <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-              </ModernButton>
-              <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
-                <span className="mr-2">🔄</span>
-                تحويل بين الخزائن
-                <span className="mr-2 text-xs opacity-70">Ctrl+T</span>
-              </ModernButton>
-              <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                العودة للرئيسية
-              </ModernButton>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <ModernCard className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
@@ -492,29 +509,43 @@ export default function Treasury() {
             <h2 className="text-xl font-bold text-gray-900">قائمة الخزائن</h2>
             <div className="flex items-center space-x-2 space-x-reverse">
               <span className="text-sm text-gray-500">آخر تحديث:</span>
-              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('ar-SA')}</span>
+              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('en-GB')}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {safes.map((safe) => (
-              <div key={safe.id} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{safe.name}</h3>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(safe)}>
-                      ✏️
-                    </ModernButton>
-                    <ModernButton size="sm" variant="danger" onClick={() => handleDeleteSafe(safe.id)}>
-                      🗑️
-                    </ModernButton>
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-green-600 mb-2">{formatCurrency(safe.balance)}</div>
-                <div className="text-sm text-gray-600">آخر تحديث: {formatDate(safe.updatedAt || new Date())}</div>
+          {safes.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl text-gray-400">💰</span>
               </div>
-            ))}
-          </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">لا توجد خزائن</h3>
+              <p className="text-gray-500 mb-6">ابدأ بإنشاء خزنة جديدة لإدارة أموالك</p>
+              <ModernButton onClick={() => setShowAddSafeModal(true)}>
+                <span className="mr-2">➕</span>
+                إضافة خزنة جديدة
+              </ModernButton>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {safes.map((safe) => (
+                <div key={safe.id} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">{safe.name}</h3>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(safe)}>
+                        ✏️
+                      </ModernButton>
+                      <ModernButton size="sm" variant="danger" onClick={() => handleDeleteSafe(safe.id)}>
+                        🗑️
+                      </ModernButton>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 mb-2">{formatCurrency(safe.balance)}</div>
+                  <div className="text-sm text-gray-600">آخر تحديث: {formatDate(safe.updatedAt || new Date())}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </ModernCard>
 
         {/* Recent Transfers */}
@@ -526,40 +557,54 @@ export default function Treasury() {
             </ModernButton>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">من</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">إلى</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الوصف</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">التاريخ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.slice(0, 10).map((transfer) => (
-                  <tr key={transfer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{transfer.fromSafeId}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{transfer.toSafeId}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-blue-600">{formatCurrency(transfer.amount)}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600 max-w-xs truncate">{transfer.description || '-'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{formatDate(transfer.createdAt || new Date())}</div>
-                    </td>
+          {transfers.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl text-gray-400">🔄</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">لا توجد تحويلات</h3>
+              <p className="text-gray-500 mb-6">لم يتم تنفيذ أي تحويلات بين الخزائن بعد</p>
+              <ModernButton variant="info" onClick={() => setShowTransferModal(true)}>
+                <span className="mr-2">🔄</span>
+                تسجيل تحويل جديد
+              </ModernButton>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">من</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">إلى</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">الوصف</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-700">التاريخ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {transfers.slice(0, 10).map((transfer) => (
+                    <tr key={transfer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900">{transfer.fromSafeId}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900">{transfer.toSafeId}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-semibold text-blue-600">{formatCurrency(transfer.amount)}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-gray-600 max-w-xs truncate">{transfer.description || '-'}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-gray-600">{formatDate(transfer.createdAt || new Date())}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </ModernCard>
       </div>
 
@@ -724,10 +769,11 @@ export default function Treasury() {
         </div>
       )}
       
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
+        <NotificationSystem 
+          notifications={notifications} 
+          onRemove={removeNotification} 
+        />
+      </div>
     </div>
   )
 }

@@ -67,19 +67,61 @@ export default function Login() {
           </button>
           {error && <div className="error-message">{error}</div>}
         </form>
+        
         <div style={{ 
-          marginTop: '24px', 
-          textAlign: 'center', 
-          fontSize: '14px', 
-          color: 'rgb(100, 116, 139)',
-          background: 'rgb(248, 250, 252)',
-          padding: '16px',
-          borderRadius: '8px',
-          border: '1px solid rgba(226, 232, 240, 0.8)'
+          marginTop: '16px', 
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
         }}>
-          <p style={{ fontWeight: '600', marginBottom: '8px', color: 'rgb(15, 23, 42)' }}>بيانات الدخول الافتراضية:</p>
-          <p style={{ margin: '4px 0', color: 'rgb(15, 23, 42)' }}>اسم المستخدم: <strong style={{ color: 'rgb(59, 130, 246)' }}>admin</strong></p>
-          <p style={{ margin: '4px 0', color: 'rgb(15, 23, 42)' }}>كلمة المرور: <strong style={{ color: 'rgb(59, 130, 246)' }}>admin123</strong></p>
+          <button
+            onClick={() => router.push('/forgot-password')}
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            🔐 نسيت كلمة المرور؟
+          </button>
+          
+          <button
+            onClick={() => router.push('/admin')}
+            style={{
+              background: 'linear-gradient(135deg, #dc2626, #ec4899)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            👑 لوحة الإدارة
+          </button>
         </div>
       </div>
     </div>

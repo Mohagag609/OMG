@@ -32,11 +32,16 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '100')
     const unitId = searchParams.get('unitId')
+    const partnerId = searchParams.get('partnerId')
 
     let whereClause: any = { deletedAt: null }
 
     if (unitId) {
       whereClause.unitId = unitId
+    }
+
+    if (partnerId) {
+      whereClause.partnerId = partnerId
     }
 
     const skip = (page - 1) * limit

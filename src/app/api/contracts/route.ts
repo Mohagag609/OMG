@@ -178,25 +178,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if unit has partners
+    // Check if unit has partners (optional check)
     const unitPartners = await prisma.unitPartner.findMany({
       where: { unitId, deletedAt: null }
     })
 
-    if (unitPartners.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'لا يمكن إنشاء عقد. يجب تحديد شركاء لهذه الوحدة أولاً.' },
-        { status: 400 }
-      )
-    }
-
-    // Check if total percentage is 100%
-    const totalPercent = unitPartners.reduce((sum, p) => sum + p.percentage, 0)
-    if (totalPercent !== 100) {
-      return NextResponse.json(
-        { success: false, error: `لا يمكن إنشاء عقد. مجموع نسب الشركاء هو ${totalPercent}% ويجب أن يكون 100% بالضبط.` },
-        { status: 400 }
-      )
+    // If there are partners, validate their percentages
+    if (unitPartners.length > 0) {
+      const totalPercent = unitPartners.reduce((sum, p) => sum + p.percentage, 0)
+      if (Math.abs(totalPercent - 100) > 0.01) { // Allow small floating point differences
+        return NextResponse.json(
+          { success: false, error: `مجموع نسب الشركاء هو ${totalPercent}% ويجب أن يكون 100% بالضبط.` },
+          { status: 400 }
+        )
+      }
     }
 
     // Create contract and generate installments in a transaction
@@ -251,7 +246,7 @@ export async function POST(request: NextRequest) {
             safeId: downPaymentSafeId,
             description: `مقدم عقد للوحدة ${unit?.code}`,
             payer: customer?.name,
-            linkedRef: contract.id
+            linkedRef: unitId
           }
         })
 
@@ -262,25 +257,24 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Create broker commission voucher if broker amount > 0
-      if (brokerAmount > 0 && commissionSafeId) {
-        await tx.voucher.create({
-          data: {
-            type: 'payment',
-            date: new Date(start),
-            amount: brokerAmount,
-            safeId: commissionSafeId,
-            description: `عمولة سمسار ${brokerName} للوحدة ${contract.unit?.code}`,
-            beneficiary: brokerName,
-            linkedRef: contract.id
-          }
+      // Create broker due if broker amount > 0 (instead of immediate payment)
+      if (brokerAmount > 0 && brokerName) {
+        // Find broker by name
+        const broker = await tx.broker.findFirst({
+          where: { name: brokerName }
         })
 
-        // Update safe balance
-        await tx.safe.update({
-          where: { id: commissionSafeId },
-          data: { balance: { decrement: brokerAmount } }
-        })
+        if (broker) {
+          await tx.brokerDue.create({
+            data: {
+              brokerId: broker.id,
+              amount: brokerAmount,
+              dueDate: new Date(start), // Due date is contract start date
+              status: 'معلق', // Pending payment
+              notes: `عمولة عقد للوحدة ${contract.unit?.code}`
+            }
+          })
+        }
       }
 
       // Generate installments if payment type is installment
@@ -309,16 +303,18 @@ export async function POST(request: NextRequest) {
 
         // Generate regular installments
         if (count > 0) {
-          const baseAmount = Math.floor((amountForRegularInstallments / count) * 100) / 100
+          // حساب القسط الصحيح بدون تقريب
+          const baseAmount = amountForRegularInstallments / count
           let accumulatedAmount = 0
           
           for (let i = 0; i < count; i++) {
             const dueDate = new Date(start)
             dueDate.setMonth(dueDate.getMonth() + months * (i + 1))
             
+            // القسط الأخير يحصل على الفرق لضمان عدم وجود كسور
             const amount = (i === count - 1) 
               ? Math.round((amountForRegularInstallments - accumulatedAmount) * 100) / 100 
-              : baseAmount
+              : Math.round(baseAmount * 100) / 100
             
             accumulatedAmount += amount
             
@@ -385,8 +381,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error creating contract:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
+    const errorMessage = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: `خطأ في قاعدة البيانات: ${errorMessage}` },
       { status: 500 }
     )
   }

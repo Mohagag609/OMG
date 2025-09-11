@@ -1,143 +1,91 @@
+/**
+ * API Route لتصدير Excel
+ * يتعامل مع طلبات تصدير البيانات إلى ملفات Excel
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import * as XLSX from 'xlsx'
-import { ApiResponse } from '@/types'
+import { exportToExcel, exportMultipleSheets } from '../../../../lib/reports/exporters/toExcel'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-// GET /api/export/excel - Export data to Excel
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getUserFromToken(token)
+    const body = await request.json()
+    const { title, data, reportType, fileName, multipleSheets } = body
     
-    if (!user) {
+    if (!data || !Array.isArray(data)) {
       return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const entityType = searchParams.get('type') || ''
-
-    if (!entityType) {
-      return NextResponse.json(
-        { success: false, error: 'نوع البيانات مطلوب' },
+        { success: false, error: 'البيانات مطلوبة' },
         { status: 400 }
       )
     }
-
-    let data: any[] = []
-    let filename = ''
-
-    // Get data based on entity type
-    switch (entityType) {
-      case 'customers':
-        data = await prisma.customer.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'customers.xlsx'
-        break
-      case 'units':
-        data = await prisma.unit.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'units.xlsx'
-        break
-      case 'contracts':
-        data = await prisma.contract.findMany({
-          where: { deletedAt: null },
-          include: {
-            unit: true,
-            customer: true
-          },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'contracts.xlsx'
-        break
-      case 'vouchers':
-        data = await prisma.voucher.findMany({
-          where: { deletedAt: null },
-          include: {
-            safe: true,
-            unit: true
-          },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'vouchers.xlsx'
-        break
-      case 'safes':
-        data = await prisma.safe.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'safes.xlsx'
-        break
-      case 'partners':
-        data = await prisma.partner.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'partners.xlsx'
-        break
-      case 'brokers':
-        data = await prisma.broker.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' }
-        })
-        filename = 'brokers.xlsx'
-        break
-      default:
-        return NextResponse.json(
-          { success: false, error: 'نوع البيانات غير مدعوم' },
-          { status: 400 }
-        )
+    
+    let buffer: Buffer
+    
+    if (multipleSheets && Array.isArray(multipleSheets)) {
+      // تصدير متعدد الأوراق
+      buffer = await exportMultipleSheets(multipleSheets)
+    } else {
+      // تصدير ورقة واحدة
+      buffer = await exportToExcel({
+        title: title || 'تقرير',
+        data,
+        reportType: reportType || 'general',
+        fileName: fileName || `report-${new Date().toISOString().split('T')[0]}.xlsx`
+      })
     }
-
-    if (data.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'لا توجد بيانات للتصدير' },
-        { status: 404 }
-      )
-    }
-
-    // Create workbook
-    const workbook = XLSX.utils.book_new()
     
-    // Convert data to worksheet
-    const worksheet = XLSX.utils.json_to_sheet(data)
+    const response = new NextResponse(buffer as any)
+    response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response.headers.set('Content-Disposition', `attachment; filename="${fileName || 'report'}.xlsx"`)
+    response.headers.set('Content-Length', buffer.length.toString())
     
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'البيانات')
+    return response
     
-    // Generate Excel file buffer
-    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-
-    // Return Excel file
-    return new NextResponse(excelBuffer, {
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${filename}"`
-      }
-    })
   } catch (error) {
-    console.error('Error exporting Excel:', error)
+    console.error('Excel export error:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في تصدير البيانات' },
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'خطأ في تصدير Excel' 
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const reportType = searchParams.get('type') || 'general'
+    const title = searchParams.get('title') || 'تقرير'
+    
+    // هذا مثال بسيط - في التطبيق الحقيقي ستحتاج لجلب البيانات من قاعدة البيانات
+    const sampleData = [
+      { name: 'عينة 1', value: 100, date: '2024-01-01' },
+      { name: 'عينة 2', value: 200, date: '2024-01-02' },
+      { name: 'عينة 3', value: 300, date: '2024-01-03' }
+    ]
+    
+    const buffer = await exportToExcel({
+      title,
+      data: sampleData,
+      reportType,
+      fileName: `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`
+    })
+    
+    const response = new NextResponse(buffer as any)
+    response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response.headers.set('Content-Disposition', `attachment; filename="${reportType}-report.xlsx"`)
+    response.headers.set('Content-Length', buffer.length.toString())
+    
+    return response
+    
+  } catch (error) {
+    console.error('Excel export error:', error)
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'خطأ في تصدير Excel' 
+      },
       { status: 500 }
     )
   }

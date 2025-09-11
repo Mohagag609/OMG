@@ -112,9 +112,12 @@ export function validateCustomer(customer: any): { isValid: boolean; errors: str
     errors.push(ERROR_MESSAGES.validation.required)
   }
   
-  const phoneValidation = validatePhone(customer.phone)
-  if (!phoneValidation.isValid) {
-    errors.push(phoneValidation.error!)
+  // رقم الهاتف اختياري، لكن إذا تم إدخاله يجب أن يكون صحيحاً
+  if (customer.phone && customer.phone.trim()) {
+    const phoneValidation = validatePhone(customer.phone)
+    if (!phoneValidation.isValid) {
+      errors.push(phoneValidation.error!)
+    }
   }
   
   if (customer.nationalId) {
@@ -134,14 +137,25 @@ export function validateCustomer(customer: any): { isValid: boolean; errors: str
 export function validateUnit(unit: any): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
-  const codeValidation = validateUnitCode(unit.code)
-  if (!codeValidation.isValid) {
-    errors.push(codeValidation.error!)
+  // الاسم فقط مطلوب
+  if (!unit.name) {
+    errors.push(ERROR_MESSAGES.validation.required)
   }
   
-  const amountValidation = validateAmount(unit.totalPrice)
-  if (!amountValidation.isValid) {
-    errors.push(amountValidation.error!)
+  // الكود اختياري (سيتم إنشاؤه تلقائياً)
+  if (unit.code) {
+    const codeValidation = validateUnitCode(unit.code)
+    if (!codeValidation.isValid) {
+      errors.push(codeValidation.error!)
+    }
+  }
+  
+  // السعر اختياري
+  if (unit.totalPrice !== undefined && unit.totalPrice !== null && unit.totalPrice !== '') {
+    const amountValidation = validateAmount(parseFloat(unit.totalPrice))
+    if (!amountValidation.isValid) {
+      errors.push(amountValidation.error!)
+    }
   }
   
   return {

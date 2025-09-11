@@ -3,14 +3,14 @@
 version: '3.8'
 
 services:
-  # قاعدة البيانات PostgreSQL
+  # قاعدة البيانات PostgreSQL المحلية
   postgres:
     image: postgres:15-alpine
     container_name: estate-management-db
     environment:
-      POSTGRES_DB: estate_management
+      POSTGRES_DB: estate_pro_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
@@ -18,6 +18,7 @@ services:
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - estate-network
+    restart: unless-stopped
 
   # Redis للتخزين المؤقت
   redis:
@@ -36,7 +37,8 @@ services:
     container_name: estate-management-app
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/estate_management
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/estate_pro_db?schema=public
+      - NEON_DATABASE_URL=${NEON_DATABASE_URL}
       - JWT_SECRET=estate-management-development-secret-key
       - REDIS_URL=redis://redis:6379
     ports:

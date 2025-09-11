@@ -49,7 +49,7 @@ export function NotificationSystem({ notifications, onRemove }: NotificationSyst
             <div className="notification-title">{notification.title}</div>
             <div className="notification-message">{notification.message}</div>
             <div className="notification-time">
-              {notification.timestamp.toLocaleTimeString('ar-SA')}
+              {notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString('ar-SA') : 'الآن'}
             </div>
           </div>
           <button className="notification-close">×</button>
@@ -66,7 +66,7 @@ export function useNotifications() {
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     const newNotification: Notification = {
       ...notification,
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 11),
       timestamp: new Date(),
       duration: notification.duration || 5000
     }
