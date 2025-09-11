@@ -303,16 +303,18 @@ export async function POST(request: NextRequest) {
 
         // Generate regular installments
         if (count > 0) {
-          const baseAmount = Math.floor((amountForRegularInstallments / count) * 100) / 100
+          // حساب القسط الصحيح بدون تقريب
+          const baseAmount = amountForRegularInstallments / count
           let accumulatedAmount = 0
           
           for (let i = 0; i < count; i++) {
             const dueDate = new Date(start)
             dueDate.setMonth(dueDate.getMonth() + months * (i + 1))
             
+            // القسط الأخير يحصل على الفرق لضمان عدم وجود كسور
             const amount = (i === count - 1) 
               ? Math.round((amountForRegularInstallments - accumulatedAmount) * 100) / 100 
-              : baseAmount
+              : Math.round(baseAmount * 100) / 100
             
             accumulatedAmount += amount
             
