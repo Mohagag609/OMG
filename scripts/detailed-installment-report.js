@@ -94,7 +94,9 @@ async function generateDetailedInstallmentReport() {
         // إضافة سطر لكل شريك
         for (const unitPartner of unitPartners) {
           // جلب مجموعة الشركاء
-          const partnerGroup = unitPartner.partner.partnerGroup || null
+          const partnerGroup = unitPartner.partner.partnerGroupId ? 
+            await prisma.partnerGroup.findUnique({ where: { id: unitPartner.partner.partnerGroupId } }) : 
+            null
           
           reportData.push({
             unitFullName: unitFullName,
