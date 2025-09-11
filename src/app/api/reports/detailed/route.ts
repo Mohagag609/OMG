@@ -40,11 +40,7 @@ export async function GET(request: NextRequest) {
           include: {
             unitPartners: {
               include: {
-                partner: {
-                  include: {
-                    partnerGroup: true
-                  }
-                }
+                partner: true
               }
             },
             contracts: {
