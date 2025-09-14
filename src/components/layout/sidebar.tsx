@@ -162,12 +162,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className={cn(
           "fixed top-0 right-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg",
-          "lg:relative lg:translate-x-0 lg:z-auto"
+          "lg:fixed lg:translate-x-0 lg:z-40"
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Header Section */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          {/* Logo */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
@@ -183,14 +183,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <button
               onClick={onClose}
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
