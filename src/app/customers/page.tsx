@@ -7,8 +7,7 @@ import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
+import ModernButton from '@/components/ModernButton'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -17,31 +16,7 @@ const ModernCard = ({ children, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
+// Using imported ModernButton component
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
@@ -74,7 +49,6 @@ export default function Customers() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [deletingCustomers, setDeletingCustomers] = useState<Set<string>>(new Set())
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -92,10 +66,6 @@ export default function Customers() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case 'b':
-            e.preventDefault()
-            setSidebarOpen(!sidebarOpen)
-            break
           case 'n':
             e.preventDefault()
             setShowAddModal(true)
@@ -115,7 +85,7 @@ export default function Customers() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [sidebarOpen])
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')

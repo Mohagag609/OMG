@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Sidebar from './Sidebar'
+import { useRouter, usePathname } from 'next/navigation'
 import Header from './Header'
 
 interface LayoutProps {
@@ -13,31 +12,8 @@ interface LayoutProps {
 }
 
 const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
-
-  // Handle sidebar state based on route
-  useEffect(() => {
-    const handleRouteChange = () => {
-      // Always open sidebar on dashboard, close on mobile
-      if (window.location.pathname === '/') {
-        setSidebarOpen(window.innerWidth >= 1024)
-      } else if (window.innerWidth < 1024) {
-        setSidebarOpen(false)
-      }
-    }
-
-    // Set initial state when component mounts
-    handleRouteChange()
-
-    // Listen for window resize
-    const handleResize = () => {
-      handleRouteChange()
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  const pathname = usePathname()
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -49,10 +25,6 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
 
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case 'b':
-            e.preventDefault()
-            setSidebarOpen(!sidebarOpen)
-            break
           case 'u':
             e.preventDefault()
             router.push('/units')
@@ -77,33 +49,31 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
             e.preventDefault()
             router.push('/customers')
             break
+          case 'h':
+            e.preventDefault()
+            router.push('/')
+            break
         }
       }
     }
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [sidebarOpen, router])
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      {/* Header with integrated navigation */}
+      <Header 
+        title={title}
+        subtitle={subtitle}
+        icon={icon}
+        currentPath={pathname}
+      />
       
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
-        {/* Header */}
-        <Header 
-          title={title}
-          subtitle={subtitle}
-          icon={icon}
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
-        
-        {/* Page Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {children}
-        </div>
+      {/* Page Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {children}
       </div>
     </div>
   )

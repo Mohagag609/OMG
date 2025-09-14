@@ -32,20 +32,22 @@ const NavigationButtons = ({
       {showBack && (
         <button
           onClick={handleBack}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center space-x-2 space-x-reverse"
+          className="group flex items-center space-x-2 space-x-reverse px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 hover:text-gray-900 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+          title={backLabel}
         >
-          <span>←</span>
-          <span>{backLabel}</span>
+          <span className="text-lg group-hover:-translate-x-1 transition-transform duration-200">←</span>
+          <span className="font-medium">{backLabel}</span>
         </button>
       )}
       
       {showDashboard && (
         <button
           onClick={() => router.push('/')}
-          className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center space-x-2 space-x-reverse"
+          className="group flex items-center space-x-2 space-x-reverse px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl shadow-blue-500/25"
+          title={dashboardLabel}
         >
-          <span>🏠</span>
-          <span>{dashboardLabel}</span>
+          <span className="text-lg group-hover:scale-110 transition-transform duration-200">🏠</span>
+          <span className="font-medium">{dashboardLabel}</span>
         </button>
       )}
     </div>

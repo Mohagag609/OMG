@@ -6,55 +6,43 @@ import { DashboardKPIs } from '@/types'
 import { formatCurrency } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
+import ModernButton from '@/components/ModernButton'
 
 // Compact UI Components
 const CompactCard = ({ children, className = '', ...props }: any) => (
-  <div className={`bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-4 ${className}`} {...props}>
+  <div className={`bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-6 transition-all duration-300 ${className}`} {...props}>
     {children}
   </div>
 )
 
 const CompactButton = ({ children, variant = 'primary', size = 'sm', className = '', ...props }: any) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md shadow-blue-500/20',
-    secondary: 'bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-md shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md shadow-green-500/20',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md shadow-red-500/20',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-md shadow-yellow-500/20',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-md shadow-purple-500/20'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    xs: 'px-2 py-1 text-xs',
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm font-medium'
-  }
-  
   return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-lg transition-all duration-150 hover:scale-105 active:scale-95 ${className}`}
+    <ModernButton 
+      variant={variant}
+      size={size}
+      className={className}
       {...props}
     >
       {children}
-    </button>
+    </ModernButton>
   )
 }
 
 const KPICard = ({ title, value, icon, color, trend, onClick }: any) => (
   <CompactCard 
-    className={`cursor-pointer hover:scale-105 transition-all duration-150 ${onClick ? 'hover:shadow-xl' : ''}`}
+    className={`group cursor-pointer hover:scale-105 transition-all duration-300 ${onClick ? 'hover:shadow-xl hover:shadow-gray-900/10' : ''} border-2 border-transparent hover:border-gray-200`}
     onClick={onClick}
   >
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <p className="text-xs font-medium text-gray-600 mb-1">{title}</p>
-        <p className={`text-lg font-bold ${color}`}>{value}</p>
+        <p className="text-xs font-medium text-gray-600 mb-1 group-hover:text-gray-800 transition-colors duration-300">{title}</p>
+        <p className={`text-xl font-bold ${color} group-hover:scale-105 transition-transform duration-300`}>{value}</p>
         {trend && (
-          <p className="text-xs text-gray-500 mt-1">{trend}</p>
+          <p className="text-xs text-gray-500 mt-1 group-hover:text-gray-700 transition-colors duration-300">{trend}</p>
         )}
       </div>
-      <div className={`w-8 h-8 ${color.replace('text-', 'bg-').replace('-600', '-100')} rounded-lg flex items-center justify-center`}>
-        <span className="text-sm">{icon}</span>
+      <div className={`w-10 h-10 ${color.replace('text-', 'bg-').replace('-600', '-100')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+        <span className="text-lg">{icon}</span>
       </div>
     </div>
   </CompactCard>
@@ -62,28 +50,28 @@ const KPICard = ({ title, value, icon, color, trend, onClick }: any) => (
 
 const QuickActionCard = ({ title, icon, color, onClick }: any) => (
   <CompactCard 
-    className="cursor-pointer hover:scale-105 transition-all duration-150 hover:shadow-xl"
+    className="group cursor-pointer hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-gray-900/10 border-2 border-transparent hover:border-gray-200"
     onClick={onClick}
   >
     <div className="text-center">
-      <div className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center mx-auto mb-2`}>
-        <span className="text-lg">{icon}</span>
+      <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+        <span className="text-xl">{icon}</span>
       </div>
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">{title}</h3>
     </div>
   </CompactCard>
 )
 
 const NavigationCard = ({ title, icon, color, onClick }: any) => (
   <CompactCard 
-    className="cursor-pointer hover:scale-105 transition-all duration-150 hover:shadow-xl"
+    className="group cursor-pointer hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-gray-900/10 border-2 border-transparent hover:border-gray-200"
     onClick={onClick}
   >
     <div className="text-center">
-      <div className={`w-8 h-8 ${color} rounded-lg flex items-center justify-center mx-auto mb-2`}>
-        <span className="text-sm">{icon}</span>
+      <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+        <span className="text-lg">{icon}</span>
       </div>
-      <h3 className="text-xs font-semibold text-gray-900">{title}</h3>
+      <h3 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">{title}</h3>
     </div>
   </CompactCard>
 )
@@ -166,9 +154,9 @@ export default function Dashboard() {
         <div className="text-xs text-gray-500">
           آخر تحديث: {new Date().toLocaleString('en-GB')}
         </div>
-        <CompactButton variant="secondary" size="sm" onClick={() => fetchKPIs()}>
-          🔄 تحديث
-        </CompactButton>
+        <ModernButton variant="secondary" size="sm" onClick={() => fetchKPIs()} icon="🔄">
+          تحديث
+        </ModernButton>
       </div>
 
       {/* Error Message */}
