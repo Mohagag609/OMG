@@ -6,10 +6,7 @@ import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
-import NavigationButtons from '@/components/NavigationButtons'
-
+import Layout from '@/components/Layout'
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
@@ -26,13 +23,13 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
     warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
     info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
   }
-  
+
   const sizes: { [key: string]: string } = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2.5 text-sm font-medium',
     lg: 'px-6 py-3 text-base font-medium'
   }
-  
+
   return (
     <button 
       className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
@@ -79,7 +76,7 @@ export default function Partners() {
   })
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
   const [showEditForm, setShowEditForm] = useState(false)
-  
+
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -121,7 +118,7 @@ export default function Partners() {
       router.push('/login')
       return
     }
-    
+
     fetchPartners()
   }, [])
 
@@ -170,7 +167,7 @@ export default function Partners() {
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!newPartner.name.trim()) {
       setError('الرجاء إدخال اسم الشريك')
       addNotification({
@@ -257,7 +254,7 @@ export default function Partners() {
 
   const handleEditPartner = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!editingPartner || !editingPartner.name.trim()) {
       setError('الرجاء إدخال اسم الشريك')
       return
@@ -378,51 +375,19 @@ export default function Partners() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-      
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-xl">👥</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">إدارة الشركاء</h1>
-                  <p className="text-gray-600">نظام متطور لإدارة الشركاء والمستثمرين</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 space-x-reverse">
-                <ModernButton variant="secondary" onClick={() => router.push('/partner-debts')}>
-                  💰 ديون الشركاء
-                </ModernButton>
-                <ModernButton variant="secondary" onClick={() => router.push('/partner-groups')}>
-                  👥 مجموعات الشركاء
-                </ModernButton>
-                <NavigationButtons />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+    <Layout>
         {/* Add Partner Form */}
         {showAddForm && (
           <ModernCard className="mb-8">
@@ -464,7 +429,7 @@ export default function Partners() {
                   placeholder="أدخل اسم الشريك"
                   required
                 />
-                
+
                 <ModernInput
                   label="رقم الهاتف"
                   type="tel"
@@ -473,7 +438,7 @@ export default function Partners() {
                   placeholder="أدخل رقم الهاتف"
                 />
               </div>
-              
+
               <ModernTextarea
                 label="ملاحظات"
                 value={newPartner.notes}
@@ -481,7 +446,7 @@ export default function Partners() {
                 placeholder="أدخل أي ملاحظات إضافية"
                 rows={3}
               />
-              
+
               <div className="flex items-center justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200">
                 <ModernButton variant="secondary" onClick={() => setShowAddForm(false)}>
                   إلغاء
@@ -518,7 +483,7 @@ export default function Partners() {
                   placeholder="أدخل اسم الشريك"
                   required
                 />
-                
+
                 <ModernInput
                   label="رقم الهاتف"
                   type="tel"
@@ -527,7 +492,7 @@ export default function Partners() {
                   placeholder="أدخل رقم الهاتف"
                 />
               </div>
-              
+
               <ModernTextarea
                 label="ملاحظات"
                 value={editingPartner.notes || ''}
@@ -535,7 +500,7 @@ export default function Partners() {
                 placeholder="أدخل أي ملاحظات إضافية"
                 rows={3}
               />
-              
+
               <div className="flex items-center justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200">
                 <ModernButton variant="secondary" onClick={() => setShowEditForm(false)}>
                   إلغاء
@@ -679,13 +644,11 @@ export default function Partners() {
             </div>
           )}
         </ModernCard>
-        </div>
-        
+
         <NotificationSystem 
           notifications={notifications} 
           onRemove={removeNotification} 
         />
-      </div>
-    </div>
+      </Layout>
   )
 }

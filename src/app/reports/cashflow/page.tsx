@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useNotifications } from '../../../components/NotificationSystem'
 
+import Layout from '@/components/Layout'
 // Modern Card Component
 const ModernCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 ${className}`}>
@@ -381,7 +382,6 @@ export default function CashflowReportPage() {
             <p className="text-gray-600">يرجى الانتظار بينما نقوم بجلب البيانات</p>
           </ModernCard>
         )}
-      </div>
-    </div>
+      </Layout>
   )
 }

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Inter, Cairo } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
+import { LayoutProvider } from '@/contexts/LayoutContext'
+import AppLayout from '@/components/AppLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 const cairo = Cairo({ subsets: ['arabic'] })
@@ -20,7 +22,11 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className={`${cairo.className} antialiased`}>
         <Providers>
-          {children}
+          <LayoutProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </LayoutProvider>
         </Providers>
       </body>
     </html>
