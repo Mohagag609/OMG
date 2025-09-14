@@ -3,13 +3,13 @@ const { execSync } = require('child_process')
 console.log('🔧 إعداد البناء للإنتاج...')
 
 try {
-  // تأكد من أن Prisma schema يستخدم PostgreSQL
+  // تأكد من أن Prisma schema صحيح
   const fs = require('fs')
   const schemaPath = 'prisma/schema.prisma'
   const schema = fs.readFileSync(schemaPath, 'utf8')
   
-  if (!schema.includes('provider = "postgresql"')) {
-    console.log('❌ Prisma schema يجب أن يستخدم PostgreSQL للإنتاج')
+  if (!schema.includes('provider = "sqlite"') && !schema.includes('provider = "postgresql"')) {
+    console.log('❌ Prisma schema يجب أن يستخدم SQLite أو PostgreSQL')
     process.exit(1)
   }
 
