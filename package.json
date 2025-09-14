@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "تطبيق Next.js لإدارة الاستثمارات العقارية مع نظام شامل للمراقبة والنسخ الاحتياطية",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:local": "DB_MODE=local next dev",

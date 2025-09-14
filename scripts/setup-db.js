@@ -8,6 +8,14 @@ async function setupDatabase() {
     try {
       console.log('🔍 إعداد قاعدة البيانات للإنتاج...')
       
+      // التحقق من وجود DATABASE_URL
+      if (!process.env.DATABASE_URL) {
+        console.error('❌ DATABASE_URL غير محدد في متغيرات البيئة')
+        process.exit(1)
+      }
+
+      console.log('📊 استخدام PostgreSQL للإنتاج')
+      
       const prisma = new PrismaClient()
       await prisma.$queryRaw`SELECT 1`
       console.log('✅ قاعدة البيانات متاحة')
@@ -22,6 +30,7 @@ async function setupDatabase() {
     } catch (error) {
       console.error('❌ فشل في إعداد قاعدة البيانات:', error.message)
       console.log('💡 تأكد من أن DATABASE_URL صحيح في متغيرات البيئة')
+      console.log('💡 تأكد من أن قاعدة البيانات PostgreSQL متاحة')
       process.exit(1)
     }
   }
