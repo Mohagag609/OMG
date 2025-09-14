@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Installment, Unit, Contract } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
-import NavigationButtons from '@/components/NavigationButtons'
-
+import Layout from '@/components/Layout'
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
@@ -25,13 +22,13 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
     warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
     info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
   }
-  
+
   const sizes: { [key: string]: string } = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2.5 text-sm font-medium',
     lg: 'px-6 py-3 text-base font-medium'
   }
-  
+
   return (
     <button 
       className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
@@ -82,11 +79,11 @@ export default function Installments() {
   const [rescheduleInstallment, setRescheduleInstallment] = useState<Installment | null>(null)
   const [newDueDate, setNewDueDate] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   // Master-Detail Layout states
   const [selectedInstallment, setSelectedInstallment] = useState<Installment | null>(null)
   const [showDetailPanel, setShowDetailPanel] = useState(false)
-  
+
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -122,14 +119,14 @@ export default function Installments() {
       router.push('/login')
       return
     }
-    
+
     fetchInstallments()
   }, [])
 
   const fetchInstallments = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      
+
       const [installmentsRes, unitsRes, contractsRes] = await Promise.all([
         fetch('/api/installments', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -383,7 +380,7 @@ export default function Installments() {
         </body>
       </html>
     `
-    
+
     const printWindow = window.open('', '_blank')
     if (printWindow) {
       printWindow.document.write(printContent)
@@ -418,21 +415,21 @@ export default function Installments() {
     const matchesSearch = search === '' || 
       getUnitName(installment.unitId).toLowerCase().includes(search.toLowerCase()) ||
       installment.notes?.toLowerCase().includes(search.toLowerCase())
-    
+
     const matchesStatus = statusFilter === 'all' || installment.status === statusFilter
     const matchesUnit = unitFilter === 'all' || installment.unitId === unitFilter
-    
+
     const matchesDate = !dateFilter.from || !dateFilter.to || 
       (new Date(installment.dueDate) >= new Date(dateFilter.from) && 
        new Date(installment.dueDate) <= new Date(dateFilter.to))
-    
+
     return matchesSearch && matchesStatus && matchesUnit && matchesDate
   })
 
   // Group installments by unit
   const groupedInstallments = useMemo(() => {
     if (!groupByUnit) return { 'all': filteredInstallments }
-    
+
     const groups: { [key: string]: Installment[] } = {}
     filteredInstallments.forEach(installment => {
       const unitId = installment.unitId
@@ -441,7 +438,7 @@ export default function Installments() {
       }
       groups[unitId].push(installment)
     })
-    
+
     return groups
   }, [filteredInstallments, groupByUnit])
 
@@ -453,54 +450,25 @@ export default function Installments() {
     const overdue = unitInstallments.filter(i => i.status === 'متأخر' || isOverdue(i.dueDate)).length
     const totalAmount = unitInstallments.reduce((sum, i) => sum + i.amount, 0)
     const paidAmount = unitInstallments.filter(i => i.status === 'مدفوع').reduce((sum, i) => sum + i.amount, 0)
-    
+
     return { total, paid, pending, overdue, totalAmount, paidAmount }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-      
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-xl">📅</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">إدارة الأقساط</h1>
-                  <p className="text-gray-600">نظام متطور لإدارة أقساط العقود</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 space-x-reverse">
-                <ModernButton variant="secondary" onClick={() => router.push('/contracts')}>
-                  📋 إضافة عقد جديد
-                </ModernButton>
-                <NavigationButtons />
-              </div>
-            </div>
-          </div>
-        </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <Layout>
         {/* Search and Filters */}
         <ModernCard className="mb-8">
           <div className="space-y-6">
@@ -639,7 +607,7 @@ export default function Installments() {
                   {Object.entries(groupedInstallments).map(([unitId, unitInstallments]) => {
                   const summary = getUnitSummary(unitInstallments)
                   const isExpanded = expandedUnits.has(unitId)
-                  
+
                   return (
                     <div key={unitId} className="border border-gray-200 rounded-xl overflow-hidden">
                       {/* Unit Summary Header */}
@@ -858,7 +826,7 @@ export default function Installments() {
                   <span className="text-sm font-medium text-gray-500">التاريخ الحالي:</span>
                   <p className="text-gray-900">{formatDate(rescheduleInstallment.dueDate)}</p>
                 </div>
-                
+
                 <ModernInput
                   label="التاريخ الجديد"
                   type="date"
@@ -888,7 +856,7 @@ export default function Installments() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={closeDetailPanel}
           />
-          
+
           {/* Side Panel */}
           <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
             <div className="h-full flex flex-col">
@@ -1041,12 +1009,11 @@ export default function Installments() {
           </div>
         </div>
       )}
-      
+
       <NotificationSystem 
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-      </div>
-    </div>
+      </Layout>
   )
 }

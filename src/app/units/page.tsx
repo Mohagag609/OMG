@@ -631,35 +631,25 @@ export default function Units() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-white text-xl">🏠</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">إدارة الوحدات</h1>
-              <p className="text-gray-600">نظام متطور لإدارة الوحدات العقارية</p>
-            </div>
-          </div>
-          <ModernButton onClick={() => setShowAddModal(true)}>
-            <span className="mr-2">➕</span>
-            إضافة وحدة جديدة
-            <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-          </ModernButton>
-        </div>
-
+    <Layout>
+      <div className="flex items-center justify-between mb-8">
+        <ModernButton onClick={() => setShowAddModal(true)}>
+          <span className="mr-2">➕</span>
+          إضافة وحدة جديدة
+          <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
+        </ModernButton>
       {/* Search and Filters */}
       <ModernCard className="mb-8">
         <div className="flex items-center justify-between">
@@ -854,7 +844,6 @@ export default function Units() {
             </table>
           </div>
         </ModernCard>
-      </div>
 
       {/* Add/Edit Unit Modal */}
       {showAddModal && (
@@ -1025,6 +1014,6 @@ export default function Units() {
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-    </div>
+    </Layout>
   )
 }

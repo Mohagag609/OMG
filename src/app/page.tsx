@@ -161,7 +161,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout title="لوحة التحكم" subtitle="نظام إدارة العقارات المتطور" icon="🏢">
+    <Layout>
       <div className="flex items-center justify-between mb-6">
         <div className="text-xs text-gray-500">
           آخر تحديث: {new Date().toLocaleString('en-GB')}

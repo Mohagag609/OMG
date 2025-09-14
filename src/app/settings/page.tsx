@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import Layout from '@/components/Layout'
 export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -182,7 +183,6 @@ export default function SettingsPage() {
             العودة للرئيسية
           </button>
         </div>
-      </div>
-    </div>
+      </Layout>
   )
 }

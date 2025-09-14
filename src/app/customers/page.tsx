@@ -7,9 +7,6 @@ import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
-
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
@@ -26,13 +23,13 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
     warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
     info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
   }
-  
+
   const sizes: { [key: string]: string } = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2.5 text-sm font-medium',
     lg: 'px-6 py-3 text-base font-medium'
   }
-  
+
   return (
     <button 
       className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
@@ -83,7 +80,7 @@ export default function Customers() {
     status: 'نشط',
     notes: ''
   })
-  
+
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -123,7 +120,7 @@ export default function Customers() {
       router.push('/login')
       return
     }
-    
+
     fetchCustomers()
   }, [])
 
@@ -133,7 +130,7 @@ export default function Customers() {
       const response = await fetch('/api/customers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      
+
       const data = await response.json()
       if (data.success) {
         setCustomers(data.data)
@@ -150,7 +147,7 @@ export default function Customers() {
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // التحقق من الاسم فقط (مطلوب)
     if (!newCustomer.name.trim()) {
       addNotification({
@@ -195,7 +192,7 @@ export default function Customers() {
     setShowAddModal(false)
     setSuccess('تم إضافة العميل بنجاح!')
     setError(null)
-    
+
     // إضافة العميل للقائمة فوراً مع ID مؤقت
     const tempCustomer = {
       ...newCustomer,
@@ -266,7 +263,7 @@ export default function Customers() {
 
   const handleEditCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!editingCustomer) return
 
     // التحقق من الاسم فقط (مطلوب)
@@ -391,7 +388,7 @@ export default function Customers() {
       newSet.add(customerId)
       return newSet
     })
-    
+
     // إزالة العميل من القائمة فوراً مع الحركة
     setCustomers(prev => prev.filter(customer => customer.id !== customerId))
 
@@ -458,7 +455,7 @@ export default function Customers() {
 
   if (loading) {
     return (
-      <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+      <Layout>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -470,7 +467,7 @@ export default function Customers() {
   }
 
   return (
-    <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+    <Layout>
       <div className="flex items-center justify-between mb-8">
         <ModernButton onClick={() => setShowAddModal(true)}>
           <span className="mr-2">➕</span>
@@ -643,7 +640,7 @@ export default function Customers() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ModernInput
                   label="الاسم * (مطلوب)"
@@ -653,7 +650,7 @@ export default function Customers() {
                   placeholder="اسم العميل"
                   required
                 />
-                
+
                 <ModernInput
                   label="رقم الهاتف (اختياري)"
                   type="tel"
@@ -661,7 +658,7 @@ export default function Customers() {
                   onChange={(e: any) => setNewCustomer({...newCustomer, phone: e.target.value})}
                   placeholder="رقم الهاتف"
                 />
-                
+
                 <ModernInput
                   label="الرقم القومي (اختياري)"
                   type="text"
@@ -669,7 +666,7 @@ export default function Customers() {
                   onChange={(e: any) => setNewCustomer({...newCustomer, nationalId: e.target.value})}
                   placeholder="الرقم القومي"
                 />
-                
+
                 <ModernSelect
                   label="الحالة"
                   value={newCustomer.status}
@@ -678,7 +675,7 @@ export default function Customers() {
                   <option value="نشط">نشط</option>
                   <option value="غير نشط">غير نشط</option>
                 </ModernSelect>
-                
+
                 <div className="md:col-span-2">
                   <ModernInput
                     label="العنوان"
@@ -688,7 +685,7 @@ export default function Customers() {
                     placeholder="عنوان العميل"
                   />
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-900">ملاحظات</label>
@@ -728,7 +725,7 @@ export default function Customers() {
           </div>
         </div>
       )}
-      
+
       <NotificationSystem 
         notifications={notifications} 
         onRemove={removeNotification} 

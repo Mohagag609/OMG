@@ -9,6 +9,7 @@ import Sidebar from '../../components/Sidebar'
 import NavigationButtons from '../../components/NavigationButtons'
 import { NotificationSystem } from '../../components/NotificationSystem'
 
+import Layout from '@/components/Layout'
 interface UserProfile {
   id: string
   name: string
@@ -118,12 +119,14 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري تحميل الملف الشخصي...</p>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
@@ -288,8 +291,7 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </Layout>
   )
 }
 

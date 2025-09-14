@@ -6,10 +6,7 @@ import { Broker } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
-import NavigationButtons from '@/components/NavigationButtons'
-
+import Layout from '@/components/Layout'
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
@@ -26,13 +23,13 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
     warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
     info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
   }
-  
+
   const sizes: { [key: string]: string } = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2.5 text-sm font-medium',
     lg: 'px-6 py-3 text-base font-medium'
   }
-  
+
   return (
     <button 
       className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
@@ -107,7 +104,7 @@ export default function Brokers() {
     notes: ''
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -148,7 +145,7 @@ export default function Brokers() {
       router.push('/login')
       return
     }
-    
+
     fetchBrokers()
     fetchBrokerDues()
     fetchSafes()
@@ -160,7 +157,7 @@ export default function Brokers() {
       const response = await fetch('/api/brokers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      
+
       const data = await response.json()
       if (data.success) {
         setBrokers(data.data || [])
@@ -192,7 +189,7 @@ export default function Brokers() {
       const response = await fetch('/api/broker-due', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      
+
       const data = await response.json()
       if (data.success) {
         setBrokerDues(data.data || [])
@@ -208,7 +205,7 @@ export default function Brokers() {
       const response = await fetch('/api/safes', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      
+
       const data = await response.json()
       if (data.success) {
         setSafes(data.data || [])
@@ -220,7 +217,7 @@ export default function Brokers() {
 
   const handleAddBroker = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!newBroker.name.trim()) {
       setError('الرجاء إدخال اسم السمسار')
       addNotification({
@@ -305,7 +302,7 @@ export default function Brokers() {
 
   const handleEditBroker = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!editingBroker || !editingBroker.name.trim()) {
       setError('الرجاء إدخال اسم السمسار')
       return
@@ -443,7 +440,7 @@ export default function Brokers() {
 
   const handlePayDue = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!selectedDue || !paymentData.safeId) {
       addNotification({
         type: 'error',
@@ -584,7 +581,7 @@ export default function Brokers() {
         </body>
       </html>
     `
-    
+
     const printWindow = window.open('', '_blank')
     if (printWindow) {
       printWindow.document.write(printContent)
@@ -598,13 +595,13 @@ export default function Brokers() {
       broker.name.toLowerCase().includes(search.toLowerCase()) ||
       (broker.phone && broker.phone.toLowerCase().includes(search.toLowerCase())) ||
       (broker.notes && broker.notes.toLowerCase().includes(search.toLowerCase()))
-    
+
     const matchesStatus = filterStatus === 'all' || (broker as any).status === filterStatus
-    
+
     return matchesSearch && matchesStatus
   }).sort((a, b) => {
     let aValue, bValue
-    
+
     switch (sortBy) {
       case 'name':
         aValue = a.name
@@ -630,7 +627,7 @@ export default function Brokers() {
         aValue = a.name
         bValue = b.name
     }
-    
+
     if (sortOrder === 'asc') {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
     } else {
@@ -640,51 +637,38 @@ export default function Brokers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-      
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-xl">🤝</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">إدارة السماسرة</h1>
-                  <p className="text-gray-600">نظام متطور لإدارة السماسرة والعمولات</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 space-x-reverse">
-                <ModernButton variant="secondary" onClick={() => router.push('/contracts')}>
-                  📋 العقود المرتبطة
-                </ModernButton>
-                <NavigationButtons />
-              </div>
-            </div>
+    <Layout>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <span className="text-white text-xl">🤝</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">إدارة السماسرة</h1>
+            <p className="text-gray-600">نظام متطور لإدارة السماسرة والعمولات</p>
           </div>
         </div>
+        <ModernButton onClick={() => setShowAddForm(true)}>
+          <span className="mr-2">➕</span>
+          إضافة سمسار جديد
+        </ModernButton>
+      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Add Broker Form */}
-        {showAddForm && (
-          <ModernCard className="mb-8">
+      {/* Add Broker Form */}
+      {showAddForm && (
+        <ModernCard className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">إضافة سمسار جديد</h2>
               <button
@@ -723,7 +707,7 @@ export default function Brokers() {
                   placeholder="أدخل اسم السمسار"
                   required
                 />
-                
+
                 <ModernInput
                   label="رقم الهاتف"
                   type="tel"
@@ -744,7 +728,7 @@ export default function Brokers() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewBroker({...newBroker, commissionRate: parseFloat(e.target.value) || 0})}
                   placeholder="أدخل نسبة العمولة"
                 />
-                
+
                 <ModernSelect
                   label="الحالة"
                   value={newBroker.status}
@@ -755,7 +739,7 @@ export default function Brokers() {
                   <option value="معلق">معلق</option>
                 </ModernSelect>
               </div>
-              
+
               <ModernTextarea
                 label="ملاحظات"
                 value={newBroker.notes}
@@ -763,7 +747,7 @@ export default function Brokers() {
                 placeholder="أدخل أي ملاحظات إضافية"
                 rows={3}
               />
-              
+
               <div className="flex items-center justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200">
                 <ModernButton variant="secondary" onClick={() => setShowAddForm(false)}>
                   إلغاء
@@ -800,7 +784,7 @@ export default function Brokers() {
                   placeholder="أدخل اسم السمسار"
                   required
                 />
-                
+
                 <ModernInput
                   label="رقم الهاتف"
                   type="tel"
@@ -821,7 +805,7 @@ export default function Brokers() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBroker({...editingBroker, commissionRate: parseFloat(e.target.value) || 0})}
                   placeholder="أدخل نسبة العمولة"
                 />
-                
+
                 <ModernSelect
                   label="الحالة"
                   value={editingBroker.status || 'نشط'}
@@ -832,7 +816,7 @@ export default function Brokers() {
                   <option value="معلق">معلق</option>
                 </ModernSelect>
               </div>
-              
+
               <ModernTextarea
                 label="ملاحظات"
                 value={editingBroker.notes || ''}
@@ -840,7 +824,7 @@ export default function Brokers() {
                 placeholder="أدخل أي ملاحظات إضافية"
                 rows={3}
               />
-              
+
               <div className="flex items-center justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200">
                 <ModernButton variant="secondary" onClick={() => setShowEditForm(false)}>
                   إلغاء
@@ -1180,7 +1164,7 @@ export default function Brokers() {
                   value={paymentData.paymentDate}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentData({...paymentData, paymentDate: e.target.value})}
                 />
-                
+
                 <ModernTextarea
                   label="ملاحظات إضافية"
                   value={paymentData.notes}
@@ -1203,12 +1187,11 @@ export default function Brokers() {
           </div>
         </div>
       )}
-      
+
       <NotificationSystem 
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-      </div>
-    </div>
+      </Layout>
   )
 }
