@@ -5,47 +5,36 @@ import { useRouter } from 'next/navigation'
 import { DashboardKPIs } from '@/types'
 import { formatCurrency } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import Layout from '@/components/Layout'
-import ModernButton from '@/components/ModernButton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 // Compact UI Components
 const CompactCard = ({ children, className = '', ...props }: any) => (
-  <div className={`bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-6 transition-all duration-300 ${className}`} {...props}>
+  <Card className={`bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-lg shadow-gray-900/5 transition-all duration-300 ${className}`} {...props}>
     {children}
-  </div>
+  </Card>
 )
 
-const CompactButton = ({ children, variant = 'primary', size = 'sm', className = '', ...props }: any) => {
-  return (
-    <ModernButton 
-      variant={variant}
-      size={size}
-      className={className}
-      {...props}
-    >
-      {children}
-    </ModernButton>
-  )
-}
-
 const KPICard = ({ title, value, icon, color, trend, onClick }: any) => (
-  <CompactCard 
+  <Card 
     className={`group cursor-pointer hover:scale-105 transition-all duration-300 ${onClick ? 'hover:shadow-xl hover:shadow-gray-900/10' : ''} border-2 border-transparent hover:border-gray-200`}
     onClick={onClick}
   >
-    <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-xs font-medium text-gray-600 mb-1 group-hover:text-gray-800 transition-colors duration-300">{title}</p>
-        <p className={`text-xl font-bold ${color} group-hover:scale-105 transition-transform duration-300`}>{value}</p>
-        {trend && (
-          <p className="text-xs text-gray-500 mt-1 group-hover:text-gray-700 transition-colors duration-300">{trend}</p>
-        )}
+    <CardContent className="p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-medium text-gray-600 mb-1 group-hover:text-gray-800 transition-colors duration-300">{title}</p>
+          <p className={`text-xl font-bold ${color} group-hover:scale-105 transition-transform duration-300`}>{value}</p>
+          {trend && (
+            <p className="text-xs text-gray-500 mt-1 group-hover:text-gray-700 transition-colors duration-300">{trend}</p>
+          )}
+        </div>
+        <div className={`w-10 h-10 ${color.replace('text-', 'bg-').replace('-600', '-100')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+          <span className="text-lg">{icon}</span>
+        </div>
       </div>
-      <div className={`w-10 h-10 ${color.replace('text-', 'bg-').replace('-600', '-100')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
-        <span className="text-lg">{icon}</span>
-      </div>
-    </div>
-  </CompactCard>
+    </CardContent>
+  </Card>
 )
 
 const QuickActionCard = ({ title, icon, color, onClick }: any) => (
@@ -149,14 +138,14 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout title="لوحة التحكم" subtitle="نظام إدارة العقارات المتطور" icon="🏢">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="flex items-center justify-between mb-6">
         <div className="text-xs text-gray-500">
           آخر تحديث: {new Date().toLocaleString('en-GB')}
         </div>
-        <ModernButton variant="secondary" size="sm" onClick={() => fetchKPIs()} icon="🔄">
-          تحديث
-        </ModernButton>
+        <Button variant="secondary" size="sm" onClick={() => fetchKPIs()}>
+          🔄 تحديث
+        </Button>
       </div>
 
       {/* Error Message */}
@@ -289,6 +278,6 @@ export default function Dashboard() {
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-    </Layout>
+    </div>
   )
 }
