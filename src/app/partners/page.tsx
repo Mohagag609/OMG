@@ -6,9 +6,8 @@ import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { checkDuplicateName, checkDuplicatePhone } from '@/utils/duplicateCheck'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
+import ModernButton from '@/components/ModernButton'
 
 // Modern UI Components
 const ModernCard = ({ children, className = '', ...props }: any) => (
@@ -17,31 +16,7 @@ const ModernCard = ({ children, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
+// Using imported ModernButton component
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
@@ -71,7 +46,6 @@ export default function Partners() {
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [deletingPartners, setDeletingPartners] = useState<Set<string>>(new Set())
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newPartner, setNewPartner] = useState({
     name: '',
     phone: '',
@@ -93,10 +67,6 @@ export default function Partners() {
 
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case 'b':
-            e.preventDefault()
-            setSidebarOpen(!sidebarOpen)
-            break
           case 'f':
             e.preventDefault()
             document.getElementById('search-input')?.focus()
@@ -113,7 +83,7 @@ export default function Partners() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [sidebarOpen])
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -389,17 +359,14 @@ export default function Partners() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+      <div className={`transition-all duration-300 `}>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 space-x-reverse">
-                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
                   <span className="text-white text-xl">👥</span>
                 </div>
