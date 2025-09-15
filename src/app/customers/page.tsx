@@ -46,6 +46,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Printer,
 } from "lucide-react"
 
 // Mock data - replace with real API calls
@@ -192,6 +193,94 @@ export default function Customers() {
     }
   }
 
+  const exportToCSV = () => {
+    const headers = ['الاسم', 'البريد الإلكتروني', 'الهاتف', 'العنوان', 'تاريخ الانضمام', 'عدد العقود', 'إجمالي المبلغ', 'الحالة']
+    const csvContent = [
+      headers.join(','),
+      ...customers.map(customer => [
+        customer.name,
+        customer.email,
+        customer.phone,
+        customer.address,
+        customer.joinDate,
+        customer.totalContracts,
+        customer.totalAmount,
+        customer.status
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `customers_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const printCustomers = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8">
+          <title>تقرير العملاء</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f2f2f2; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .date { text-align: left; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>تقرير العملاء</h1>
+            <p class="date">تاريخ الطباعة: ${new Date().toLocaleString('en-GB')}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>البريد الإلكتروني</th>
+                <th>الهاتف</th>
+                <th>العنوان</th>
+                <th>تاريخ الانضمام</th>
+                <th>عدد العقود</th>
+                <th>إجمالي المبلغ</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${customers.map(customer => `
+                <tr>
+                  <td>${customer.name}</td>
+                  <td>${customer.email}</td>
+                  <td>${customer.phone}</td>
+                  <td>${customer.address}</td>
+                  <td>${customer.joinDate}</td>
+                  <td>${customer.totalContracts}</td>
+                  <td>${customer.totalAmount.toLocaleString()} ر.س</td>
+                  <td>${customer.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
   if (loading) {
     return (
       <AppLayout>
@@ -280,9 +369,13 @@ export default function Customers() {
             </p>
           </div>
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <Button variant="outline" size="sm" className="h-10">
+            <Button variant="outline" size="sm" className="h-10" onClick={printCustomers}>
+              <Printer className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" />
+              طباعة PDF
+            </Button>
+            <Button variant="outline" size="sm" className="h-10" onClick={exportToCSV}>
               <Download className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" />
-              تصدير
+              تصدير CSV
             </Button>
             <Button variant="outline" size="sm" className="h-10">
               <RefreshCw className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" />

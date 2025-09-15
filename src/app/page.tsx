@@ -31,6 +31,9 @@ import {
   Activity,
   Target,
   Zap,
+  BarChart3,
+  PieChart,
+  LineChart,
 } from "lucide-react"
 import {
   AreaChart,
@@ -40,12 +43,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
+  PieChart as RechartsPieChart,
   Pie,
   Cell,
   BarChart,
   Bar,
-  LineChart,
+  LineChart as RechartsLineChart,
   Line,
 } from "recharts"
 
@@ -363,7 +366,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <RechartsPieChart>
                     <Pie
                       data={unitStatusData}
                       cx="50%"
@@ -386,7 +389,7 @@ export default function Dashboard() {
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                       }} 
                     />
-                  </PieChart>
+                  </RechartsPieChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
