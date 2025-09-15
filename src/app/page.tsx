@@ -1,382 +1,373 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { DashboardKPIs } from '@/types'
-import { formatCurrency } from '@/utils/formatting'
-import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import ModernLayout from '@/components/modern-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
-  Building2, 
-  FileText, 
-  Calendar,
-  Receipt,
-  Handshake,
-  BarChart3,
-  Database,
-  RefreshCw,
+import React, { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AppLayout } from "@/components/layout/app-layout"
+import {
+  Users,
+  FileText,
+  Building2,
+  Calculator,
+  Wallet,
+  TrendingUp,
   Plus,
-  ArrowUpRight,
-  ArrowDownRight
-} from 'lucide-react'
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  Eye,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  Download,
+  RefreshCw,
+} from "lucide-react"
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar
-} from 'recharts'
+} from "recharts"
 
-// Sample data for charts
+// Mock data - replace with real API calls
+const mockStats = {
+  totalCustomers: 1247,
+  totalContracts: 892,
+  totalUnits: 156,
+  totalRevenue: 24500000,
+  monthlyGrowth: 12.5,
+  contractCompletion: 78.3,
+}
+
 const salesData = [
-  { month: 'يناير', sales: 4000, contracts: 12 },
-  { month: 'فبراير', sales: 3000, contracts: 8 },
-  { month: 'مارس', sales: 5000, contracts: 15 },
-  { month: 'أبريل', sales: 4500, contracts: 10 },
-  { month: 'مايو', sales: 6000, contracts: 18 },
-  { month: 'يونيو', sales: 5500, contracts: 14 },
+  { month: "يناير", sales: 4000, contracts: 2400 },
+  { month: "فبراير", sales: 3000, contracts: 1398 },
+  { month: "مارس", sales: 2000, contracts: 9800 },
+  { month: "أبريل", sales: 2780, contracts: 3908 },
+  { month: "مايو", sales: 1890, contracts: 4800 },
+  { month: "يونيو", sales: 2390, contracts: 3800 },
 ]
 
 const unitStatusData = [
-  { name: 'متاحة', value: 45, color: '#22c55e' },
-  { name: 'محجوزة', value: 30, color: '#f59e0b' },
-  { name: 'مباعة', value: 25, color: '#3b82f6' },
+  { name: "مباع", value: 78, color: "#10b981" },
+  { name: "متاح", value: 22, color: "#3b82f6" },
 ]
 
-const KPICard = ({ title, value, icon: Icon, trend, trendValue, onClick, loading }: any) => (
-  <Card 
-    className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${onClick ? 'hover:scale-105' : ''}`}
-    onClick={onClick}
-  >
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-          {loading ? (
-            <Skeleton className="h-8 w-24 mb-2" />
-          ) : (
-            <p className="text-2xl font-bold text-card-foreground mb-1">{value}</p>
-          )}
-          {trend && !loading && (
-            <div className="flex items-center space-x-1 space-x-reverse">
-              {trend === 'up' ? (
-                <ArrowUpRight className="w-4 h-4 text-green-500" />
-              ) : (
-                <ArrowDownRight className="w-4 h-4 text-red-500" />
-              )}
-              <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                {trendValue}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-          <Icon className="w-6 h-6 text-primary" />
-        </div>
-      </div>
+const recentContracts = [
+  { id: "1", customer: "أحمد محمد", unit: "شقة 101", amount: 250000, status: "مكتمل" },
+  { id: "2", customer: "فاطمة علي", unit: "شقة 205", amount: 180000, status: "قيد التنفيذ" },
+  { id: "3", customer: "محمد حسن", unit: "شقة 302", amount: 320000, status: "مكتمل" },
+  { id: "4", customer: "نور الدين", unit: "شقة 108", amount: 195000, status: "قيد التنفيذ" },
+]
+
+const StatCard = ({ title, value, change, icon: Icon, color = "blue" }: any) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium text-muted-foreground">
+        {title}
+      </CardTitle>
+      <Icon className={`h-4 w-4 text-${color}-500`} />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      <p className="text-xs text-muted-foreground">
+        <span className="text-green-600">+{change}%</span> من الشهر الماضي
+      </p>
     </CardContent>
   </Card>
 )
 
-const QuickActionCard = ({ title, icon: Icon, onClick, loading }: any) => (
-  <Card 
-    className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
-    onClick={onClick}
-  >
-    <CardContent className="p-6">
-      <div className="text-center">
-        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <Icon className="w-6 h-6 text-primary" />
+const QuickActionCard = ({ title, description, icon: Icon, onClick, color = "blue" }: any) => (
+  <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
+    <CardHeader className="pb-3">
+      <div className="flex items-center space-x-2 rtl:space-x-reverse">
+        <div className={`p-2 rounded-lg bg-${color}-100 dark:bg-${color}-900/20`}>
+          <Icon className={`h-5 w-5 text-${color}-600 dark:text-${color}-400`} />
         </div>
-        <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
+        <CardTitle className="text-base">{title}</CardTitle>
       </div>
+    </CardHeader>
+    <CardContent>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </CardContent>
   </Card>
+)
+
+const ContractRow = ({ contract }: any) => (
+  <div className="flex items-center justify-between p-3 border-b border-border last:border-b-0">
+    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+        <FileText className="w-4 h-4 text-primary" />
+      </div>
+      <div>
+        <p className="font-medium">{contract.customer}</p>
+        <p className="text-sm text-muted-foreground">{contract.unit}</p>
+      </div>
+    </div>
+    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+      <span className="font-medium">{contract.amount.toLocaleString()} ر.س</span>
+      <Badge variant={contract.status === "مكتمل" ? "default" : "secondary"}>
+        {contract.status}
+      </Badge>
+    </div>
+  </div>
 )
 
 export default function Dashboard() {
-  const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const { notifications, addNotification, removeNotification } = useNotifications()
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchKPIs()
+    // Simulate loading
+    const timer = setTimeout(() => setLoading(false), 1000)
+    return () => clearTimeout(timer)
   }, [])
-
-  const fetchKPIs = async () => {
-    try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      const data = await response.json()
-      if (data.success) {
-        setKpis(data.data)
-      } else {
-        setError(data.error || 'خطأ في تحميل البيانات')
-      }
-    } catch (err) {
-      console.error('Error fetching KPIs:', err)
-      setError('خطأ في الاتصال')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const quickActions = [
-    { title: 'عميل جديد', icon: Users, onClick: () => router.push('/customers') },
-    { title: 'وحدة جديدة', icon: Building2, onClick: () => router.push('/units') },
-    { title: 'عقد جديد', icon: FileText, onClick: () => router.push('/contracts') },
-    { title: 'سمسار', icon: Handshake, onClick: () => router.push('/brokers') },
-    { title: 'شريك', icon: Users, onClick: () => router.push('/partners') },
-    { title: 'خزينة', icon: DollarSign, onClick: () => router.push('/treasury') },
-    { title: 'تقرير', icon: BarChart3, onClick: () => router.push('/reports') },
-    { title: 'نسخ احتياطي', icon: Database, onClick: () => router.push('/backup-system') }
-  ]
 
   if (loading) {
     return (
-      <ModernLayout title="لوحة التحكم" subtitle="نظام إدارة العقارات المتطور" icon={<Building2 className="w-6 h-6 text-white" />}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-card-foreground">جاري التحميل...</h2>
+      <AppLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64 mt-2" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-3 w-32 mt-2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Charts */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-80 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-80 w-full" />
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </ModernLayout>
+      </AppLayout>
     )
   }
 
   return (
-    <ModernLayout title="لوحة التحكم" subtitle="نظام إدارة العقارات المتطور" icon={<Building2 className="w-6 h-6 text-white" />}>
-      <div className="flex items-center justify-between mb-8">
-        <div className="text-sm text-muted-foreground">
-          آخر تحديث: {new Date().toLocaleString('en-GB')}
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+            <p className="text-muted-foreground">
+              نظرة عامة على أداء النظام والإحصائيات المهمة
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" />
+              تحديث
+            </Button>
+            <Button size="sm">
+              <Download className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" />
+              تصدير
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchKPIs()}>
-          <RefreshCw className="w-4 h-4 ml-2" />
-          تحديث
-        </Button>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <Card className="mb-6 border-destructive/50 bg-destructive/5">
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-destructive/10 rounded-full flex items-center justify-center ml-3">
-                <span className="text-destructive text-lg">⚠️</span>
-              </div>
-              <div>
-                <h3 className="text-destructive font-semibold text-sm">خطأ في تحميل البيانات</h3>
-                <p className="text-destructive/80 text-xs">{error}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* KPIs Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-card-foreground mb-6">المؤشرات الرئيسية</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="إجمالي المبيعات"
-            value={kpis ? formatCurrency(kpis.totalSales) : '0'}
-            icon={DollarSign}
-            trend="up"
-            trendValue="+12%"
-            onClick={() => router.push('/contracts')}
-            loading={loading}
-          />
-          <KPICard
-            title="إجمالي المقبوضات"
-            value={kpis ? formatCurrency(kpis.totalReceipts) : '0'}
-            icon={TrendingUp}
-            trend="up"
-            trendValue="+8%"
-            onClick={() => router.push('/vouchers')}
-            loading={loading}
-          />
-          <KPICard
-            title="إجمالي المصروفات"
-            value={kpis ? formatCurrency(kpis.totalExpenses) : '0'}
-            icon={TrendingDown}
-            trend="down"
-            trendValue="-5%"
-            onClick={() => router.push('/vouchers')}
-            loading={loading}
-          />
-          <KPICard
-            title="صافي الربح"
-            value={kpis ? formatCurrency(kpis.netProfit) : '0'}
-            icon={BarChart3}
-            trend="up"
-            trendValue="+15%"
-            onClick={() => router.push('/reports')}
-            loading={loading}
-          />
-        </div>
-      </div>
-
-      {/* Additional KPIs */}
-      <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="نسبة التحصيل"
-            value={kpis ? `${kpis.collectionPercentage}%` : '0%'}
-            icon={BarChart3}
-            trend="up"
-            trendValue="ممتاز"
-            onClick={() => router.push('/installments')}
-            loading={loading}
-          />
-          <KPICard
-            title="إجمالي الديون"
-            value={kpis ? formatCurrency(kpis.totalDebt) : '0'}
-            icon={TrendingDown}
-            trend="down"
-            trendValue="يحتاج متابعة"
-            onClick={() => router.push('/installments')}
-            loading={loading}
-          />
-          <KPICard
-            title="عدد الوحدات"
-            value={kpis ? `${kpis.unitCounts.total}` : '0'}
-            icon={Building2}
-            trend="up"
-            trendValue={`متاحة: ${kpis?.unitCounts.available || 0}`}
-            onClick={() => router.push('/units')}
-            loading={loading}
-          />
-          <KPICard
-            title="عدد المستثمرين"
-            value={kpis ? `${kpis.investorCount}` : '0'}
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="إجمالي العملاء"
+            value={mockStats.totalCustomers.toLocaleString()}
+            change={12.5}
             icon={Users}
-            trend="up"
-            trendValue="نشط"
-            onClick={() => router.push('/partners')}
-            loading={loading}
+            color="blue"
+          />
+          <StatCard
+            title="إجمالي العقود"
+            value={mockStats.totalContracts.toLocaleString()}
+            change={8.2}
+            icon={FileText}
+            color="green"
+          />
+          <StatCard
+            title="إجمالي الوحدات"
+            value={mockStats.totalUnits.toLocaleString()}
+            change={15.3}
+            icon={Building2}
+            color="purple"
+          />
+          <StatCard
+            title="إجمالي الإيرادات"
+            value={`${(mockStats.totalRevenue / 1000000).toFixed(1)}م ر.س`}
+            change={22.1}
+            icon={TrendingUp}
+            color="orange"
           />
         </div>
-      </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Sales Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>تطور المبيعات</CardTitle>
-            <CardDescription>مقارنة المبيعات والعقود خلال الأشهر الماضية</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="sales" 
-                    stackId="1" 
-                    stroke="#3b82f6" 
-                    fill="#3b82f6" 
-                    fillOpacity={0.6}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="contracts" 
-                    stackId="1" 
-                    stroke="#10b981" 
-                    fill="#10b981" 
-                    fillOpacity={0.6}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Charts */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>مقارنة المبيعات والعقود</CardTitle>
+              <CardDescription>مقارنة المبيعات والعقود خلال الأشهر الماضية</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={salesData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area 
+                      type="monotone" 
+                      dataKey="sales" 
+                      stackId="1" 
+                      stroke="#3b82f6" 
+                      fill="#3b82f6" 
+                      fillOpacity={0.6}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="contracts" 
+                      stackId="1" 
+                      stroke="#10b981" 
+                      fill="#10b981" 
+                      fillOpacity={0.6}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Unit Status Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>حالة الوحدات</CardTitle>
-            <CardDescription>توزيع الوحدات حسب الحالة</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={unitStatusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {unitStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-card-foreground mb-6">الإجراءات السريعة</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-          {quickActions.map((action, index) => (
-            <QuickActionCard
-              key={index}
-              title={action.title}
-              icon={action.icon}
-              onClick={action.onClick}
-              loading={loading}
-            />
-          ))}
+          <Card>
+            <CardHeader>
+              <CardTitle>حالة الوحدات</CardTitle>
+              <CardDescription>توزيع الوحدات حسب الحالة</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={unitStatusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {unitStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>الإجراءات السريعة</CardTitle>
+            <CardDescription>الوصول السريع للوظائف المهمة</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <QuickActionCard
+                title="إضافة عميل جديد"
+                description="تسجيل عميل جديد في النظام"
+                icon={Users}
+                color="blue"
+                onClick={() => console.log("Add customer")}
+              />
+              <QuickActionCard
+                title="إنشاء عقد جديد"
+                description="بدء عملية إنشاء عقد جديد"
+                icon={FileText}
+                color="green"
+                onClick={() => console.log("Add contract")}
+              />
+              <QuickActionCard
+                title="إضافة وحدة جديدة"
+                description="تسجيل وحدة عقارية جديدة"
+                icon={Building2}
+                color="purple"
+                onClick={() => console.log("Add unit")}
+              />
+              <QuickActionCard
+                title="تسجيل دفعة"
+                description="تسجيل دفعة جديدة من عميل"
+                icon={Calculator}
+                color="orange"
+                onClick={() => console.log("Add payment")}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Contracts */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>العقود الأخيرة</CardTitle>
+                <CardDescription>آخر العقود المضافة إلى النظام</CardDescription>
+              </div>
+              <Button variant="outline" size="sm">
+                عرض الكل
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-0">
+              {recentContracts.map((contract) => (
+                <ContractRow key={contract.id} contract={contract} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
-    </ModernLayout>
+    </AppLayout>
   )
 }
