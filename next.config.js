@@ -10,14 +10,6 @@ const nextConfig = {
   // إعدادات Netlify
   output: 'export',
   distDir: 'out',
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: '/api/:path*',
-      },
-    ];
-  },
   webpack: (config, { isServer }) => {
     // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {

@@ -3,8 +3,6 @@ import { prisma } from '@/lib/db'
 import { generateToken, verifyPassword } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // POST /api/auth/login - Login user
 export async function POST(request: NextRequest) {

@@ -3,8 +3,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { getAuditLogs } from '@/lib/audit'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/audit - Get audit logs with pagination
 export async function GET(request: NextRequest) {

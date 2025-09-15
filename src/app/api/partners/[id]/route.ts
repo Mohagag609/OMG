@@ -3,8 +3,6 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, Partner } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/partners/[id] - Get partner by ID
 export async function GET(

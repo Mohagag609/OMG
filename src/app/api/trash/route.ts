@@ -3,8 +3,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { getSoftDeletedEntities } from '@/lib/soft-delete'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/trash - Get soft deleted entities
 export async function GET(request: NextRequest) {

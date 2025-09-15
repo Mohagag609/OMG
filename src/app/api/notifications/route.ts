@@ -3,8 +3,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { getNotifications, getUnacknowledgedCount } from '@/lib/notifications'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/notifications - Get notifications with pagination
 export async function GET(request: NextRequest) {

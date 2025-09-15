@@ -3,8 +3,6 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, Safe, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/safes - Get safes with pagination
 export async function GET(request: NextRequest) {

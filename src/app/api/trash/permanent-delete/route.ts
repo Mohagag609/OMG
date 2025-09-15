@@ -3,8 +3,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // POST /api/trash/permanent-delete - Permanently delete entity
 export async function POST(request: NextRequest) {

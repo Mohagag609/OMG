@@ -3,8 +3,6 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/broker-due - Get broker dues with pagination
 export async function GET(request: NextRequest) {

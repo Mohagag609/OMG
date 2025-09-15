@@ -4,8 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { calculateDashboardKPIs } from '@/utils/calculations'
 import { ApiResponse, DashboardKPIs } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Removed for static export compatibility
 
 // GET /api/dashboard - Get dashboard KPIs
 export async function GET(request: NextRequest) {

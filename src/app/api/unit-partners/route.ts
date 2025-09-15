@@ -3,8 +3,6 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, UnitPartner, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/unit-partners - Get unit partners with pagination
 export async function GET(request: NextRequest) {

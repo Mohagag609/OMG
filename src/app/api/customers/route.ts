@@ -4,8 +4,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { validateCustomer } from '@/utils/validation'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/customers - Get customers with pagination
 export async function GET(request: NextRequest) {

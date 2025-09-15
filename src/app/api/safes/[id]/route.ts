@@ -4,8 +4,6 @@ import { getUserFromToken } from '@/lib/auth'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Safe } from '@/types'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 // GET /api/safes/[id] - Get safe by ID
 export async function GET(
