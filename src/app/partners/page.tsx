@@ -156,16 +156,6 @@ export default function Partners() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchPartners()
-  }, [fetchPartners, router]) // FIXED: Added proper dependencies
-
   // FIXED: Memoized fetchPartners function to prevent unnecessary re-renders
   const fetchPartners = useCallback(async () => {
     try {
@@ -212,6 +202,16 @@ export default function Partners() {
       setLoading(false)
     }
   }, [router, addNotification]) // FIXED: Added proper dependencies
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchPartners()
+  }, [fetchPartners, router]) // FIXED: Added proper dependencies
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()

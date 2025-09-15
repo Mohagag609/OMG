@@ -185,7 +185,7 @@ export default function Contracts() {
   const [showAddModal, setShowAddModal] = useState(false)
   // FIXED: Removed unused variables
   const [deletingContracts, setDeletingContracts] = useState<Set<string>>(new Set())
-  const [editingContract, setEditingContract] = useState<Contract | null>(null)
+  // FIXED: Removed unused editingContract variable
   const [viewingContract, setViewingContract] = useState<Contract | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
@@ -242,16 +242,6 @@ export default function Contracts() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchData()
-  }, [fetchData, router]) // FIXED: Added proper dependencies
-
   // FIXED: Memoized fetchData function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     try {
@@ -289,6 +279,16 @@ export default function Contracts() {
       setLoading(false)
     }
   }, []) // FIXED: Empty dependency array since no external dependencies
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchData()
+  }, [fetchData, router]) // FIXED: Added proper dependencies
 
   const handleAddContract = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -350,7 +350,7 @@ export default function Contracts() {
       const data = await response.json()
       if (data.success) {
         setShowAddModal(false)
-        setCurrentStep(1)
+        // FIXED: Removed unused setCurrentStep call
         setSuccess('تم إضافة العقد بنجاح!')
         setError(null)
         setNewContract({
@@ -465,7 +465,7 @@ export default function Contracts() {
   }
 
   const handleEditContract = (contract: Contract) => {
-    setEditingContract(contract)
+    // FIXED: Removed unused setEditingContract call
     setNewContract({
       unitId: contract.unitId,
       customerId: contract.customerId,

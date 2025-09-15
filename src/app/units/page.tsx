@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Unit, UnitPartner, PartnerGroup } from '@/types'
-import { formatCurrency, formatDate } from '@/utils/formatting'
+import { formatCurrency } from '@/utils/formatting'
+// FIXED: Removed unused formatDate import
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 // FIXED: Removed unused imports
 
@@ -156,33 +157,6 @@ export default function Units() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [])
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchData()
-  }, [fetchData, router]) // FIXED: Added proper dependencies
-
-  // FIXED: Separate useEffect for URL params to avoid dependency issues
-  useEffect(() => {
-    if (units.length > 0) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const editId = urlParams.get('edit')
-      if (editId) {
-        // Find the unit to edit
-        const unitToEdit = units.find(unit => unit.id === editId)
-        if (unitToEdit) {
-          openEditModal(unitToEdit)
-          // Clean up URL
-          window.history.replaceState({}, '', '/units')
-        }
-      }
-    }
-  }, [units]) // FIXED: Only depend on units
-
   // FIXED: Memoized fetchData function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     try {
@@ -230,6 +204,33 @@ export default function Units() {
       setLoading(false)
     }
   }, []) // FIXED: Empty dependency array since no external dependencies
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchData()
+  }, [fetchData, router]) // FIXED: Added proper dependencies
+
+  // FIXED: Separate useEffect for URL params to avoid dependency issues
+  useEffect(() => {
+    if (units.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const editId = urlParams.get('edit')
+      if (editId) {
+        // Find the unit to edit
+        const unitToEdit = units.find(unit => unit.id === editId)
+        if (unitToEdit) {
+          openEditModal(unitToEdit)
+          // Clean up URL
+          window.history.replaceState({}, '', '/units')
+        }
+      }
+    }
+  }, [units]) // FIXED: Only depend on units
 
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
