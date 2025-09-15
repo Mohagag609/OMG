@@ -10,6 +10,16 @@ const nextConfig = {
   // إعدادات Netlify
   output: 'export',
   distDir: 'out',
+  // Exclude API routes from static export
+  exportPathMap: async function (defaultPathMap) {
+    const pathMap = {}
+    for (const [path, config] of Object.entries(defaultPathMap)) {
+      if (!path.startsWith('/api/')) {
+        pathMap[path] = config
+      }
+    }
+    return pathMap
+  },
   webpack: (config, { isServer }) => {
     // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {
