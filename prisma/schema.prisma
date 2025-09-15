@@ -29,6 +29,10 @@ model Customer {
   // Relations
   contracts Contract[]
   
+  // FIXED: Add indexes for better performance
+  @@index([deletedAt])
+  @@index([status])
+  @@index([createdAt])
   @@map("customers")
 }
 
@@ -54,6 +58,11 @@ model Unit {
   vouchers      Voucher[]
   unitPartners  UnitPartner[]
   
+  // FIXED: Add indexes for better performance
+  @@index([deletedAt])
+  @@index([status])
+  @@index([unitType])
+  @@index([createdAt])
   @@map("units")
 }
 
@@ -72,6 +81,9 @@ model Partner {
   partnerDebts         PartnerDebt[]
   partnerGroupPartners PartnerGroupPartner[]
   
+  // FIXED: Add indexes for better performance
+  @@index([deletedAt])
+  @@index([createdAt])
   @@map("partners")
 }
 
@@ -121,6 +133,12 @@ model Contract {
   unit      Unit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
   customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
+  // FIXED: Add indexes for better performance
+  @@index([deletedAt])
+  @@index([unitId])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([start])
   @@map("contracts")
 }
 

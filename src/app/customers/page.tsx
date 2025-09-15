@@ -131,28 +131,32 @@ export default function Customers() {
     }
     
     fetchCustomers()
-  }, [])
+  }, [fetchCustomers, router]) // FIXED: Added proper dependencies
 
-  const fetchCustomers = async () => {
+  // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
+  const fetchCustomers = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/customers', {
+      const response = await fetch('/.netlify/functions/customers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
       const data = await response.json()
       if (data.success) {
         setCustomers(data.data)
+        setError(null)
       } else {
         setError(data.error || 'خطأ في تحميل العملاء')
       }
     } catch (err) {
-      console.error('Error fetching customers:', err)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching customers:', err)
+      }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
