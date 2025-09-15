@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+// Removed framer-motion import
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
 
@@ -49,15 +49,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         />
         
         <main className="min-h-[calc(100vh-4rem)]">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="p-6"
-          >
+          <div className="p-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
             {children}
-          </motion.div>
+          </div>
         </main>
       </div>
     </div>

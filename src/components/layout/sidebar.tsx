@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+// Removed framer-motion import
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -141,27 +141,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={onClose}
-          />
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in-0 duration-200"
+          onClick={onClose}
+        />
+      )}
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          x: isOpen ? 0 : "100%",
-        }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      <aside
         className={cn(
-          "fixed top-0 right-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg",
+          "fixed top-0 right-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "translate-x-full",
           "lg:fixed lg:translate-x-0 lg:z-40"
         )}
       >
@@ -225,7 +216,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
           </div>
         </div>
-      </motion.aside>
+      </aside>
     </>
   )
 }
@@ -269,36 +260,28 @@ function MenuItem({ item, isActive, hasActiveChild, isExpanded, onToggle, onClos
             <ChevronRight className="w-4 h-4" />
           )}
         </button>
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-1 space-y-1 pr-6 rtl:pr-0 rtl:pl-6">
-                {item.children.map((child) => (
-                  <Link
-                    key={child.href}
-                    href={child.href!}
-                    onClick={onClose}
-                    className={cn(
-                      "flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 text-sm rounded-md transition-colors",
-                      isActive
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    <child.icon className="w-4 h-4" />
-                    <span>{child.title}</span>
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isExpanded && (
+          <div className="overflow-hidden transition-all duration-200">
+            <div className="mt-1 space-y-1 pr-6 rtl:pr-0 rtl:pl-6">
+              {item.children.map((child) => (
+                <Link
+                  key={child.href}
+                  href={child.href!}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 text-sm rounded-md transition-colors",
+                    isActive
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  )}
+                >
+                  <child.icon className="w-4 h-4" />
+                  <span>{child.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }

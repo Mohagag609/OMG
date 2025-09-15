@@ -314,7 +314,7 @@ export default function Dashboard() {
                   <Area 
                     type="monotone" 
                     dataKey="contracts" 
-                    stackId="2" 
+                    stackId="1" 
                     stroke="#10b981" 
                     fill="#10b981" 
                     fillOpacity={0.6}
@@ -340,7 +340,7 @@ export default function Dashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
