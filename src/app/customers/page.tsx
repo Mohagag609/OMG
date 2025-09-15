@@ -5,64 +5,56 @@ import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import Layout from '@/components/Layout'
+import ModernLayout from '@/components/modern-layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog'
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table'
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  Download, 
+  Printer, 
+  Users,
+  Phone,
+  MapPin,
+  Calendar,
+  UserCheck,
+  UserX
+} from 'lucide-react'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
-  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
-    {children}
-  </div>
-)
-
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
-
-const ModernInput = ({ label, className = '', ...props }: any) => (
-  <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <input 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal ${className}`}
-      {...props}
-    />
-  </div>
-)
-
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
-  <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <select 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold ${className}`}
-      {...props}
-    >
-      {children}
-    </select>
-  </div>
+// Loading skeleton for table rows
+const CustomerRowSkeleton = () => (
+  <TableRow>
+    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+    <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+  </TableRow>
 )
 
 export default function Customers() {
@@ -458,254 +450,291 @@ export default function Customers() {
 
   if (loading) {
     return (
-      <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+      <ModernLayout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon={<Users className="w-6 h-6 text-white" />}>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-card-foreground">جاري التحميل...</h2>
           </div>
         </div>
-      </Layout>
+      </ModernLayout>
     )
   }
 
   return (
-    <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+    <ModernLayout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon={<Users className="w-6 h-6 text-white" />}>
       <div className="flex items-center justify-between mb-8">
-        <ModernButton onClick={() => setShowAddModal(true)}>
-          <span className="mr-2">➕</span>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="w-4 h-4 ml-2" />
           إضافة عميل جديد
           <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
-        </ModernButton>
+        </Button>
       </div>
 
       {/* Search and Filters */}
-      <ModernCard className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="relative">
-              <input
-                id="search-input"
-                type="text"
-                placeholder="🔍 ابحث في العملاء... (Ctrl+F)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
-              />
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="search-input"
+                  type="text"
+                  placeholder="ابحث في العملاء... (Ctrl+F)"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-80 pr-10"
+                />
+              </div>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 ml-2" />
+                تصدير CSV
+              </Button>
+              <Button variant="outline" size="sm">
+                <Printer className="w-4 h-4 ml-2" />
+                طباعة PDF
+              </Button>
             </div>
-            <ModernButton variant="secondary" size="sm">
-              📊 تصدير CSV
-            </ModernButton>
-            <ModernButton variant="secondary" size="sm">
-              🖨️ طباعة PDF
-            </ModernButton>
+            <div className="text-sm text-muted-foreground">
+              {customers.length} عميل
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            {customers.length} عميل
-          </div>
-        </div>
-      </ModernCard>
+        </CardContent>
+      </Card>
 
       {/* Customers List */}
-      <ModernCard>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">قائمة العملاء</h2>
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <span className="text-sm text-gray-500">آخر تحديث:</span>
-            <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('en-GB')}</span>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-            <div className="flex items-center">
-              <span className="text-red-500 mr-2">⚠️</span>
-              <span className="text-red-700">{error}</span>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>قائمة العملاء</CardTitle>
+              <CardDescription>إدارة جميع العملاء في النظام</CardDescription>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <span className="text-sm text-muted-foreground">آخر تحديث:</span>
+              <span className="text-sm font-medium text-card-foreground">{new Date().toLocaleString('en-GB')}</span>
             </div>
           </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✅</span>
-              <span className="text-green-700">{success}</span>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-6 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-destructive mr-2">⚠️</span>
+                <span className="text-destructive">{error}</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">رقم الهاتف</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الرقم القومي</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">العنوان</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">تاريخ الإضافة</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.filter(customer => 
-                search === '' || 
-                customer.name.toLowerCase().includes(search.toLowerCase()) ||
-                (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
-                (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
-              ).map((customer) => (
-                <tr 
-                  key={customer.id} 
-                  className={`
-                    border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
-                    ${deletingCustomers.has(customer.id) 
-                      ? 'transform translate-x-full opacity-0 scale-95' 
-                      : 'transform translate-x-0 opacity-100 scale-100'
-                    }
-                  `}
-                >
-                  <td className="py-4 px-6">
-                    <div className="text-gray-900 font-bold text-base">{customer.name}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{customer.phone || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold max-w-xs truncate">{customer.address || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      customer.status === 'نشط' 
-                        ? 'bg-green-100 text-green-900' 
-                        : 'bg-red-100 text-red-900'
-                    }`}>
-                      {customer.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{formatDate(customer.createdAt || new Date())}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
-                        ✏️ تعديل
-                      </ModernButton>
-                      <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
-                        🗑️ حذف
-                      </ModernButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </ModernCard>
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✅</span>
+                <span className="text-green-700">{success}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">الاسم</TableHead>
+                  <TableHead className="text-right">رقم الهاتف</TableHead>
+                  <TableHead className="text-right">الرقم القومي</TableHead>
+                  <TableHead className="text-right">العنوان</TableHead>
+                  <TableHead className="text-right">الحالة</TableHead>
+                  <TableHead className="text-right">تاريخ الإضافة</TableHead>
+                  <TableHead className="text-right">الإجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <CustomerRowSkeleton key={index} />
+                  ))
+                ) : (
+                  customers.filter(customer => 
+                    search === '' || 
+                    customer.name.toLowerCase().includes(search.toLowerCase()) ||
+                    (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
+                    (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
+                  ).map((customer) => (
+                    <TableRow 
+                      key={customer.id} 
+                      className={`
+                        transition-all duration-300
+                        ${deletingCustomers.has(customer.id) 
+                          ? 'transform translate-x-full opacity-0 scale-95' 
+                          : 'transform translate-x-0 opacity-100 scale-100'
+                        }
+                      `}
+                    >
+                      <TableCell>
+                        <div className="flex items-center space-x-3 space-x-reverse">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="font-medium text-card-foreground">{customer.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{customer.phone || '-'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-muted-foreground">{customer.nationalId || '-'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2 space-x-reverse max-w-xs">
+                          <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-muted-foreground truncate">{customer.address || '-'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={customer.status === 'نشط' ? 'default' : 'secondary'}>
+                          {customer.status === 'نشط' ? (
+                            <UserCheck className="w-3 h-3 ml-1" />
+                          ) : (
+                            <UserX className="w-3 h-3 ml-1" />
+                          )}
+                          {customer.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{formatDate(customer.createdAt || new Date())}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Button size="sm" variant="outline" onClick={() => openEditModal(customer)}>
+                            <Edit className="w-4 h-4 ml-1" />
+                            تعديل
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleDeleteCustomer(customer.id)}
+                            disabled={deletingCustomers.has(customer.id)}
+                          >
+                            <Trash2 className="w-4 h-4 ml-1" />
+                            حذف
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Add/Edit Customer Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 rounded-t-3xl">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {editingCustomer ? 'تعديل العميل' : 'إضافة عميل جديد'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowAddModal(false)
-                    setEditingCustomer(null)
-                    setNewCustomer({
-                      name: '',
-                      phone: '',
-                      nationalId: '',
-                      address: '',
-                      status: 'نشط',
-                      notes: ''
-                    })
-                  }}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors duration-200"
-                >
-                  ✕
-                </button>
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCustomer ? 'تعديل العميل' : 'إضافة عميل جديد'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCustomer ? 'قم بتحديث معلومات العميل' : 'أدخل معلومات العميل الجديد'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={editingCustomer ? handleEditCustomer : handleAddCustomer} className="space-y-6">
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-primary mr-2">ℹ️</span>
+                <span className="text-primary text-sm font-medium">
+                  الاسم فقط مطلوب، باقي الحقول اختيارية
+                </span>
               </div>
             </div>
-
-            <form onSubmit={editingCustomer ? handleEditCustomer : handleAddCustomer} className="p-6">
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <div className="flex items-center">
-                  <span className="text-blue-500 mr-2">ℹ️</span>
-                  <span className="text-blue-700 text-sm font-medium">
-                    الاسم فقط مطلوب، باقي الحقول اختيارية
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ModernInput
-                  label="الاسم * (مطلوب)"
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">الاسم * (مطلوب)</Label>
+                <Input
+                  id="name"
                   type="text"
                   value={newCustomer.name}
-                  onChange={(e: any) => setNewCustomer({...newCustomer, name: e.target.value})}
+                  onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
                   placeholder="اسم العميل"
                   required
                 />
-                
-                <ModernInput
-                  label="رقم الهاتف (اختياري)"
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
+                <Input
+                  id="phone"
                   type="tel"
                   value={newCustomer.phone}
-                  onChange={(e: any) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                  onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
                   placeholder="رقم الهاتف"
                 />
-                
-                <ModernInput
-                  label="الرقم القومي (اختياري)"
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="nationalId">الرقم القومي (اختياري)</Label>
+                <Input
+                  id="nationalId"
                   type="text"
                   value={newCustomer.nationalId}
-                  onChange={(e: any) => setNewCustomer({...newCustomer, nationalId: e.target.value})}
+                  onChange={(e) => setNewCustomer({...newCustomer, nationalId: e.target.value})}
                   placeholder="الرقم القومي"
                 />
-                
-                <ModernSelect
-                  label="الحالة"
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="status">الحالة</Label>
+                <select
+                  id="status"
                   value={newCustomer.status}
-                  onChange={(e: any) => setNewCustomer({...newCustomer, status: e.target.value})}
+                  onChange={(e) => setNewCustomer({...newCustomer, status: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="نشط">نشط</option>
                   <option value="غير نشط">غير نشط</option>
-                </ModernSelect>
-                
-                <div className="md:col-span-2">
-                  <ModernInput
-                    label="العنوان"
-                    type="text"
-                    value={newCustomer.address}
-                    onChange={(e: any) => setNewCustomer({...newCustomer, address: e.target.value})}
-                    placeholder="عنوان العميل"
-                  />
-                </div>
-                
-                <div className="md:col-span-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-900">ملاحظات</label>
-                    <textarea
-                      value={newCustomer.notes}
-                      onChange={(e: any) => setNewCustomer({...newCustomer, notes: e.target.value})}
-                      placeholder="ملاحظات إضافية"
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                    />
-                  </div>
-                </div>
+                </select>
               </div>
+              
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="address">العنوان</Label>
+                <Input
+                  id="address"
+                  type="text"
+                  value={newCustomer.address}
+                  onChange={(e) => setNewCustomer({...newCustomer, address: e.target.value})}
+                  placeholder="عنوان العميل"
+                />
+              </div>
+              
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="notes">ملاحظات</Label>
+                <textarea
+                  id="notes"
+                  value={newCustomer.notes}
+                  onChange={(e) => setNewCustomer({...newCustomer, notes: e.target.value})}
+                  placeholder="ملاحظات إضافية"
+                  rows={3}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end space-x-3 space-x-reverse mt-8 pt-6 border-t border-gray-200">
-                <ModernButton variant="secondary" onClick={() => {
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
                   setShowAddModal(false)
                   setEditingCustomer(null)
                   setNewCustomer({
@@ -716,23 +745,23 @@ export default function Customers() {
                     status: 'نشط',
                     notes: ''
                   })
-                }}>
-                  إلغاء
-                </ModernButton>
-                <ModernButton type="submit">
-                  <span className="mr-2">💾</span>
-                  {editingCustomer ? 'تحديث العميل' : 'إضافة العميل'}
-                </ModernButton>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                }}
+              >
+                إلغاء
+              </Button>
+              <Button type="submit">
+                <span className="mr-2">💾</span>
+                {editingCustomer ? 'تحديث العميل' : 'إضافة العميل'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       <NotificationSystem 
         notifications={notifications} 
         onRemove={removeNotification} 
       />
-    </Layout>
+    </ModernLayout>
   )
 }
