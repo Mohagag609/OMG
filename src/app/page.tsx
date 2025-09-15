@@ -116,7 +116,7 @@ export default function Dashboard() {
   const fetchKPIs = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/dashboard', {
+      const response = await fetch('/.netlify/functions/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       

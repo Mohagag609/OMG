@@ -7,8 +7,9 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken']
   },
-  // إصلاح مشكلة useContext في Server Components
-  output: 'standalone',
+  // إعدادات Netlify
+  output: 'export',
+  distDir: 'out',
   async rewrites() {
     return [
       {

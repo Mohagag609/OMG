@@ -7,7 +7,7 @@
     "dev": "next dev",
     "dev:local": "DB_MODE=local next dev",
     "dev:cloud": "DB_MODE=cloud next dev",
-    "build": "node scripts/build-production.js",
+    "build": "next build",
     "build:local": "DB_MODE=local npx prisma db push --accept-data-loss && next build",
     "build:cloud": "DB_MODE=cloud npx prisma db push --accept-data-loss && next build",
     "start": "next start",
