@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface Notification {
   id: string
@@ -31,30 +34,76 @@ export function NotificationSystem({ notifications, onRemove }: NotificationSyst
 
   if (notifications.length === 0) return null
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success': return '✅'
+      case 'error': return '❌'
+      case 'warning': return '⚠️'
+      case 'info': return 'ℹ️'
+      default: return 'ℹ️'
+    }
+  }
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'success': return 'border-success/50 bg-success/5'
+      case 'error': return 'border-destructive/50 bg-destructive/5'
+      case 'warning': return 'border-yellow-500/50 bg-yellow-500/5'
+      case 'info': return 'border-primary/50 bg-primary/5'
+      default: return 'border-border/50 bg-background/5'
+    }
+  }
+
   return (
-    <div className="notification-container">
-      {notifications.map(notification => (
-        <div
-          key={notification.id}
-          className={`notification notification-${notification.type}`}
-          onClick={() => onRemove(notification.id)}
-        >
-          <div className="notification-icon">
-            {notification.type === 'success' && '✅'}
-            {notification.type === 'error' && '❌'}
-            {notification.type === 'warning' && '⚠️'}
-            {notification.type === 'info' && 'ℹ️'}
-          </div>
-          <div className="notification-content">
-            <div className="notification-title">{notification.title}</div>
-            <div className="notification-message">{notification.message}</div>
-            <div className="notification-time">
-              {notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString('ar-SA') : 'الآن'}
-            </div>
-          </div>
-          <button className="notification-close">×</button>
-        </div>
-      ))}
+    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+      <AnimatePresence>
+        {notifications.map(notification => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 300, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 300, scale: 0.8 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card 
+              className={`notification-modern cursor-pointer border-l-4 ${getNotificationColor(notification.type)}`}
+              onClick={() => onRemove(notification.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start space-x-3 space-x-reverse">
+                  <div className="text-2xl flex-shrink-0">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-foreground text-sm mb-1">
+                      {notification.title}
+                    </div>
+                    <div className="text-muted-foreground text-xs mb-2">
+                      {notification.message}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString('ar-SA') : 'الآن'}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-6 h-6 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRemove(notification.id)
+                    }}
+                  >
+                    ×
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

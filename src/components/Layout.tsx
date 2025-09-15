@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
@@ -86,12 +87,17 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
   }, [sidebarOpen, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="dashboard-container">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+      <motion.div 
+        className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         {/* Header */}
         <Header 
           title={title}
@@ -101,10 +107,17 @@ const Layout = ({ children, title, subtitle, icon }: LayoutProps) => {
         />
         
         {/* Page Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {children}
-        </div>
-      </div>
+        <motion.div 
+          className="max-w-7xl mx-auto px-6 py-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <AnimatePresence mode="wait">
+            {children}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
