@@ -1,21 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
-import SidebarToggle from '@/components/SidebarToggle'
-import Sidebar from '@/components/Sidebar'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interface for ModernCard
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+// FIXED: Memoized ModernCard component
+const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
+ModernCard.displayName = 'ModernCard'
 
 const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
   const variants: { [key: string]: string } = {

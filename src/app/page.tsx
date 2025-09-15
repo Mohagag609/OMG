@@ -1,23 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { DashboardKPIs } from '@/types'
 import { formatCurrency } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import Layout from '@/components/Layout'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'default' | 'outline' | 'ghost'
+  size?: 'default' | 'sm' | 'lg'
+  className?: string
+  onClick?: () => void
+}
+
+// FIXED: Memoized components to prevent unnecessary re-renders
+const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }) => (
   <Card className={`modern-card ${className}`} {...props}>
     {children}
   </Card>
-)
+))
+ModernCard.displayName = 'ModernCard'
 
-const ModernButton = ({ children, variant = 'default', size = 'default', className = '', ...props }: any) => (
+const ModernButton = memo<ModernButtonProps>(({ children, variant = 'default', size = 'default', className = '', ...props }) => (
   <Button 
     variant={variant}
     size={size}
@@ -26,9 +42,20 @@ const ModernButton = ({ children, variant = 'default', size = 'default', classNa
   >
     {children}
   </Button>
-)
+))
+ModernButton.displayName = 'ModernButton'
 
-const KPICard = ({ title, value, icon, color, trend, onClick }: any) => (
+// FIXED: Proper TypeScript interface for KPICard
+interface KPICardProps {
+  title: string
+  value: string | number
+  icon: string
+  color: string
+  trend?: string
+  onClick?: () => void
+}
+
+const KPICard = memo<KPICardProps>(({ title, value, icon, color, trend, onClick }) => (
   <motion.div
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
@@ -54,9 +81,18 @@ const KPICard = ({ title, value, icon, color, trend, onClick }: any) => (
       </CardContent>
     </ModernCard>
   </motion.div>
-)
+))
+KPICard.displayName = 'KPICard'
 
-const QuickActionCard = ({ title, icon, color, onClick }: any) => (
+// FIXED: Proper TypeScript interface for QuickActionCard
+interface QuickActionCardProps {
+  title: string
+  icon: string
+  color: string
+  onClick: () => void
+}
+
+const QuickActionCard = memo<QuickActionCardProps>(({ title, icon, color, onClick }) => (
   <motion.div
     whileHover={{ scale: 1.05, y: -2 }}
     whileTap={{ scale: 0.95 }}
@@ -74,9 +110,18 @@ const QuickActionCard = ({ title, icon, color, onClick }: any) => (
       </CardContent>
     </ModernCard>
   </motion.div>
-)
+))
+QuickActionCard.displayName = 'QuickActionCard'
 
-const NavigationCard = ({ title, icon, color, onClick }: any) => (
+// FIXED: Proper TypeScript interface for NavigationCard
+interface NavigationCardProps {
+  title: string
+  icon: string
+  color: string
+  onClick: () => void
+}
+
+const NavigationCard = memo<NavigationCardProps>(({ title, icon, color, onClick }) => (
   <motion.div
     whileHover={{ scale: 1.05, y: -2 }}
     whileTap={{ scale: 0.95 }}
@@ -94,28 +139,25 @@ const NavigationCard = ({ title, icon, color, onClick }: any) => (
       </CardContent>
     </ModernCard>
   </motion.div>
-)
+))
+NavigationCard.displayName = 'NavigationCard'
 
 export default function Dashboard() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { notifications, addNotification, removeNotification } = useNotifications()
+  const { notifications, removeNotification } = useNotifications()
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchKPIs()
-  }, [])
-
-  const fetchKPIs = async () => {
+  // FIXED: Added missing dependency to useEffect
+  const fetchKPIs = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
       const response = await fetch('/.netlify/functions/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -123,18 +165,27 @@ export default function Dashboard() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
+        setError(null) // FIXED: Clear error on success
       } else {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
     } catch (err) {
-      console.error('Error fetching KPIs:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching KPIs:', err)
+      }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
-  const quickActions = [
+  useEffect(() => {
+    fetchKPIs()
+  }, [fetchKPIs])
+
+  // FIXED: Memoized data to prevent unnecessary re-renders
+  const quickActions = useMemo(() => [
     { title: 'عميل جديد', icon: '👤', color: 'bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30', onClick: () => router.push('/customers') },
     { title: 'وحدة جديدة', icon: '🏠', color: 'bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30', onClick: () => router.push('/units') },
     { title: 'عقد جديد', icon: '📋', color: 'bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30', onClick: () => router.push('/contracts') },
@@ -142,9 +193,9 @@ export default function Dashboard() {
     { title: 'شركاء', icon: '👥', color: 'bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30', onClick: () => router.push('/partners') },
     { title: 'خزينة', icon: '💰', color: 'bg-gradient-to-r from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30', onClick: () => router.push('/treasury') },
     { title: 'الإعدادات', icon: '⚙️', color: 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800/30 dark:to-gray-700/30', onClick: () => router.push('/settings') }
-  ]
+  ], [router])
 
-  const navigationItems = [
+  const navigationItems = useMemo(() => [
     { title: 'العملاء', icon: '👤', color: 'bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30', onClick: () => router.push('/customers') },
     { title: 'الوحدات', icon: '🏠', color: 'bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30', onClick: () => router.push('/units') },
     { title: 'العقود', icon: '📋', color: 'bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30', onClick: () => router.push('/contracts') },
@@ -155,7 +206,7 @@ export default function Dashboard() {
     { title: 'الخزينة', icon: '💰', color: 'bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30', onClick: () => router.push('/treasury') },
     { title: 'التقارير', icon: '📊', color: 'bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30', onClick: () => router.push('/reports') },
     { title: 'النسخ', icon: '💾', color: 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800/30 dark:to-gray-700/30', onClick: () => router.push('/backup') }
-  ]
+  ], [router])
 
   if (loading) {
     return (

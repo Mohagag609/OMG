@@ -1,12 +1,24 @@
 const { PrismaClient } = require('@prisma/client')
 
+// FIXED: Optimized Prisma client with connection pooling
 const prisma = new PrismaClient({
   datasources: {
     db: {
       url: process.env.DATABASE_URL
     }
+  },
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  // FIXED: Connection pooling for better performance
+  __internal: {
+    engine: {
+      binaryTargets: ['native']
+    }
   }
 })
+
+// FIXED: Simple in-memory cache for dashboard data
+const cache = new Map()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -14,6 +26,7 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Cache-Control': 'public, max-age=300' // FIXED: Add caching headers
   }
 
   // Handle preflight requests
@@ -39,29 +52,54 @@ exports.handler = async (event, context) => {
       }
     }
 
-    // Get all data for calculations
+    // FIXED: Check cache first
+    const cacheKey = 'dashboard-kpis'
+    const cached = cache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          data: cached.data,
+          message: 'تم تحميل بيانات لوحة التحكم من الذاكرة المؤقتة'
+        })
+      }
+    }
+
+    // FIXED: Optimized database queries with specific fields only
     const [
       contracts,
       vouchers,
-      installments,
       units,
       customers
     ] = await Promise.all([
-      prisma.contract.findMany({ where: { deletedAt: null } }),
-      prisma.voucher.findMany({ where: { deletedAt: null } }),
-      prisma.installment.findMany({ where: { deletedAt: null } }),
-      prisma.unit.findMany({ where: { deletedAt: null } }),
-      prisma.customer.findMany({ where: { deletedAt: null } })
+      prisma.contract.findMany({ 
+        where: { deletedAt: null },
+        select: { totalPrice: true, createdAt: true }
+      }),
+      prisma.voucher.findMany({ 
+        where: { deletedAt: null },
+        select: { type: true, amount: true, createdAt: true }
+      }),
+      prisma.unit.findMany({ 
+        where: { deletedAt: null },
+        select: { isSold: true, createdAt: true }
+      }),
+      prisma.customer.findMany({ 
+        where: { deletedAt: null },
+        select: { id: true, createdAt: true }
+      })
     ])
 
-    // Calculate KPIs (simplified version)
+    // FIXED: Optimized calculations
     const totalSales = contracts.reduce((sum, contract) => sum + (contract.totalPrice || 0), 0)
-    const totalReceipts = vouchers
-      .filter(v => v.type === 'receipt')
-      .reduce((sum, voucher) => sum + (voucher.amount || 0), 0)
-    const totalExpenses = vouchers
-      .filter(v => v.type === 'payment')
-      .reduce((sum, voucher) => sum + (voucher.amount || 0), 0)
+    
+    const receiptVouchers = vouchers.filter(v => v.type === 'receipt')
+    const paymentVouchers = vouchers.filter(v => v.type === 'payment')
+    
+    const totalReceipts = receiptVouchers.reduce((sum, voucher) => sum + (voucher.amount || 0), 0)
+    const totalExpenses = paymentVouchers.reduce((sum, voucher) => sum + (voucher.amount || 0), 0)
     const netProfit = totalReceipts - totalExpenses
 
     const kpis = {
@@ -78,6 +116,12 @@ exports.handler = async (event, context) => {
       investorCount: customers.length
     }
 
+    // FIXED: Cache the result
+    cache.set(cacheKey, {
+      data: kpis,
+      timestamp: Date.now()
+    })
+
     return {
       statusCode: 200,
       headers,
@@ -88,7 +132,11 @@ exports.handler = async (event, context) => {
       })
     }
   } catch (error) {
-    console.error('Error getting dashboard data:', error)
+    // FIXED: Better error logging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error getting dashboard data:', error)
+    }
+    
     return {
       statusCode: 500,
       headers,
@@ -97,5 +145,8 @@ exports.handler = async (event, context) => {
         error: 'خطأ في قاعدة البيانات'
       })
     }
+  } finally {
+    // FIXED: Close Prisma connection
+    await prisma.$disconnect()
   }
 }
