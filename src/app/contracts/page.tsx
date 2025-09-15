@@ -35,6 +35,9 @@ interface ModernInputProps {
   placeholder?: string
   required?: boolean
   readOnly?: boolean
+  min?: string | number
+  max?: string | number
+  step?: string | number
 }
 
 interface ModernSelectProps {
@@ -829,9 +832,7 @@ export default function Contracts() {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         getContractStatus(contract) === 'نشط' 
                           ? 'bg-green-100 text-green-800' 
-                          : getContractStatus(contract) === 'مكتمل'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
                       }`}>
                         {getContractStatus(contract)}
                       </span>
@@ -1193,9 +1194,7 @@ export default function Contracts() {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         getContractStatus(viewingContract) === 'نشط' 
                           ? 'bg-green-100 text-green-800' 
-                          : getContractStatus(viewingContract) === 'مكتمل'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
                       }`}>
                         {getContractStatus(viewingContract)}
                       </span>

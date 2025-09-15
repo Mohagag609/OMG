@@ -36,6 +36,9 @@ interface ModernInputProps {
   placeholder?: string
   required?: boolean
   readOnly?: boolean
+  min?: string | number
+  max?: string | number
+  step?: string | number
 }
 
 interface ModernTextareaProps {
