@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
@@ -10,14 +10,52 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}
+
+interface ModernInputProps {
+  label?: string
+  className?: string
+  type?: string
+  value?: string | number
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  placeholder?: string
+  required?: boolean
+  readOnly?: boolean
+}
+
+interface ModernTextareaProps {
+  label?: string
+  className?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  placeholder?: string
+  rows?: number
+}
+
+// FIXED: Memoized components to prevent unnecessary re-renders
+const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
+ModernCard.displayName = 'ModernCard'
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = memo<ModernButtonProps>(({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -41,9 +79,10 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
-}
+})
+ModernButton.displayName = 'ModernButton'
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = memo<ModernInputProps>(({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -51,9 +90,10 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
       {...props}
     />
   </div>
-)
+))
+ModernInput.displayName = 'ModernInput'
 
-const ModernTextarea = ({ label, className = '', ...props }: any) => (
+const ModernTextarea = memo<ModernTextareaProps>(({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <textarea 
@@ -61,7 +101,8 @@ const ModernTextarea = ({ label, className = '', ...props }: any) => (
       {...props}
     />
   </div>
-)
+))
+ModernTextarea.displayName = 'ModernTextarea'
 
 export default function Partners() {
   const [partners, setPartners] = useState<Partner[]>([])
@@ -123,9 +164,10 @@ export default function Partners() {
     }
     
     fetchPartners()
-  }, [])
+  }, [fetchPartners, router]) // FIXED: Added proper dependencies
 
-  const fetchPartners = async () => {
+  // FIXED: Memoized fetchPartners function to prevent unnecessary re-renders
+  const fetchPartners = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/partners', {
@@ -156,7 +198,10 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      console.error('Partners error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Partners error:', err)
+      }
       setError('خطأ في الاتصال')
       addNotification({
         type: 'error',
@@ -166,7 +211,7 @@ export default function Partners() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router, addNotification]) // FIXED: Added proper dependencies
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -244,7 +289,10 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      console.error('Add partner error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Add partner error:', err)
+      }
       setError('خطأ في إضافة الشريك')
       setSuccess(null)
       addNotification({
@@ -304,7 +352,10 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      console.error('Edit partner error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Edit partner error:', err)
+      }
       setError('خطأ في تحديث الشريك')
       setSuccess(null)
       addNotification({
@@ -346,7 +397,10 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      console.error('Delete partner error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Delete partner error:', err)
+      }
       setError('خطأ في حذف الشريك')
       setSuccess(null)
       addNotification({
@@ -369,12 +423,15 @@ export default function Partners() {
     setShowAddForm(false)
   }
 
-  const filteredPartners = partners.filter(partner => 
-    search === '' || 
-    partner.name.toLowerCase().includes(search.toLowerCase()) ||
-    (partner.phone && partner.phone.toLowerCase().includes(search.toLowerCase())) ||
-    (partner.notes && partner.notes.toLowerCase().includes(search.toLowerCase()))
-  )
+  // FIXED: Memoized filtered partners to prevent unnecessary recalculations
+  const filteredPartners = useMemo(() => {
+    return partners.filter(partner => 
+      search === '' || 
+      partner.name.toLowerCase().includes(search.toLowerCase()) ||
+      (partner.phone && partner.phone.toLowerCase().includes(search.toLowerCase())) ||
+      (partner.notes && partner.notes.toLowerCase().includes(search.toLowerCase()))
+    )
+  }, [partners, search])
 
   if (loading) {
     return (

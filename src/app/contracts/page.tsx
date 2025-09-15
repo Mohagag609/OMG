@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Contract, Unit, Customer, Safe, Broker } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -9,14 +9,60 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}
+
+interface ModernInputProps {
+  label?: string
+  className?: string
+  type?: string
+  value?: string | number
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  placeholder?: string
+  required?: boolean
+  readOnly?: boolean
+}
+
+interface ModernSelectProps {
+  label?: string
+  children: React.ReactNode
+  className?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void
+}
+
+interface SmartAutoCompleteProps {
+  label?: string
+  options: any[]
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  className?: string
+}
+
+// FIXED: Memoized components to prevent unnecessary re-renders
+const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
+ModernCard.displayName = 'ModernCard'
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = memo<ModernButtonProps>(({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -38,9 +84,10 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
-}
+})
+ModernButton.displayName = 'ModernButton'
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = memo<ModernInputProps>(({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -48,9 +95,10 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
       {...props}
     />
   </div>
-)
+))
+ModernInput.displayName = 'ModernInput'
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = memo<ModernSelectProps>(({ label, children, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -60,16 +108,17 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
       {children}
     </select>
   </div>
-)
+))
+ModernSelect.displayName = 'ModernSelect'
 
-const SmartAutoComplete = ({ 
+const SmartAutoComplete = memo<SmartAutoCompleteProps>(({ 
   label, 
   options, 
   value, 
   onChange, 
   placeholder = "اكتب للبحث...",
   className = "" 
-}: any) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   
@@ -120,7 +169,8 @@ const SmartAutoComplete = ({
       </div>
     </div>
   )
-}
+})
+SmartAutoComplete.displayName = 'SmartAutoComplete'
 
 export default function Contracts() {
   const [contracts, setContracts] = useState<Contract[]>([])
@@ -133,7 +183,7 @@ export default function Contracts() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
+  // FIXED: Removed unused variables
   const [deletingContracts, setDeletingContracts] = useState<Set<string>>(new Set())
   const [editingContract, setEditingContract] = useState<Contract | null>(null)
   const [viewingContract, setViewingContract] = useState<Contract | null>(null)
@@ -200,9 +250,10 @@ export default function Contracts() {
     }
     
     fetchData()
-  }, [])
+  }, [fetchData, router]) // FIXED: Added proper dependencies
 
-  const fetchData = async () => {
+  // FIXED: Memoized fetchData function to prevent unnecessary re-renders
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
       
@@ -229,12 +280,15 @@ export default function Contracts() {
       if (brokersData.success) setBrokers(brokersData.data)
 
     } catch (err) {
-      console.error('Error fetching data:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching data:', err)
+      }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }
+  }, []) // FIXED: Empty dependency array since no external dependencies
 
   const handleAddContract = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -334,7 +388,10 @@ export default function Contracts() {
         })
       }
     } catch (err) {
-      console.error('Add contract error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Add contract error:', err)
+      }
       setError('خطأ في إضافة العقد')
       setSuccess(null)
       addNotification({
@@ -373,15 +430,16 @@ export default function Contracts() {
     return count + extra
   }
 
-  const getUnitName = (unitId: string) => {
+  // FIXED: Memoized helper functions to prevent unnecessary recalculations
+  const getUnitName = useCallback((unitId: string) => {
     const unit = units.find(u => u.id === unitId)
     return unit ? unit.code : 'غير محدد'
-  }
+  }, [units])
 
-  const getCustomerName = (customerId: string) => {
+  const getCustomerName = useCallback((customerId: string) => {
     const customer = customers.find(c => c.id === customerId)
     return customer ? customer.name : 'غير محدد'
-  }
+  }, [customers])
 
   const copyFromContract = (contract: Contract) => {
     setNewContract({
@@ -462,7 +520,10 @@ export default function Contracts() {
         })
       }
     } catch (err) {
-      console.error('Delete contract error:', err)
+      // FIXED: Remove console.error in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Delete contract error:', err)
+      }
       addNotification({
         type: 'error',
         title: 'خطأ في الحذف',
@@ -568,26 +629,29 @@ export default function Contracts() {
     }
   }
 
-  const getContractStatus = (contract: Contract) => {
+  const getContractStatus = useCallback((contract: Contract) => {
     // Logic to determine contract status based on installments
     return 'نشط' // Placeholder
-  }
+  }, [])
 
-  const filteredContracts = contracts.filter(contract => {
-    const matchesSearch = search === '' || 
-      contract.id.toLowerCase().includes(search.toLowerCase()) ||
-      getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase()) ||
-      getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
-      (contract.brokerName && contract.brokerName.toLowerCase().includes(search.toLowerCase()))
-    
-    const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
-    
-    const matchesDate = !dateFilter.from || !dateFilter.to || 
-      (new Date(contract.start) >= new Date(dateFilter.from) && 
-       new Date(contract.start) <= new Date(dateFilter.to))
-    
-    return matchesSearch && matchesStatus && matchesDate
-  })
+  // FIXED: Memoized filtered contracts to prevent unnecessary recalculations
+  const filteredContracts = useMemo(() => {
+    return contracts.filter(contract => {
+      const matchesSearch = search === '' || 
+        contract.id.toLowerCase().includes(search.toLowerCase()) ||
+        getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase()) ||
+        getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+        (contract.brokerName && contract.brokerName.toLowerCase().includes(search.toLowerCase()))
+      
+      const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+      
+      const matchesDate = !dateFilter.from || !dateFilter.to || 
+        (new Date(contract.start) >= new Date(dateFilter.from) && 
+         new Date(contract.start) <= new Date(dateFilter.to))
+      
+      return matchesSearch && matchesStatus && matchesDate
+    })
+  }, [contracts, search, statusFilter, dateFilter, getUnitName, getCustomerName, getContractStatus])
 
   if (loading) {
     return (
