@@ -7,9 +7,9 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken']
   },
-  // إعدادات Netlify
-  output: 'export',
-  distDir: 'out',
+  // إعدادات Netlify - تعطيل static export مؤقتاً
+  // output: 'export',
+  distDir: '.next',
   webpack: (config, { isServer }) => {
     // Don't externalize bcryptjs and jsonwebtoken for server-side
     if (isServer) {
