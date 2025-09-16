@@ -16,7 +16,7 @@ export default function Login() {
     setError('')
 
     try {
-      const response = await fetch('/.netlify/functions/auth', {
+      const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

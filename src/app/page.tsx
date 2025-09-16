@@ -158,7 +158,7 @@ export default function Dashboard() {
         return
       }
 
-      const response = await fetch('/.netlify/functions/dashboard', {
+      const response = await fetch('/api/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       

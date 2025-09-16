@@ -166,10 +166,10 @@ export default function Units() {
       const token = localStorage.getItem('authToken')
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
-        fetch('/.netlify/functions/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/partners', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       
       const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([

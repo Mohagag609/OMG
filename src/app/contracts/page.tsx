@@ -251,11 +251,11 @@ export default function Contracts() {
       const token = localStorage.getItem('authToken')
       
       const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
-        fetch('/.netlify/functions/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/customers', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/.netlify/functions/brokers', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/brokers', { headers: { 'Authorization': `Bearer ${token}` } })
       ])
 
       const [contractsData, unitsData, customersData, safesData, brokersData] = await Promise.all([

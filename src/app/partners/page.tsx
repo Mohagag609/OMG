@@ -163,7 +163,7 @@ export default function Partners() {
   const fetchPartners = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/.netlify/functions/partners', {
+      const response = await fetch('/api/partners', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

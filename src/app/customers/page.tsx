@@ -128,7 +128,7 @@ export default function Customers() {
   const fetchCustomers = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/.netlify/functions/customers', {
+      const response = await fetch('/api/customers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
