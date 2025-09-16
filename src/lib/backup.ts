@@ -29,7 +29,6 @@ export interface BackupData {
 // Create backup
 export async function createBackup(): Promise<BackupData> {
   try {
-    console.log('🔄 بدء إنشاء النسخة الاحتياطية...')
     
     // Get all data from all tables
     const [
@@ -95,7 +94,6 @@ export async function createBackup(): Promise<BackupData> {
       }
     }
     
-    console.log(`✅ تم إنشاء النسخة الاحتياطية بنجاح - ${totalRecords} سجل`)
     
     // Create notification
     await createCriticalNotification(
@@ -107,7 +105,6 @@ export async function createBackup(): Promise<BackupData> {
     
     return backupData
   } catch (error) {
-    console.error('❌ خطأ في إنشاء النسخة الاحتياطية:', error)
     throw error
   }
 }
@@ -115,7 +112,6 @@ export async function createBackup(): Promise<BackupData> {
 // Restore backup
 export async function restoreBackup(backupData: BackupData): Promise<{ success: boolean; message: string }> {
   try {
-    console.log('🔄 بدء استرجاع النسخة الاحتياطية...')
     
     // Start transaction
     await prisma.$transaction(async (tx) => {
@@ -201,7 +197,6 @@ export async function restoreBackup(backupData: BackupData): Promise<{ success: 
       }
     })
     
-    console.log(`✅ تم استرجاع النسخة الاحتياطية بنجاح - ${backupData.metadata.totalRecords} سجل`)
     
     // Create notification
     await createCriticalNotification(
@@ -216,7 +211,6 @@ export async function restoreBackup(backupData: BackupData): Promise<{ success: 
       message: `تم استرجاع النسخة الاحتياطية بنجاح - ${backupData.metadata.totalRecords} سجل`
     }
   } catch (error) {
-    console.error('❌ خطأ في استرجاع النسخة الاحتياطية:', error)
     return {
       success: false,
       message: 'خطأ في استرجاع النسخة الاحتياطية'
@@ -337,7 +331,6 @@ export async function getBackupStatistics(): Promise<{
       tableCounts
     }
   } catch (error) {
-    console.error('Error getting backup statistics:', error)
     throw error
   }
 }

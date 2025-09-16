@@ -48,11 +48,7 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
 
       // Mock profile data for now
       setProfile({
@@ -66,7 +62,6 @@ const ProfilePage = () => {
       })
 
     } catch (error) {
-      console.error('Error fetching profile:', error)
       addNotification('error', 'خطأ في تحميل الملف الشخصي', 'فشل في تحميل بيانات المستخدم')
     } finally {
       setLoading(false)

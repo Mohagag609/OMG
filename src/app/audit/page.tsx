@@ -14,32 +14,23 @@ export default function Audit() {
     total: 0,
     totalPages: 0
   })
-  const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
+  // const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchAuditLogs()
   }, [pagination.page])
 
   const fetchAuditLogs = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString()
       })
 
       const response = await fetch(`/api/audit?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       if (!response.ok) {
@@ -59,7 +50,6 @@ export default function Audit() {
         setError(data.error || 'خطأ في تحميل سجل التدقيق')
       }
     } catch (err) {
-      console.error('Audit error:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)

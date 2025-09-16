@@ -10,25 +10,14 @@ export default function TestSafes() {
   useEffect(() => {
     const fetchSafes = async () => {
       try {
-        const token = localStorage.getItem('authToken')
-        console.log('Token from localStorage:', token)
-        
-        if (!token) {
-          setError('No token found in localStorage')
-          setLoading(false)
-          return
-        }
+        // Authentication removed - direct access
 
-        const response = await fetch('/api/safes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const response = await fetch('/.netlify/functions/safes', {
+          headers: {}
         })
         
-        console.log('Response status:', response.status)
         
         const data = await response.json()
-        console.log('Response data:', data)
         
         if (data.success) {
           setSafes(data.data)
@@ -36,7 +25,6 @@ export default function TestSafes() {
           setError(data.error)
         }
       } catch (err) {
-        console.error('Error:', err)
         setError(err instanceof Error ? err.message : String(err))
       } finally {
         setLoading(false)

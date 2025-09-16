@@ -48,11 +48,7 @@ export default function BackupSystem() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
+    // Authentication removed - direct access
     
     // Get database type from environment or API
     fetchDatabaseInfo()
@@ -64,20 +60,15 @@ export default function BackupSystem() {
       // For now, we'll use a placeholder
       setDatabaseType('PostgreSQL (Neon)')
     } catch (error) {
-      console.error('Failed to fetch database info:', error)
     }
   }
 
   const handleExport = async () => {
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/export', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
       })
 
@@ -103,7 +94,6 @@ export default function BackupSystem() {
         throw new Error(errorMessage)
       }
     } catch (error) {
-      console.error('Export error:', error)
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
       addNotification({
         type: 'error',
@@ -127,8 +117,6 @@ export default function BackupSystem() {
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
-      
       // Convert file to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
@@ -142,10 +130,7 @@ export default function BackupSystem() {
 
       const response = await fetch('/api/system/import', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           base64,
           apply: !dryRun,
@@ -163,13 +148,11 @@ export default function BackupSystem() {
         })
         
         if (result.stats) {
-          console.log('Import statistics:', result.stats)
         }
       } else {
         throw new Error(result.details || 'فشل في استيراد النسخة الاحتياطية')
       }
     } catch (error) {
-      console.error('Import error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في الاستيراد',
@@ -187,13 +170,9 @@ export default function BackupSystem() {
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/wipe', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: wipeMode,
           confirm: true
@@ -224,7 +203,6 @@ export default function BackupSystem() {
         throw new Error(result.details || 'فشل في مسح البيانات')
       }
     } catch (error) {
-      console.error('Wipe error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في المسح',

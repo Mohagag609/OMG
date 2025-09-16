@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 
@@ -30,40 +30,34 @@ export default function PartnerGroups() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', notes: '' })
   const [selectedGroup, setSelectedGroup] = useState<PartnerGroup | null>(null)
-  const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
+  // const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       
       // Fetch partner groups
-      const groupsResponse = await fetch('/api/partner-groups', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const groupsResponse = await fetch('/.netlify/functions/partner-groups', {
+        headers: {}
       })
       const groupsData = await groupsResponse.json()
       setPartnerGroups(groupsData.data || [])
 
       // Fetch partners
-      const partnersResponse = await fetch('/api/partners', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const partnersResponse = await fetch('/.netlify/functions/partners', {
+        headers: {}
       })
       const partnersData = await partnersResponse.json()
       setPartners(partnersData.data || [])
 
     } catch (err) {
-      console.error('Error fetching data:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في التحميل',
@@ -72,9 +66,9 @@ export default function PartnerGroups() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleAddGroup = async () => {
+  const handleAddGroup = useCallback(async () => {
     if (!newGroup.name.trim()) {
       addNotification({
         type: 'error',
@@ -85,13 +79,10 @@ export default function PartnerGroups() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/partner-groups', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/partner-groups', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newGroup)
       })
 
@@ -113,24 +104,20 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      console.error('Error adding group:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
         message: 'فشل في إنشاء المجموعة'
       })
     }
-  }
+  }, [])
 
-  const handleAddPartnerToGroup = async (groupId: string, partnerId: string, percent: number) => {
+  const handleAddPartnerToGroup = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       const response = await fetch(`/api/partner-groups/${groupId}/partners`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partnerId, percent })
       })
 
@@ -150,14 +137,13 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      console.error('Error adding partner to group:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
         message: 'فشل في إضافة الشريك'
       })
     }
-  }
+  }, [])
 
   const getPartnerName = (partnerId: string) => {
     const partner = partners.find(p => p.id === partnerId)
@@ -363,8 +349,7 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
 }) {
   const [selectedPartner, setSelectedPartner] = useState('')
   const [percent, setPercent] = useState('')
-
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     const percentNum = parseFloat(percent)
     if (!selectedPartner || !percentNum || percentNum <= 0) {
       alert('الرجاء اختيار شريك وإدخال نسبة صحيحة')
@@ -374,7 +359,7 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
     onAdd(groupId, selectedPartner, percentNum)
     setSelectedPartner('')
     setPercent('')
-  }
+  }, [groupId, selectedPartner, percent, onAdd])
 
   return (
     <div className="tools">

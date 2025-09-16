@@ -127,11 +127,9 @@ export default function Partners() {
 
   const fetchPartners = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/partners', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/partners', {
+        headers: {}
       })
 
       if (!response.ok) {
@@ -204,12 +202,11 @@ export default function Partners() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/partners', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/partners', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newPartner)
       })
@@ -264,12 +261,11 @@ export default function Partners() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/partners/${editingPartner.id}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/partners?id=${editingPartner.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: editingPartner.name,
@@ -320,10 +316,10 @@ export default function Partners() {
 
     try {
       setDeletingPartners(prev => new Set(prev).add(partnerId))
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/partners/${partnerId}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/partners?id=${partnerId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { PartnerDebt, Partner } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -13,7 +13,7 @@ export default function PartnerDebts() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [deletingDebts, setDeletingDebts] = useState<Set<string>>(new Set())
+  // const [deletingDebts, setDeletingDebts] = useState<Set<string>>(new Set())
   const [newDebt, setNewDebt] = useState({
     partnerId: '',
     amount: '',
@@ -24,22 +24,17 @@ export default function PartnerDebts() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       
       // Fetch partner debts
-      const debtsResponse = await fetch('/api/partner-debts', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const debtsResponse = await fetch('/.netlify/functions/partner-debts', {
+        headers: {}
       })
       const debtsData = await debtsResponse.json()
       if (debtsData.success) {
@@ -49,8 +44,8 @@ export default function PartnerDebts() {
       }
 
       // Fetch partners
-      const partnersResponse = await fetch('/api/partners', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const partnersResponse = await fetch('/.netlify/functions/partners', {
+        headers: {}
       })
       const partnersData = await partnersResponse.json()
       if (partnersData.success) {
@@ -58,23 +53,19 @@ export default function PartnerDebts() {
       }
 
     } catch (err) {
-      console.error('Error fetching data:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleAddDebt = async (e: React.FormEvent) => {
+  const handleAddDebt = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/partner-debts', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/partner-debts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newDebt,
           amount: parseFloat(newDebt.amount)
@@ -104,23 +95,20 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      console.error('Error adding debt:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
         message: 'فشل في إضافة دين الشريك'
       })
     }
-  }
+  }, [])
 
-  const handlePayDebt = async (debtId: string) => {
+  const handlePayDebt = useCallback(async (debtId: string) => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       const response = await fetch(`/api/partner-debts/${debtId}/pay`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       const data = await response.json()
@@ -139,14 +127,13 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      console.error('Error paying debt:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في السداد',
         message: 'فشل في تسجيل السداد'
       })
     }
-  }
+  }, [])
 
   const getPartnerName = (partnerId: string) => {
     const partner = partners.find(p => p.id === partnerId)

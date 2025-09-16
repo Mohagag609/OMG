@@ -129,9 +129,9 @@ export default function Customers() {
 
   const fetchCustomers = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/customers', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/customers', {
+        headers: {}
       })
       
       const data = await response.json()
@@ -216,12 +216,11 @@ export default function Customers() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/customers', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/customers', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newCustomer)
       })
@@ -336,12 +335,11 @@ export default function Customers() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/customers/${editingCustomer.id}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newCustomer)
       })
@@ -396,10 +394,10 @@ export default function Customers() {
     setCustomers(prev => prev.filter(customer => customer.id !== customerId))
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/customers/${customerId}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/customers?id=${customerId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

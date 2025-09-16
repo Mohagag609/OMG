@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Safe, Transfer } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -9,14 +9,31 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}
+
+// FIXED: Memoized components for better performance
+const ModernCard = memo(({ children, className = '', ...props }: ModernCardProps) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = memo(({ children, variant = 'primary', size = 'md', className = '', ...props }: ModernButtonProps) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -40,7 +57,10 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
-}
+})
+
+ModernCard.displayName = 'ModernCard'
+ModernButton.displayName = 'ModernButton'
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
@@ -73,7 +93,7 @@ export default function Treasury() {
   const [showAddSafeModal, setShowAddSafeModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
-  const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
+  // const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newSafe, setNewSafe] = useState({
     name: '',
@@ -126,22 +146,17 @@ export default function Treasury() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       
       const [safesResponse, transfersResponse] = await Promise.all([
-        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/transfers', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/transfers', { headers: {} })
       ])
       
       const [safesData, transfersData] = await Promise.all([
@@ -159,14 +174,13 @@ export default function Treasury() {
         setTransfers(transfersData.data)
       }
     } catch (err) {
-      console.error('Error fetching data:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleAddSafe = async (e: React.FormEvent) => {
+  const handleAddSafe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newSafe.name) {
@@ -179,13 +193,10 @@ export default function Treasury() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/safes', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/safes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newSafe,
           balance: parseFloat(newSafe.balance) || 0
@@ -217,7 +228,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Add safe error:', err)
       setError('خطأ في إضافة الخزنة')
       setSuccess(null)
       addNotification({
@@ -226,21 +236,18 @@ export default function Treasury() {
         message: 'فشل في إضافة الخزنة'
       })
     }
-  }
+  }, [])
 
-  const handleEditSafe = async (e: React.FormEvent) => {
+  const handleEditSafe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!editingSafe) return
 
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       const response = await fetch(`/api/safes/${editingSafe.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newSafe,
           balance: parseFloat(newSafe.balance) || 0
@@ -273,7 +280,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Update safe error:', err)
       setError('خطأ في تحديث الخزنة')
       setSuccess(null)
       addNotification({
@@ -282,16 +288,16 @@ export default function Treasury() {
         message: 'فشل في تحديث الخزنة'
       })
     }
-  }
+  }, [])
 
-  const handleDeleteSafe = async (safeId: string) => {
+  const handleDeleteSafe = useCallback(async (safeId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       const response = await fetch(`/api/safes/${safeId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -314,7 +320,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Delete safe error:', err)
       setError('خطأ في حذف الخزنة')
       setSuccess(null)
       addNotification({
@@ -323,9 +328,9 @@ export default function Treasury() {
         message: 'فشل في حذف الخزنة'
       })
     }
-  }
+  }, [])
 
-  const handleTransfer = async (e: React.FormEvent) => {
+  const handleAddTransfer = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newTransfer.fromSafeId || !newTransfer.toSafeId || !newTransfer.amount) {
@@ -347,13 +352,10 @@ export default function Treasury() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/transfers', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/transfers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newTransfer,
           amount: parseFloat(newTransfer.amount)
@@ -387,7 +389,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Transfer error:', err)
       setError('خطأ في التحويل')
       setSuccess(null)
       addNotification({
@@ -396,7 +397,7 @@ export default function Treasury() {
         message: 'فشل في التحويل'
       })
     }
-  }
+  }, [])
 
   const openEditModal = (safe: Safe) => {
     setEditingSafe(safe)
@@ -698,7 +699,7 @@ export default function Treasury() {
               </div>
             </div>
 
-            <form onSubmit={handleTransfer} className="p-6">
+            <form onSubmit={handleAddTransfer} className="p-6">
               <div className="space-y-6">
                 <ModernSelect
                   label="من الخزنة *"

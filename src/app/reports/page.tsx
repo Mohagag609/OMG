@@ -83,20 +83,14 @@ export default function Reports() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchKPIs()
   }, [])
 
   const fetchKPIs = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch('/.netlify/functions/dashboard', {
+        headers: {}
       })
       
       const data = await response.json()
@@ -106,7 +100,6 @@ export default function Reports() {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
     } catch (err) {
-      console.error('Error fetching KPIs:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -142,17 +135,13 @@ export default function Reports() {
 
     try {
       setReportLoading(true)
-      const token = localStorage.getItem('authToken')
       let response: Response
 
       switch (format) {
         case 'excel':
           response = await fetch('/api/export/excel', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -165,10 +154,7 @@ export default function Reports() {
         case 'csv':
           response = await fetch('/api/export/csv', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -181,10 +167,7 @@ export default function Reports() {
         case 'pdf':
           response = await fetch('/api/export/pdf', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -218,7 +201,6 @@ export default function Reports() {
         throw new Error('فشل في تصدير التقرير')
       }
     } catch (err) {
-      console.error('Export error:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',
@@ -250,12 +232,9 @@ export default function Reports() {
 
   const generateReport = async (reportType: string) => {
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/export/excel?type=${reportType}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       if (response.ok) {
@@ -278,7 +257,6 @@ export default function Reports() {
         throw new Error('فشل في تصدير التقرير')
       }
     } catch (err) {
-      console.error('Export error:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',

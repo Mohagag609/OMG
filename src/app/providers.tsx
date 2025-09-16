@@ -1,15 +1,23 @@
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';
+import { ThemeProvider } from '@/components/theme-provider';
 
 // إنشاء Context بسيط
 const AppContext = createContext({});
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <AppContext.Provider value={{}}>
-      {children}
-    </AppContext.Provider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <AppContext.Provider value={{}}>
+        {children}
+      </AppContext.Provider>
+    </ThemeProvider>
   );
 }
 

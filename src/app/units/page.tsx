@@ -142,13 +142,13 @@ export default function Units() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/unit-partners', { headers: {} }),
+        fetch('/.netlify/functions/partner-groups', { headers: {} }),
+        fetch('/.netlify/functions/partners', { headers: {} })
       ])
       
       const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([
@@ -267,12 +267,11 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/units', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/units', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -383,12 +382,11 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/units/${editingUnit.id}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/units?id=${editingUnit.id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -448,10 +446,10 @@ export default function Units() {
     setUnits(prev => prev.filter(unit => unit.id !== unitId))
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/units/${unitId}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/units?id=${unitId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Voucher } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = memo(({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
+ModernCard.displayName = 'ModernCard'
 
 const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
   const variants: { [key: string]: string } = {
@@ -46,7 +47,7 @@ export default function Vouchers() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
+  // const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -74,20 +75,15 @@ export default function Vouchers() {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchVouchers()
   }, [])
 
   const fetchVouchers = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/vouchers', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/vouchers', {
+        headers: {}
       })
       
       const data = await response.json()
@@ -97,21 +93,18 @@ export default function Vouchers() {
         setError(data.error || 'خطأ في تحميل السندات')
       }
     } catch (err) {
-      console.error('Error fetching vouchers:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
-
-  const handleDeleteVoucher = async (voucherId: string) => {
+  const handleDeleteVoucher = useCallback(async (voucherId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/vouchers/${voucherId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Authentication removed - direct access
+      const response = await fetch(`/api/vouchers?id=${voucherId}`, { method: 'DELETE',
+        headers: {}
       })
 
       const data = await response.json()
@@ -134,7 +127,6 @@ export default function Vouchers() {
         })
       }
     } catch (err) {
-      console.error('Delete voucher error:', err)
       setError('خطأ في حذف السند')
       setSuccess(null)
       addNotification({
@@ -143,7 +135,7 @@ export default function Vouchers() {
         message: 'فشل في حذف السند'
       })
     }
-  }
+  }, [])
 
   const getTypeColor = (type: string) => {
     switch (type) {

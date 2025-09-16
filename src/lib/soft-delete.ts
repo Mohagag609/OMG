@@ -125,7 +125,6 @@ export async function canDeleteEntity(entityType: string, entityId: string): Pro
     
     return { canDelete: true }
   } catch (error) {
-    console.error('Error checking if entity can be deleted:', error)
     return {
       canDelete: false,
       reason: 'خطأ في التحقق من إمكانية الحذف'
@@ -209,7 +208,6 @@ export async function softDeleteEntity(
       message: 'تم حذف العنصر بنجاح'
     }
   } catch (error) {
-    console.error('Error soft deleting entity:', error)
     return {
       success: false,
       message: 'خطأ في حذف العنصر'
@@ -302,7 +300,6 @@ export async function restoreEntity(
       message: 'تم استرجاع العنصر بنجاح'
     }
   } catch (error) {
-    console.error('Error restoring entity:', error)
     return {
       success: false,
       message: 'خطأ في استرجاع العنصر'
@@ -379,7 +376,6 @@ export async function getSoftDeletedEntities(
     
     return { data, total, totalPages }
   } catch (error) {
-    console.error('Error getting soft deleted entities:', error)
     throw error
   }
 }

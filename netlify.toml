@@ -1,20 +1,34 @@
 [build]
-  command = "npm run build"
-  publish = ".next"
+  command = "npm run build:cloud"
+  publish = "out"
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "9"
   DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  JWT_SECRET = "production-jwt-secret-key-change-this"
-  JWT_EXPIRES_IN = "24h"
-  NEXT_PUBLIC_API_URL = "https://your-app.netlify.app/api"
-  NEXT_PUBLIC_ADMIN_KEY = "ADMIN_SECRET_2024"
+  NEON_DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  NEXTAUTH_SECRET = "estate-management-super-secret-key-2024-production"
+  NEXTAUTH_URL = "https://gilded-cucurucho-87d287.netlify.app"
   NODE_ENV = "production"
-  DB_MODE = "cloud"
+  JWT_SECRET = "estate-management-super-secret-key-2024-production"
+  TZ = "Africa/Cairo"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# إعدادات Netlify Functions للـ API routes
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# إعادة توجيه API routes إلى Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# إعادة توجيه جميع الصفحات الأخرى
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 [build.processing]
   skip_processing = false

@@ -11,7 +11,6 @@ export default function DebugTreasury() {
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken')
     setToken(storedToken)
-    console.log('🔍 Token from localStorage:', storedToken)
     
     if (!storedToken) {
       setError('No token found in localStorage')
@@ -21,27 +20,21 @@ export default function DebugTreasury() {
 
     const fetchSafes = async () => {
       try {
-        console.log('🔍 Fetching safes...')
-        const response = await fetch('/api/safes', {
+        const response = await fetch('/.netlify/functions/safes', {
           headers: {
             'Authorization': `Bearer ${storedToken}`
           }
         })
         
-        console.log('🔍 Response status:', response.status)
         
         const data = await response.json()
-        console.log('🔍 Response data:', data)
         
         if (data.success) {
           setSafes(data.data)
-          console.log('✅ Safes set:', data.data)
         } else {
           setError(data.error)
-          console.error('❌ Error:', data.error)
         }
       } catch (err) {
-        console.error('❌ Fetch error:', err)
         setError(err instanceof Error ? err.message : String(err))
       } finally {
         setLoading(false)
@@ -53,12 +46,9 @@ export default function DebugTreasury() {
 
   const addTestSafe = async () => {
     try {
-      const response = await fetch('/api/safes', {
+      const response = await fetch('/.netlify/functions/safes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `خزنة اختبار ${Date.now()}`,
           description: 'خزنة اختبار',
@@ -67,14 +57,11 @@ export default function DebugTreasury() {
       })
       
       const data = await response.json()
-      console.log('🔍 Add safe response:', data)
       
       if (data.success) {
         // Refresh the list
-        const refreshResponse = await fetch('/api/safes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const refreshResponse = await fetch('/.netlify/functions/safes', {
+          headers: {}
         })
         const refreshData = await refreshResponse.json()
         if (refreshData.success) {
@@ -82,7 +69,6 @@ export default function DebugTreasury() {
         }
       }
     } catch (err) {
-      console.error('❌ Add safe error:', err)
     }
   }
 

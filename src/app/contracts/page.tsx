@@ -204,14 +204,14 @@ export default function Contracts() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      // Authentication removed - direct access
       
       const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
-        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/brokers', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/.netlify/functions/contracts', { headers: {} }),
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/customers', { headers: {} }),
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/brokers', { headers: {} })
       ])
 
       const [contractsData, unitsData, customersData, safesData, brokersData] = await Promise.all([
@@ -272,12 +272,11 @@ export default function Contracts() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/contracts', {
+      // Authentication removed - direct access
+      const response = await fetch('/.netlify/functions/contracts', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newContract,
@@ -440,10 +439,10 @@ export default function Contracts() {
     setDeletingContracts(prev => new Set(prev).add(contractId))
     
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/contracts/${contractId}`, {
+      // Authentication removed - direct access
+      const response = await fetch(`/.netlify/functions/contracts?id=${contractId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

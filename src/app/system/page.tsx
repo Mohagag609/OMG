@@ -63,19 +63,15 @@ const SystemPage = () => {
   const fetchSystemStats = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
 
       // Fetch basic stats
       const [unitsRes, contractsRes, partnersRes, safesRes, vouchersRes] = await Promise.all([
-        fetch('/api/units', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/contracts', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/partners', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/safes', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/vouchers', { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/contracts', { headers: {} }),
+        fetch('/.netlify/functions/partners', { headers: {} }),
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/vouchers', { headers: {} })
       ])
 
       const [units, contracts, partners, safes, vouchers] = await Promise.all([
@@ -102,7 +98,6 @@ const SystemPage = () => {
       }))
 
     } catch (error) {
-      console.error('Error fetching system stats:', error)
       addNotification('error', 'خطأ في تحميل إحصائيات النظام')
     } finally {
       setLoading(false)

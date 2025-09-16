@@ -36,9 +36,8 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
 
   const loadUnits = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/units', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch('/.netlify/functions/units', {
+        headers: {}
       })
       
       if (response.ok) {
@@ -59,7 +58,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
         })
       }
     } catch (error) {
-      console.error('Error loading units:', error)
     }
   }
 
@@ -99,13 +97,9 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
     onLoadingChange(true)
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/reports/${selectedReport}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filters)
       })
 
@@ -123,7 +117,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
         throw new Error(error.message || 'فشل في إنشاء التقرير')
       }
     } catch (error) {
-      console.error('Report generation error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ',

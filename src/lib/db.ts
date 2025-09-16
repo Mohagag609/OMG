@@ -12,7 +12,6 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // Helper function to handle database errors
 export function handleDatabaseError(error: any): string {
-  console.error('Database error:', error)
   
   if (error.code === 'P2002') {
     return 'هذا الكود مستخدم بالفعل'
@@ -35,7 +34,6 @@ export async function recordExists(model: any, where: any): Promise<boolean> {
     const count = await model.count({ where })
     return count > 0
   } catch (error) {
-    console.error('Error checking record existence:', error)
     return false
   }
 }
@@ -45,7 +43,6 @@ export async function getRecordById(model: any, id: string): Promise<any> {
   try {
     return await model.findUnique({ where: { id } })
   } catch (error) {
-    console.error('Error getting record by ID:', error)
     return null
   }
 }
@@ -55,7 +52,6 @@ export async function createRecord(model: any, data: any): Promise<any> {
   try {
     return await model.create({ data })
   } catch (error) {
-    console.error('Error creating record:', error)
     throw error
   }
 }
@@ -65,7 +61,6 @@ export async function updateRecord(model: any, id: string, data: any): Promise<a
   try {
     return await model.update({ where: { id }, data })
   } catch (error) {
-    console.error('Error updating record:', error)
     throw error
   }
 }
@@ -78,7 +73,6 @@ export async function deleteRecord(model: any, id: string): Promise<any> {
       data: { deletedAt: new Date() } 
     })
   } catch (error) {
-    console.error('Error deleting record:', error)
     throw error
   }
 }
@@ -110,7 +104,6 @@ export async function getRecordsWithPagination(
     
     return { data, total, totalPages }
   } catch (error) {
-    console.error('Error getting records with pagination:', error)
     throw error
   }
 }
@@ -153,7 +146,6 @@ export async function searchRecords(
     
     return { data, total, totalPages }
   } catch (error) {
-    console.error('Error searching records:', error)
     throw error
   }
 }
