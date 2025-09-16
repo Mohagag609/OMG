@@ -7,7 +7,7 @@
   DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
   NEON_DATABASE_URL = "postgresql://neondb_owner:npg_x5qvmpzF3hjX@ep-dawn-cell-adylfb98-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
   NEXTAUTH_SECRET = "estate-management-super-secret-key-2024-production"
-  NEXTAUTH_URL = "https://your-app-name.netlify.app"
+  NEXTAUTH_URL = "https://gilded-cucurucho-87d287.netlify.app"
   NODE_ENV = "production"
   JWT_SECRET = "estate-management-super-secret-key-2024-production"
   TZ = "Africa/Cairo"
@@ -45,6 +45,3 @@
 
 [build.processing.images]
   compress = true
-
-[functions]
-  node_bundler = "esbuild"
