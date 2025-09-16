@@ -253,7 +253,7 @@ export async function getStorageQuota(): Promise<{
 }
 
 // FIXED: PWA initialization
-export async function initializePWA(config: PWAConfig = defaultPWAConfig): Promise<{
+export async function initializePWA(): Promise<{
   isInstalled: boolean
   isOnline: boolean
   hasNotificationPermission: boolean

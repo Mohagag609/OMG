@@ -91,7 +91,7 @@ const OptimizedImage = memo<OptimizedImageProps>(({
 
       {/* Main Image */}
       {isInView && (
-        <motion.img
+        <Image
           src={src}
           alt={alt}
           width={width}
@@ -101,8 +101,8 @@ const OptimizedImage = memo<OptimizedImageProps>(({
           }`}
           onLoad={handleLoad}
           onError={handleError}
+          priority={priority}
           loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
         />
       )}
 

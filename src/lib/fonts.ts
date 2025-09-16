@@ -37,8 +37,8 @@ export function generateFontPreloadLinks(): string {
   return fontConfigs
     .filter(config => config.preload)
     .map(config => {
-    const weights = config.weights.join(';')
-    const url = `https://fonts.googleapis.com/css2?family=${config.family}:wght@${weights}&display=${config.display}`
+      const weights = config.weights.join(';')
+      const url = `https://fonts.googleapis.com/css2?family=${config.family}:wght@${weights}&display=${config.display}`
       
       return `<link rel="preload" href="${url}" as="style" onload="this.onload=null;this.rel='stylesheet'">`
     })

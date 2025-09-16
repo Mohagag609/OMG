@@ -9,7 +9,7 @@ export interface ValidationRule {
   minLength?: number
   maxLength?: number
   pattern?: RegExp
-  custom?: (value: any) => string | null
+  custom?: (value: any, formData?: any) => string | null
   message?: string
 }
 
