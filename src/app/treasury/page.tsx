@@ -192,9 +192,9 @@ export default function Treasury() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handle$1 = useCallback(async (e: React.FormEvent) => {
+  const handleAddSafe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newSafe.name) {
@@ -260,7 +260,7 @@ export default function Treasury() {
     }
   }
 
-  const handle$1 = useCallback(async (e: React.FormEvent) => {
+  const handleEditSafe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!editingSafe) return
@@ -318,9 +318,9 @@ export default function Treasury() {
         message: 'فشل في تحديث الخزنة'
       })
     }
-  }
+  }, [])
 
-  const handle$1 = useCallback(async (safeId: string) => {
+  const handleDeleteSafe = useCallback(async (safeId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
@@ -363,9 +363,9 @@ export default function Treasury() {
         message: 'فشل في حذف الخزنة'
       })
     }
-  }
+  }, [])
 
-  const handle$1 = useCallback(async (e: React.FormEvent) => {
+  const handleAddTransfer = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newTransfer.fromSafeId || !newTransfer.toSafeId || !newTransfer.amount) {
@@ -440,7 +440,7 @@ export default function Treasury() {
         message: 'فشل في التحويل'
       })
     }
-  }
+  }, [])
 
   const openEditModal = (safe: Safe) => {
     setEditingSafe(safe)

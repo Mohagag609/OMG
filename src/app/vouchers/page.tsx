@@ -111,7 +111,7 @@ export default function Vouchers() {
       setLoading(false)
     }
   }
-  const handle$1 = useCallback(async (voucherId: string) => {
+  const handleDeleteVoucher = useCallback(async (voucherId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
@@ -153,7 +153,7 @@ export default function Vouchers() {
         message: 'فشل في حذف السند'
       })
     }
-  }
+  }, [])
 
   const getTypeColor = (type: string) => {
     switch (type) {

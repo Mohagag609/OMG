@@ -80,9 +80,9 @@ export default function PartnerGroups() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handle$1 = useCallback(async () => {
+  const handleAddGroup = useCallback(async () => {
     if (!newGroup.name.trim()) {
       addNotification({
         type: 'error',
@@ -134,7 +134,7 @@ export default function PartnerGroups() {
     }
   }
 
-  const handle$1 = useCallback(async (groupId: string, partnerId: string, percent: number) => {
+  const handleAddPartnerToGroup = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
       const token = localStorage.getItem('authToken')
       if (!token) {
@@ -173,7 +173,7 @@ export default function PartnerGroups() {
         message: 'فشل في إضافة الشريك'
       })
     }
-  }
+  }, [])
 
   const getPartnerName = (partnerId: string) => {
     const partner = partners.find(p => p.id === partnerId)

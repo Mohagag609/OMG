@@ -71,7 +71,7 @@ export default function PartnerDebts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleAddDebt = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -125,7 +125,7 @@ export default function PartnerDebts() {
     }
   }, [])
 
-  const handle$1 = useCallback(async (debtId: string) => {
+  const handlePayDebt = useCallback(async (debtId: string) => {
     try {
       const token = localStorage.getItem('authToken')
       if (!token) {
@@ -162,7 +162,7 @@ export default function PartnerDebts() {
         message: 'فشل في تسجيل السداد'
       })
     }
-  }
+  }, [])
 
   const getPartnerName = (partnerId: string) => {
     const partner = partners.find(p => p.id === partnerId)
