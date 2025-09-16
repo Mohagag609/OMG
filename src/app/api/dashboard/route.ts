@@ -73,12 +73,7 @@ export async function GET() {
       totalExpenses,
       netProfit,
       collectionPercentage: totalSales > 0 ? Math.round((totalReceipts / totalSales) * 100) : 0,
-      totalDebt: totalSales - totalReceipts,
-      unitCounts: {
-        total: units.length,
-        available: units.filter(u => u.status === 'متاحة').length
-      },
-      investorCount: customers.length
+      totalDebt: totalSales - totalReceipts
     }
 
     // Cache the result
