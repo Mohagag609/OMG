@@ -114,7 +114,14 @@ export async function GET() {
   } catch (error) {
     console.error('Dashboard API error:', error)
     
-    // Return fallback data on error
+    // Check if it's a connection error
+    const isConnectionError = error instanceof Error && (
+      error.message.includes('Can\'t reach database server') ||
+      error.message.includes('Connection refused') ||
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ECONNREFUSED')
+    )
+    
     return NextResponse.json({
       success: true,
       data: {
@@ -125,8 +132,11 @@ export async function GET() {
         collectionPercentage: 0,
         totalDebt: 0
       },
-      message: 'تم تحميل البيانات الافتراضية - خطأ في الاتصال',
+      message: isConnectionError 
+        ? 'خطأ في الاتصال بقاعدة البيانات - تم تحميل البيانات الافتراضية'
+        : 'تم تحميل البيانات الافتراضية - خطأ في الاتصال',
       fallback: true,
+      connectionError: isConnectionError,
       error: error instanceof Error ? error.message : 'خطأ غير معروف'
     })
   } finally {

@@ -132,8 +132,15 @@ export default function Dashboard() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
-        // Only show success notification on manual refresh
-        if (isManualRefresh) {
+        
+        // Check if it's a connection error
+        if (data.connectionError) {
+          addNotification({
+            type: 'error',
+            title: 'خطأ في الاتصال',
+            message: 'فشل في الاتصال بقاعدة البيانات - تم تحميل البيانات الافتراضية'
+          })
+        } else if (isManualRefresh) {
           addNotification({
             type: 'success',
             title: 'نجاح',
