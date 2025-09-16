@@ -116,7 +116,7 @@ export async function PUT(request: Request) {
       }, { status: 400 })
     }
 
-    const item = await prisma.units.update({
+    const item = await prisma.unit.update({
       where: { id },
       data: body
     })
@@ -152,7 +152,7 @@ export async function DELETE(request: Request) {
     }
 
     // Soft delete
-    await prisma.units.update({
+    await prisma.unit.update({
       where: { id },
       data: { deletedAt: new Date() }
     })

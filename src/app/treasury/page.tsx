@@ -258,7 +258,7 @@ export default function Treasury() {
         message: 'فشل في إضافة الخزنة'
       })
     }
-  }
+  }, [])
 
   const handleEditSafe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()

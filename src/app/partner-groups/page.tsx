@@ -132,7 +132,7 @@ export default function PartnerGroups() {
         message: 'فشل في إنشاء المجموعة'
       })
     }
-  }
+  }, [])
 
   const handleAddPartnerToGroup = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
@@ -379,7 +379,7 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
 }) {
   const [selectedPartner, setSelectedPartner] = useState('')
   const [percent, setPercent] = useState('')
-  const handle$1 = useCallback(() => {
+  const handleSubmit = useCallback(() => {
     const percentNum = parseFloat(percent)
     if (!selectedPartner || !percentNum || percentNum <= 0) {
       alert('الرجاء اختيار شريك وإدخال نسبة صحيحة')
@@ -389,7 +389,7 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
     onAdd(groupId, selectedPartner, percentNum)
     setSelectedPartner('')
     setPercent('')
-  }
+  }, [groupId, selectedPartner, percent, onAdd])
 
   return (
     <div className="tools">
