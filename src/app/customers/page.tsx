@@ -127,10 +127,7 @@ export default function Customers() {
   // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
   const fetchCustomers = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/customers', {
         headers: {}
       })
@@ -152,15 +149,7 @@ export default function Customers() {
   }, [])
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchCustomers()
   }, [fetchCustomers, router]) // FIXED: Added proper dependencies
 
@@ -232,10 +221,7 @@ export default function Customers() {
     })
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -351,10 +337,7 @@ export default function Customers() {
     })
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -410,10 +393,7 @@ export default function Customers() {
     setCustomers(prev => prev.filter(customer => customer.id !== customerId))
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/customers?id=${customerId}`, {
         method: 'DELETE',
         headers: {}
