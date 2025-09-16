@@ -127,7 +127,6 @@ export default function Customers() {
   // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
   const fetchCustomers = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -153,8 +152,7 @@ export default function Customers() {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -234,7 +232,6 @@ export default function Customers() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -354,7 +351,6 @@ export default function Customers() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -414,7 +410,6 @@ export default function Customers() {
     setCustomers(prev => prev.filter(customer => customer.id !== customerId))
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

@@ -137,8 +137,7 @@ export default function Installments() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -152,7 +151,6 @@ export default function Installments() {
 
   const fetchInstallments = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -188,7 +186,6 @@ export default function Installments() {
     if (!confirm('هل أنت متأكد من تسديد هذا القسط؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -235,7 +232,6 @@ export default function Installments() {
     if (!confirm('هل أنت متأكد من حذف هذا القسط؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -311,7 +307,6 @@ export default function Installments() {
     if (!rescheduleInstallment || !newDueDate) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

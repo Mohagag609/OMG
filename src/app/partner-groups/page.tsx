@@ -35,8 +35,7 @@ export default function PartnerGroups() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -50,7 +49,6 @@ export default function PartnerGroups() {
 
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -92,7 +90,6 @@ export default function PartnerGroups() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -131,7 +128,6 @@ export default function PartnerGroups() {
 
   const handleAddPartnerToGroup = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

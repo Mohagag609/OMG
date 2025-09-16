@@ -163,7 +163,6 @@ export default function Units() {
   // FIXED: Memoized fetchData function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -211,8 +210,7 @@ export default function Units() {
   }, []) // FIXED: Empty dependency array since no external dependencies
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -325,7 +323,6 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -445,7 +442,6 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -514,7 +510,6 @@ export default function Units() {
     setUnits(prev => prev.filter(unit => unit.id !== unitId))
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

@@ -163,8 +163,7 @@ export default function Brokers() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -180,7 +179,6 @@ export default function Brokers() {
 
   const fetchBrokers = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -215,7 +213,6 @@ export default function Brokers() {
 
   const fetchBrokerDues = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -234,7 +231,6 @@ export default function Brokers() {
 
   const fetchSafes = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -290,7 +286,6 @@ export default function Brokers() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -351,7 +346,6 @@ export default function Brokers() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -407,7 +401,6 @@ export default function Brokers() {
 
     try {
       setDeletingBrokers(prev => new Set(prev).add(brokerId))
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -500,7 +493,6 @@ export default function Brokers() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

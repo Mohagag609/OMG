@@ -48,7 +48,6 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

@@ -19,10 +19,7 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
   const router = useRouter()
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken')
-    router.push('/login')
-  }
+  // Authentication removed - no logout needed
 
   return (
     <motion.div 
@@ -148,12 +145,12 @@ const Header = ({ title, subtitle, icon, onMenuToggle }: HeaderProps) => {
                         variant="ghost"
                         onClick={() => {
                           setShowUserMenu(false)
-                          handleLogout()
+                          window.location.reload()
                         }}
-                        className="w-full justify-start space-x-3 space-x-reverse p-3 hover:bg-destructive/10 text-destructive"
+                        className="w-full justify-start space-x-3 space-x-reverse p-3 hover:bg-accent"
                       >
-                        <span className="text-lg">🚪</span>
-                        <span>تسجيل الخروج</span>
+                        <span className="text-lg">🔄</span>
+                        <span>تحديث التطبيق</span>
                       </Button>
                     </div>
                   </motion.div>

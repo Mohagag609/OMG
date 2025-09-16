@@ -162,7 +162,6 @@ export default function Partners() {
   // FIXED: Memoized fetchPartners function to prevent unnecessary re-renders
   const fetchPartners = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -207,8 +206,7 @@ export default function Partners() {
   }, [router, addNotification]) // FIXED: Added proper dependencies
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -256,7 +254,6 @@ export default function Partners() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -318,7 +315,6 @@ export default function Partners() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -376,7 +372,6 @@ export default function Partners() {
 
     try {
       setDeletingPartners(prev => new Set(prev).add(partnerId))
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

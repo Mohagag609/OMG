@@ -36,7 +36,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
 
   const loadUnits = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/units', {
         headers: {}
       })
@@ -98,7 +97,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
     onLoadingChange(true)
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/reports/${selectedReport}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

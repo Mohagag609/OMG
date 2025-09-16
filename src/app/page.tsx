@@ -103,14 +103,7 @@ export default function Dashboard() {
       setLoading(true)
       setError(null)
       
-      // Only check token on client side
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('authToken')
-        if (!token) {
-          router.push('/login')
-          return
-        }
-      }
+      // Authentication removed - direct access
 
       // Add timeout to prevent infinite loading
       const controller = new AbortController()

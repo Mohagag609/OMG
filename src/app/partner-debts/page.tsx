@@ -24,8 +24,7 @@ export default function PartnerDebts() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -39,7 +38,6 @@ export default function PartnerDebts() {
 
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -75,7 +73,6 @@ export default function PartnerDebts() {
   const handleAddDebt = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -122,7 +119,6 @@ export default function PartnerDebts() {
 
   const handlePayDebt = useCallback(async (debtId: string) => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

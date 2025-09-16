@@ -146,8 +146,7 @@ export default function Treasury() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -161,7 +160,6 @@ export default function Treasury() {
 
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -206,7 +204,6 @@ export default function Treasury() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -261,7 +258,6 @@ export default function Treasury() {
     if (!editingSafe) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -315,7 +311,6 @@ export default function Treasury() {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -377,7 +372,6 @@ export default function Treasury() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

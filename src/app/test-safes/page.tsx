@@ -10,8 +10,6 @@ export default function TestSafes() {
   useEffect(() => {
     const fetchSafes = async () => {
       try {
-        const token = localStorage.getItem('authToken')
-        
         if (!token) {
           setError('No token found in localStorage')
           setLoading(false)

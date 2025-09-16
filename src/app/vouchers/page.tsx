@@ -75,8 +75,7 @@ export default function Vouchers() {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -90,7 +89,6 @@ export default function Vouchers() {
 
   const fetchVouchers = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -115,7 +113,6 @@ export default function Vouchers() {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return

@@ -83,7 +83,6 @@ export default function Reports() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
       return
@@ -94,7 +93,6 @@ export default function Reports() {
 
   const fetchKPIs = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/dashboard', {
         headers: {}
       })
@@ -141,7 +139,6 @@ export default function Reports() {
 
     try {
       setReportLoading(true)
-      const token = localStorage.getItem('authToken')
       let response: Response
 
       switch (format) {
@@ -239,7 +236,6 @@ export default function Reports() {
 
   const generateReport = async (reportType: string) => {
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/export/excel?type=${reportType}`, {
         method: 'GET',
         headers: {}

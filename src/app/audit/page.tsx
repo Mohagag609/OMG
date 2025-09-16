@@ -19,7 +19,6 @@ export default function Audit() {
 
   useEffect(() => {
     // Check if user is logged in
-    const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
       return
@@ -30,7 +29,6 @@ export default function Audit() {
 
   const fetchAuditLogs = async () => {
     try {
-      const token = localStorage.getItem('authToken')
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString()

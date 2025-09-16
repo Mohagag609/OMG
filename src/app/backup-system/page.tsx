@@ -48,7 +48,6 @@ export default function BackupSystem() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
       return
@@ -70,7 +69,6 @@ export default function BackupSystem() {
   const handleExport = async () => {
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,8 +120,6 @@ export default function BackupSystem() {
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
-      
       // Convert file to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
@@ -177,7 +173,6 @@ export default function BackupSystem() {
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/wipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

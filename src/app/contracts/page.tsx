@@ -248,7 +248,6 @@ export default function Contracts() {
   // FIXED: Memoized fetchData function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -290,8 +289,7 @@ export default function Contracts() {
   }, []) // FIXED: Empty dependency array since no external dependencies
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-      if (!token) {
+    if (!token) {
         router.push('/login')
         return
       }
@@ -339,7 +337,6 @@ export default function Contracts() {
     }
 
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
@@ -509,7 +506,6 @@ export default function Contracts() {
     setDeletingContracts(prev => new Set(prev).add(contractId))
     
     try {
-      const token = localStorage.getItem('authToken')
       if (!token) {
         router.push('/login')
         return
