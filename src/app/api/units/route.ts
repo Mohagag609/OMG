@@ -7,6 +7,7 @@ const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
 
 export async function GET() {
   try {
+    await prisma.$connect()
     // Check cache first
     const cacheKey = 'units-list'
     const cached = cache.get(cacheKey)
@@ -57,6 +58,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    await prisma.$connect()
     const body = await request.json()
     
     const unit = await prisma.unit.create({
@@ -103,6 +105,7 @@ export async function POST(request: Request) {
 }
 export async function PUT(request: Request) {
   try {
+    await prisma.$connect()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const body = await request.json()
@@ -129,15 +132,22 @@ export async function PUT(request: Request) {
     })
 
   } catch (error) {
-    
+    console.error('Error updating unit:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في التحديث'
     }, { status: 500 })
+  } finally {
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }
 export async function DELETE(request: Request) {
   try {
+    await prisma.$connect()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     
@@ -163,10 +173,16 @@ export async function DELETE(request: Request) {
     })
 
   } catch (error) {
-    
+    console.error('Error deleting unit:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في الحذف'
     }, { status: 500 })
+  } finally {
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }

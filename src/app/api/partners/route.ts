@@ -7,6 +7,8 @@ const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
 
 export async function GET() {
   try {
+    await prisma.$connect()
+    
     // Check cache first
     const cacheKey = 'partners-list'
     const cached = cache.get(cacheKey)
@@ -44,18 +46,23 @@ export async function GET() {
     })
 
   } catch (error) {
-    
+    console.error('Error fetching partners:', error)
     return NextResponse.json({
       success: false,
-      error: 'خطأ في قاعدة البيانات'
+      error: 'خطأ في تحميل الشركاء'
     }, { status: 500 })
   } finally {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }
 
 export async function POST(request: Request) {
   try {
+    await prisma.$connect()
     const body = await request.json()
     
     const partner = await prisma.partner.create({
@@ -84,17 +91,23 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    
+    console.error('Error adding partner:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في إضافة الشريك'
     }, { status: 500 })
   } finally {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }
+
 export async function PUT(request: Request) {
   try {
+    await prisma.$connect()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const body = await request.json()
@@ -102,13 +115,25 @@ export async function PUT(request: Request) {
     if (!id) {
       return NextResponse.json({
         success: false,
-        error: 'معرف العنصر مطلوب'
+        error: 'معرف الشريك مطلوب'
       }, { status: 400 })
     }
 
-    const item = await prisma.partner.update({
+    const partner = await prisma.partner.update({
       where: { id },
-      data: body
+      data: {
+        name: body.name,
+        phone: body.phone,
+        notes: body.notes
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true
+      }
     })
 
     // Invalidate cache
@@ -116,31 +141,38 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({
       success: true,
-      data: item,
-      message: 'تم التحديث بنجاح'
+      data: partner,
+      message: 'تم تحديث الشريك بنجاح'
     })
 
   } catch (error) {
-    
+    console.error('Error updating partner:', error)
     return NextResponse.json({
       success: false,
-      error: 'خطأ في التحديث'
+      error: 'خطأ في تحديث الشريك'
     }, { status: 500 })
+  } finally {
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }
+
 export async function DELETE(request: Request) {
   try {
+    await prisma.$connect()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     
     if (!id) {
       return NextResponse.json({
         success: false,
-        error: 'معرف العنصر مطلوب'
+        error: 'معرف الشريك مطلوب'
       }, { status: 400 })
     }
 
-    // Soft delete
     await prisma.partner.update({
       where: { id },
       data: { deletedAt: new Date() }
@@ -151,14 +183,20 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'تم الحذف بنجاح'
+      message: 'تم حذف الشريك بنجاح'
     })
 
   } catch (error) {
-    
+    console.error('Error deleting partner:', error)
     return NextResponse.json({
       success: false,
-      error: 'خطأ في الحذف'
+      error: 'خطأ في حذف الشريك'
     }, { status: 500 })
+  } finally {
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }

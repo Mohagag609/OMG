@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    }
-  }
-})
 
 export async function POST(request: Request) {
   try {
+    await prisma.$connect()
     const { username, password } = await request.json()
 
     // Simple authentication - in production, use proper password hashing
@@ -55,11 +48,16 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
+    console.error('Error in auth API:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في المصادقة'
     }, { status: 500 })
   } finally {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError)
+    }
   }
 }
