@@ -1,236 +1,221 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
+import { validateCustomer } from '@/utils/validation'
+import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 
-// Simple in-memory cache
-const cache = new Map()
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-export async function GET() {
+// GET /api/customers - Get customers with pagination
+export async function GET(request: NextRequest) {
   try {
-    // Test database connection first
-    await prisma.$connect()
-    
-    // Check cache first
-    const cacheKey = 'customers-list'
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return NextResponse.json({
-        success: true,
-        data: cached.data,
-        message: 'تم تحميل العملاء من الذاكرة المؤقتة'
-      })
+    // Check authentication - try both header and cookie
+    let token = null
+    let user = null
+
+    // Try authorization header first
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
     }
 
-    let customers = []
-    try {
-      customers = await prisma.customer.findMany({
-        where: { deletedAt: null },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          nationalId: true,
-          address: true,
-          status: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true
-        },
+    // Try cookie if no header
+    if (!token) {
+      const cookieHeader = request.headers.get('cookie')
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split('=')
+          acc[key] = value
+          return acc
+        }, {} as Record<string, string>)
+        token = cookies.authToken
+      }
+    }
+
+    // If we have a token, try to get user
+    if (token) {
+      user = await getUserFromToken(token)
+      if (!user) {
+        console.log('Invalid token, proceeding without auth for customers list')
+      }
+    } else {
+      console.log('No authentication token found, proceeding without auth for customers list')
+    }
+
+    // For now, allow access without authentication for customers list
+    // You can uncomment the following lines to require authentication
+    // if (!user) {
+    //   return NextResponse.json(
+    //     { success: false, error: 'غير مخول للوصول' },
+    //     { status: 401 }
+    //   )
+    // }
+
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+
+    let whereClause: any = { deletedAt: null }
+
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+        { nationalId: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
         orderBy: { createdAt: 'desc' }
-      })
-    } catch (dbError) {
-      console.error('Database query error:', dbError)
-      // Return fallback data if database is not available
-      return NextResponse.json({
-        success: true,
-        data: [],
-        message: 'تم تحميل البيانات الافتراضية - قاعدة البيانات غير متاحة',
-        fallback: true
-      })
-    }
+      }),
+      prisma.customer.count({ where: whereClause })
+    ])
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: customers,
-      timestamp: Date.now()
-    })
+    const totalPages = Math.ceil(total / limit)
 
-    return NextResponse.json({
+    const response: PaginatedResponse<Customer> = {
       success: true,
       data: customers,
-      message: 'تم تحميل العملاء بنجاح'
-    })
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
+    }
 
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('Customers API error:', error)
-    
-    // Return fallback data on error
-    return NextResponse.json({
-      success: true,
-      data: [],
-      message: 'تم تحميل البيانات الافتراضية - خطأ في الاتصال',
-      fallback: true,
-      error: error instanceof Error ? error.message : 'خطأ غير معروف'
-    })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    console.error('Error getting customers:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(request: Request) {
+// POST /api/customers - Create new customer
+export async function POST(request: NextRequest) {
   try {
-    await prisma.$connect()
+    // Check authentication - try both header and cookie
+    let token = null
+    let user = null
+
+    // Try authorization header first
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
+    }
+
+    // Try cookie if no header
+    if (!token) {
+      const cookieHeader = request.headers.get('cookie')
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split('=')
+          acc[key] = value
+          return acc
+        }, {} as Record<string, string>)
+        token = cookies.authToken
+      }
+    }
+
+    // If we have a token, try to get user
+    if (token) {
+      user = await getUserFromToken(token)
+      if (!user) {
+        console.log('Invalid token, proceeding without auth for customer creation')
+      }
+    } else {
+      console.log('No authentication token found, proceeding without auth for customer creation')
+    }
+
+    // For now, allow access without authentication for customer creation
+    // You can uncomment the following lines to require authentication
+    // if (!user) {
+    //   return NextResponse.json(
+    //     { success: false, error: 'غير مخول للوصول' },
+    //     { status: 401 }
+    //   )
+    // }
+
     const body = await request.json()
-    
+    const { name, phone, nationalId, address, status, notes } = body
+
+    // Validate customer data
+    const validation = validateCustomer({ name, phone, nationalId, address, status, notes })
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { success: false, error: validation.errors.join(', ') },
+        { status: 400 }
+      )
+    }
+
+    // Check if phone already exists (only if phone is provided)
+    if (phone && phone.trim()) {
+      const existingCustomer = await prisma.customer.findFirst({
+        where: { 
+          phone,
+          deletedAt: null
+        }
+      })
+
+      if (existingCustomer) {
+        return NextResponse.json(
+          { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Check if nationalId already exists (only if nationalId is provided)
+    if (nationalId && nationalId.trim()) {
+      const existingCustomer = await prisma.customer.findFirst({
+        where: { 
+          nationalId,
+          deletedAt: null
+        }
+      })
+
+      if (existingCustomer) {
+        return NextResponse.json(
+          { success: false, error: 'الرقم القومي مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Create customer
     const customer = await prisma.customer.create({
       data: {
-        name: body.name,
-        phone: body.phone,
-        nationalId: body.nationalId,
-        address: body.address,
-        status: body.status || 'نشط',
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        nationalId: true,
-        address: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+        name,
+        phone: phone || null,
+        nationalId: nationalId || null,
+        address: address || null,
+        status: status || 'نشط',
+        notes: notes || null
       }
     })
 
-    // Invalidate cache
-    cache.delete('customers-list')
-
-    return NextResponse.json({
+    const response: ApiResponse<Customer> = {
       success: true,
       data: customer,
       message: 'تم إضافة العميل بنجاح'
-    })
+    }
 
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error adding customer:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في إضافة العميل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const body = await request.json()
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف العميل مطلوب'
-      }, { status: 400 })
-    }
-
-    const customer = await prisma.customer.update({
-      where: { id },
-      data: {
-        name: body.name,
-        phone: body.phone,
-        nationalId: body.nationalId,
-        address: body.address,
-        status: body.status,
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        nationalId: true,
-        address: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    })
-
-    // Invalidate cache
-    cache.delete('customers-list')
-
-    return NextResponse.json({
-      success: true,
-      data: customer,
-      message: 'تم تحديث العميل بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error updating customer:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحديث العميل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف العميل مطلوب'
-      }, { status: 400 })
-    }
-
-    // Soft delete
-    await prisma.customer.update({
-      where: { id },
-      data: { deletedAt: new Date() }
-    })
-
-    // Invalidate cache
-    cache.delete('customers-list')
-
-    return NextResponse.json({
-      success: true,
-      message: 'تم حذف العميل بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error deleting customer:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في حذف العميل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    console.error('Error creating customer:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }

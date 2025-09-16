@@ -1,197 +1,167 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
+import { ApiResponse, Safe, PaginatedResponse } from '@/types'
 
-// Simple in-memory cache
-const cache = new Map()
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-export async function GET() {
+// GET /api/safes - Get safes with pagination
+export async function GET(request: NextRequest) {
   try {
-    await prisma.$connect()
-    
-    // Check cache first
-    const cacheKey = 'safes-list'
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return NextResponse.json({
-        success: true,
-        data: cached.data,
-        message: 'تم تحميل الخزائن من الذاكرة المؤقتة'
-      })
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
-    const safes = await prisma.safe.findMany({
-      where: { deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        balance: true,
-        createdAt: true,
-        updatedAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
+    
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: safes,
-      timestamp: Date.now()
-    })
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
 
-    return NextResponse.json({
+    let whereClause: any = { deletedAt: null }
+
+    if (search) {
+      whereClause.name = { contains: search, mode: 'insensitive' }
+    }
+
+    const skip = (page - 1) * limit
+    const [safes, total] = await Promise.all([
+      prisma.safe.findMany({
+        where: whereClause,
+        include: {
+          vouchers: {
+            where: { deletedAt: null },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+          },
+          transfersFrom: {
+            where: { deletedAt: null },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+          },
+          transfersTo: {
+            where: { deletedAt: null },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+          }
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.safe.count({ where: whereClause })
+    ])
+
+    const totalPages = Math.ceil(total / limit)
+
+    const response: PaginatedResponse<Safe> = {
       success: true,
       data: safes,
-      message: 'تم تحميل الخزائن بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error fetching safes:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحميل الخزائن'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
     }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('Error getting safes:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(request: Request) {
+// POST /api/safes - Create new safe
+export async function POST(request: NextRequest) {
   try {
-    await prisma.$connect()
-    const body = await request.json()
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
     
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { name, balance } = body
+
+    // Validation
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: 'اسم الخزنة مطلوب' },
+        { status: 400 }
+      )
+    }
+
+    if (balance && balance < 0) {
+      return NextResponse.json(
+        { success: false, error: 'الرصيد لا يمكن أن يكون سالباً' },
+        { status: 400 }
+      )
+    }
+
+    // Check if safe name already exists
+    const existingSafe = await prisma.safe.findUnique({
+      where: { name }
+    })
+
+    if (existingSafe) {
+      return NextResponse.json(
+        { success: false, error: 'اسم الخزنة مستخدم بالفعل' },
+        { status: 400 }
+      )
+    }
+
+    // Create safe
     const safe = await prisma.safe.create({
       data: {
-        name: body.name,
-        balance: body.balance || 0
-      },
-      select: {
-        id: true,
-        name: true,
-        balance: true,
-        createdAt: true,
-        updatedAt: true
+        name,
+        balance: balance || 0
       }
     })
 
-    // Invalidate cache
-    cache.delete('safes-list')
-
-    return NextResponse.json({
+    const response: ApiResponse<Safe> = {
       success: true,
       data: safe,
-      message: 'تم إضافة الخزينة بنجاح'
-    })
+      message: 'تم إضافة الخزنة بنجاح'
+    }
 
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error adding safe:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في إضافة الخزينة'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const body = await request.json()
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف الخزينة مطلوب'
-      }, { status: 400 })
-    }
-
-    const safe = await prisma.safe.update({
-      where: { id },
-      data: {
-        name: body.name,
-        balance: body.balance
-      },
-      select: {
-        id: true,
-        name: true,
-        balance: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    })
-
-    // Invalidate cache
-    cache.delete('safes-list')
-
-    return NextResponse.json({
-      success: true,
-      data: safe,
-      message: 'تم تحديث الخزينة بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error updating safe:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحديث الخزينة'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف الخزينة مطلوب'
-      }, { status: 400 })
-    }
-
-    await prisma.safe.update({
-      where: { id },
-      data: { deletedAt: new Date() }
-    })
-
-    // Invalidate cache
-    cache.delete('safes-list')
-
-    return NextResponse.json({
-      success: true,
-      message: 'تم حذف الخزينة بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error deleting safe:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في حذف الخزينة'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    console.error('Error creating safe:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }

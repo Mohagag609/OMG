@@ -1,197 +1,106 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
 
-// Simple in-memory cache
-const cache = new Map()
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    await prisma.$connect()
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
     
-    // Check cache first
-    const cacheKey = 'partner-groups-list'
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return NextResponse.json({
-        success: true,
-        data: cached.data,
-        message: 'تم تحميل مجموعات الشركاء من الذاكرة المؤقتة'
-      })
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
     const partnerGroups = await prisma.partnerGroup.findMany({
-      where: { deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+      include: {
+        partners: {
+          include: {
+            partner: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     })
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: partnerGroups,
-      timestamp: Date.now()
-    })
+    // Transform the data to match the expected format
+    const transformedGroups = partnerGroups.map(group => ({
+      id: group.id,
+      name: group.name,
+      notes: group.notes,
+      createdAt: group.createdAt,
+      updatedAt: group.updatedAt,
+      partners: group.partners.map(p => ({
+        partnerId: p.partnerId,
+        percent: p.percentage
+      }))
+    }))
 
-    return NextResponse.json({
-      success: true,
-      data: partnerGroups,
-      message: 'تم تحميل مجموعات الشركاء بنجاح'
-    })
-
+    return NextResponse.json({ success: true, data: transformedGroups })
   } catch (error) {
     console.error('Error fetching partner groups:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحميل مجموعات الشركاء'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    return NextResponse.json({ success: false, error: 'خطأ في الخادم' }, { status: 500 })
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    await prisma.$connect()
-    const body = await request.json()
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
     
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const { name, notes } = await request.json()
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ success: false, error: 'اسم المجموعة مطلوب' }, { status: 400 })
+    }
+
     const partnerGroup = await prisma.partnerGroup.create({
       data: {
-        name: body.name,
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+        name: name.trim(),
+        notes: notes?.trim() || null
       }
     })
 
-    // Invalidate cache
-    cache.delete('partner-groups-list')
-
-    return NextResponse.json({
-      success: true,
-      data: partnerGroup,
-      message: 'تم إضافة مجموعة الشركاء بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error adding partner group:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في إضافة مجموعة الشركاء'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const body = await request.json()
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف مجموعة الشركاء مطلوب'
-      }, { status: 400 })
-    }
-
-    const partnerGroup = await prisma.partnerGroup.update({
-      where: { id },
+    return NextResponse.json({ 
+      success: true, 
       data: {
-        name: body.name,
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+        id: partnerGroup.id,
+        name: partnerGroup.name,
+        notes: partnerGroup.notes,
+        createdAt: partnerGroup.createdAt,
+        updatedAt: partnerGroup.updatedAt,
+        partners: []
       }
     })
-
-    // Invalidate cache
-    cache.delete('partner-groups-list')
-
-    return NextResponse.json({
-      success: true,
-      data: partnerGroup,
-      message: 'تم تحديث مجموعة الشركاء بنجاح'
-    })
-
   } catch (error) {
-    console.error('Error updating partner group:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحديث مجموعة الشركاء'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف مجموعة الشركاء مطلوب'
-      }, { status: 400 })
-    }
-
-    await prisma.partnerGroup.update({
-      where: { id },
-      data: { deletedAt: new Date() }
-    })
-
-    // Invalidate cache
-    cache.delete('partner-groups-list')
-
-    return NextResponse.json({
-      success: true,
-      message: 'تم حذف مجموعة الشركاء بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error deleting partner group:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في حذف مجموعة الشركاء'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    console.error('Error creating partner group:', error)
+    return NextResponse.json({ success: false, error: 'خطأ في الخادم' }, { status: 500 })
   }
 }

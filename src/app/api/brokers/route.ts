@@ -1,202 +1,152 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getUserFromToken } from '@/lib/auth'
+import { ApiResponse, Broker, PaginatedResponse } from '@/types'
 
-// Simple in-memory cache
-const cache = new Map()
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-export async function GET() {
+// GET /api/brokers - Get brokers with pagination
+export async function GET(request: NextRequest) {
   try {
-    await prisma.$connect()
-    
-    // Check cache first
-    const cacheKey = 'brokers-list'
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return NextResponse.json({
-        success: true,
-        data: cached.data,
-        message: 'تم تحميل الوسطاء من الذاكرة المؤقتة'
-      })
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
     }
 
-    const brokers = await prisma.broker.findMany({
-      where: { deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
+    
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: brokers,
-      timestamp: Date.now()
-    })
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
 
-    return NextResponse.json({
+    let whereClause: any = { deletedAt: null }
+
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const [brokers, total] = await Promise.all([
+      prisma.broker.findMany({
+        where: whereClause,
+        include: {
+          brokerDues: {
+            where: { deletedAt: null }
+          }
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.broker.count({ where: whereClause })
+    ])
+
+    const totalPages = Math.ceil(total / limit)
+
+    const response: PaginatedResponse<Broker> = {
       success: true,
       data: brokers,
-      message: 'تم تحميل الوسطاء بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error fetching brokers:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحميل الوسطاء'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
     }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('Error getting brokers:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(request: Request) {
+// POST /api/brokers - Create new broker
+export async function POST(request: NextRequest) {
   try {
-    await prisma.$connect()
-    const body = await request.json()
+    // Check authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.substring(7)
+    const user = await getUserFromToken(token)
     
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'غير مخول للوصول' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { name, phone, notes } = body
+
+    // Validation
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: 'اسم السمسار مطلوب' },
+        { status: 400 }
+      )
+    }
+
+    // Check if broker name already exists
+    const existingBroker = await prisma.broker.findUnique({
+      where: { name }
+    })
+
+    if (existingBroker) {
+      return NextResponse.json(
+        { success: false, error: 'اسم السمسار مستخدم بالفعل' },
+        { status: 400 }
+      )
+    }
+
+    // Create broker
     const broker = await prisma.broker.create({
       data: {
-        name: body.name,
-        phone: body.phone,
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+        name,
+        phone,
+        notes
       }
     })
 
-    // Invalidate cache
-    cache.delete('brokers-list')
-
-    return NextResponse.json({
+    const response: ApiResponse<Broker> = {
       success: true,
       data: broker,
-      message: 'تم إضافة الوكيل بنجاح'
-    })
+      message: 'تم إضافة السمسار بنجاح'
+    }
 
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error adding broker:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في إضافة الوكيل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const body = await request.json()
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف الوكيل مطلوب'
-      }, { status: 400 })
-    }
-
-    const broker = await prisma.broker.update({
-      where: { id },
-      data: {
-        name: body.name,
-        phone: body.phone,
-        notes: body.notes
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    })
-
-    // Invalidate cache
-    cache.delete('brokers-list')
-
-    return NextResponse.json({
-      success: true,
-      data: broker,
-      message: 'تم تحديث الوكيل بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error updating broker:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في تحديث الوكيل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    await prisma.$connect()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'معرف الوكيل مطلوب'
-      }, { status: 400 })
-    }
-
-    await prisma.broker.update({
-      where: { id },
-      data: { deletedAt: new Date() }
-    })
-
-    // Invalidate cache
-    cache.delete('brokers-list')
-
-    return NextResponse.json({
-      success: true,
-      message: 'تم حذف الوكيل بنجاح'
-    })
-
-  } catch (error) {
-    console.error('Error deleting broker:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'خطأ في حذف الوكيل'
-    }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError)
-    }
+    console.error('Error creating broker:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { status: 500 }
+    )
   }
 }

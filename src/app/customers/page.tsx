@@ -1,28 +1,21 @@
 'use client'
 
-import { useState, useEffect, useCallback, memo } from 'react'
-// FIXED: Removed unused useMemo import
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
 
-// FIXED: Proper TypeScript interface for ModernCard
-interface ModernCardProps {
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
-}
-
-// FIXED: Memoized ModernCard component
-const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }) => (
+// Modern UI Components
+const ModernCard = ({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-))
-ModernCard.displayName = 'ModernCard'
+)
 
 const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
   const variants: { [key: string]: string } = {
@@ -124,8 +117,17 @@ export default function Customers() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
-  const fetchCustomers = useCallback(async () => {
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
     try {
       // Authentication removed - direct access
       const response = await fetch('/.netlify/functions/customers', {
@@ -135,23 +137,16 @@ export default function Customers() {
       const data = await response.json()
       if (data.success) {
         setCustomers(data.data)
-        setError(null)
       } else {
         setError(data.error || 'خطأ في تحميل العملاء')
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-      }
+      console.error('Error fetching customers:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    // Authentication removed - direct access
-    fetchCustomers()
-  }, [fetchCustomers, router]) // FIXED: Added proper dependencies
+  }
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -224,7 +219,9 @@ export default function Customers() {
       // Authentication removed - direct access
       const response = await fetch('/.netlify/functions/customers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(newCustomer)
       })
 
@@ -252,6 +249,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
+      console.error('Add customer error:', err)
       // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
       setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
       setShowAddModal(true)
@@ -338,9 +336,11 @@ export default function Customers() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch(`/api/customers?id=${editingCustomer.id}`, {
+      const response = await fetch(`/.netlify/functions/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(newCustomer)
       })
 
@@ -367,6 +367,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
+      console.error('Update customer error:', err)
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchCustomers()
       setError('خطأ في تحديث العميل')
@@ -394,7 +395,7 @@ export default function Customers() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch(`/api/customers?id=${customerId}`, {
+      const response = await fetch(`/.netlify/functions/customers?id=${customerId}`, {
         method: 'DELETE',
         headers: {}
       })
@@ -420,6 +421,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
+      console.error('Delete customer error:', err)
       // في حالة فشل الحذف، نعيد العميل للقائمة
       fetchCustomers()
       setError('خطأ في حذف العميل')
