@@ -123,16 +123,6 @@ export default function Customers() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchCustomers()
-  }, [fetchCustomers, router]) // FIXED: Added proper dependencies
-
   // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
   const fetchCustomers = useCallback(async () => {
     try {
@@ -157,6 +147,16 @@ export default function Customers() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    
+    fetchCustomers()
+  }, [fetchCustomers, router]) // FIXED: Added proper dependencies
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
