@@ -87,7 +87,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const { notifications, addNotification, removeNotification } = useNotifications()
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const { notifications, addNotification, removeNotification, clearAll } = useNotifications()
   const router = useRouter()
 
   // FIXED: Check if component is mounted on client side
@@ -124,13 +125,14 @@ export default function Dashboard() {
       if (data.success) {
         setKpis(data.data)
         // Only show success notification on manual refresh, not initial load
-        if (mounted) {
+        if (!isInitialLoad) {
           addNotification({
             type: 'success',
             title: 'نجاح',
-            message: 'تم تحميل بيانات لوحة التحكم بنجاح'
+            message: 'تم تحديث بيانات لوحة التحكم بنجاح'
           })
         }
+        setIsInitialLoad(false)
       } else {
         throw new Error(data.message || 'حدث خطأ غير متوقع')
       }
@@ -205,9 +207,16 @@ export default function Dashboard() {
         <div className="text-sm text-muted-foreground">
           آخر تحديث: {new Date().toLocaleString('ar-SA')}
         </div>
-        <ModernButton variant="outline" size="sm" onClick={() => fetchKPIs()}>
-          🔄 تحديث
-        </ModernButton>
+        <div className="flex gap-2">
+          {notifications.length > 0 && (
+            <ModernButton variant="ghost" size="sm" onClick={clearAll}>
+              🗑️ مسح الإشعارات
+            </ModernButton>
+          )}
+          <ModernButton variant="outline" size="sm" onClick={() => fetchKPIs()}>
+            🔄 تحديث
+          </ModernButton>
+        </div>
       </div>
 
       {/* Error Message */}

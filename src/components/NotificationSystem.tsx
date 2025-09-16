@@ -62,7 +62,7 @@ export function NotificationSystem({ notifications, onRemove }: NotificationSyst
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
       <AnimatePresence>
-        {notifications.map(notification => (
+        {notifications.slice(0, 3).map(notification => ( // Show max 3 notifications
           <motion.div
             key={notification.id}
             initial={{ opacity: 0, x: 300, scale: 0.8 }}
@@ -122,7 +122,7 @@ export function useNotifications() {
       ...notification,
       id: Math.random().toString(36).substring(2, 11),
       timestamp: new Date(),
-      duration: notification.duration || 5000
+      duration: notification.duration || (notification.type === 'success' ? 3000 : 5000) // Success notifications disappear faster
     }
     
     setNotifications(prev => [...prev, newNotification])
