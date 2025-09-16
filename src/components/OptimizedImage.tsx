@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, memo } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 
 // FIXED: Optimized image component with lazy loading and error handling

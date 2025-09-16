@@ -11,11 +11,11 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // FIXED: Proper TypeScript interfaces for components
-interface ModernCardProps {
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
-}
+// interface ModernCardProps {
+//   children: React.ReactNode
+//   className?: string
+//   onClick?: () => void
+// }
 
 interface ModernButtonProps {
   children: React.ReactNode
