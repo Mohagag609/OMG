@@ -124,7 +124,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   try {
     const registration = await navigator.serviceWorker.register('/sw.js')
     
-    console.log('Service Worker registered successfully:', registration)
     
     // Handle updates
     registration.addEventListener('updatefound', () => {
@@ -143,7 +142,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     
     return registration
   } catch (error) {
-    console.error('Service Worker registration failed:', error)
     return null
   }
 }
@@ -216,9 +214,7 @@ export async function clearCache(): Promise<void> {
     await Promise.all(
       cacheNames.map(cacheName => caches.delete(cacheName))
     )
-    console.log('Cache cleared successfully')
   } catch (error) {
-    console.error('Failed to clear cache:', error)
   }
 }
 
@@ -247,7 +243,6 @@ export async function getStorageQuota(): Promise<{
       percentage
     }
   } catch (error) {
-    console.error('Failed to get storage quota:', error)
     return null
   }
 }

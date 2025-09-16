@@ -68,7 +68,6 @@ export async function getUserFromToken(token: string): Promise<any> {
     
     return user
   } catch (error) {
-    console.error('Error getting user from token:', error)
     return null
   }
 }
@@ -114,5 +113,4 @@ export function requireAuth(requiredRole: string = 'user') {
 // Create default users - DISABLED
 export async function createDefaultUsers(): Promise<void> {
   // No default users created - admin panel is open access
-  console.log('No default users created - admin panel is open access')
 }

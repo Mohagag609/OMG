@@ -14,7 +14,7 @@ export default function Audit() {
     total: 0,
     totalPages: 0
   })
-  const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
+  // const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set())
   const router = useRouter()
 
   useEffect(() => {
@@ -59,7 +59,6 @@ export default function Audit() {
         setError(data.error || 'خطأ في تحميل سجل التدقيق')
       }
     } catch (err) {
-      console.error('Audit error:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)

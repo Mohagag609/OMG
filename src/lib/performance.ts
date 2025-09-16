@@ -14,7 +14,6 @@ export class PerformanceMonitor {
   static endTimer(label: string): number {
     const startTime = this.activeTimers.get(label)
     if (!startTime) {
-      console.warn(`Timer ${label} was not started`)
       return 0
     }
 
@@ -147,7 +146,6 @@ export async function monitorApiCall<T>(
     const duration = PerformanceMonitor.endTimer(label)
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🚀 API Call ${label}: ${duration.toFixed(2)}ms`)
     }
     
     return result
@@ -171,7 +169,6 @@ export function withPerformanceMonitoring<P extends object>(
       const duration = PerformanceMonitor.endTimer(`render-${componentName}`)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`🎨 Render ${componentName}: ${duration.toFixed(2)}ms`)
       }
     })
     
@@ -188,18 +185,12 @@ export function logBundleSize(): void {
     const scripts = Array.from(document.querySelectorAll('script[src]'))
     const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
     
-    console.group('📦 Bundle Analysis')
-    console.log(`Scripts: ${scripts.length}`)
-    console.log(`Stylesheets: ${styles.length}`)
     
     // Log performance metrics
     if ('performance' in window) {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      console.log(`Page Load Time: ${navigation.loadEventEnd - navigation.loadEventStart}ms`)
-      console.log(`DOM Content Loaded: ${navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart}ms`)
     }
     
-    console.groupEnd()
   }
 }
 

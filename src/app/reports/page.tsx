@@ -106,7 +106,6 @@ export default function Reports() {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
     } catch (err) {
-      console.error('Error fetching KPIs:', err)
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -218,7 +217,6 @@ export default function Reports() {
         throw new Error('فشل في تصدير التقرير')
       }
     } catch (err) {
-      console.error('Export error:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',
@@ -278,7 +276,6 @@ export default function Reports() {
         throw new Error('فشل في تصدير التقرير')
       }
     } catch (err) {
-      console.error('Export error:', err)
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',

@@ -114,7 +114,6 @@ export default function AdminPage() {
         setShowCreateForm(true)
       }
     } catch (error) {
-      console.error('Error checking users:', error)
       // Error - show setup form
       setIsAuthenticated(true)
       setShowCreateForm(true)
@@ -129,7 +128,6 @@ export default function AdminPage() {
         setUsers(data.users || [])
       }
     } catch (error) {
-      console.error('Error fetching users:', error)
     }
   }
 
@@ -176,7 +174,6 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error('Create user error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في إنشاء المستخدم',
@@ -224,7 +221,6 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error('Delete user error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في حذف المستخدم',
@@ -290,7 +286,6 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error('Cleanup error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في التنظيف',

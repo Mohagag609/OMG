@@ -13,7 +13,7 @@ export default function PartnerDebts() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [deletingDebts, setDeletingDebts] = useState<Set<string>>(new Set())
+  // const [deletingDebts, setDeletingDebts] = useState<Set<string>>(new Set())
   const [newDebt, setNewDebt] = useState({
     partnerId: '',
     amount: '',
@@ -66,7 +66,6 @@ export default function PartnerDebts() {
       }
 
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -116,7 +115,6 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error adding debt:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -155,7 +153,6 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error paying debt:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في السداد',

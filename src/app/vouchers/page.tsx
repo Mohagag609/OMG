@@ -47,7 +47,7 @@ export default function Vouchers() {
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
+  // const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -106,7 +106,6 @@ export default function Vouchers() {
         setError(data.error || 'خطأ في تحميل السندات')
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error fetching vouchers:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -145,7 +144,6 @@ export default function Vouchers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Delete voucher error:', err) }
       setError('خطأ في حذف السند')
       setSuccess(null)
       addNotification({

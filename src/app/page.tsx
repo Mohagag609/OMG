@@ -170,9 +170,7 @@ export default function Dashboard() {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching KPIs:', err)
       }
       setError('خطأ في الاتصال')
     } finally {

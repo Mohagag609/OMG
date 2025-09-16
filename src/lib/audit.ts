@@ -29,7 +29,6 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('Error creating audit log:', error)
     // Don't throw error to avoid breaking the main operation
   }
 }
@@ -92,7 +91,6 @@ export async function getAuditLogs(
     
     return { data, total, totalPages }
   } catch (error) {
-    console.error('Error getting audit logs:', error)
     throw error
   }
 }
@@ -116,7 +114,6 @@ export async function getAuditLogById(id: string): Promise<any | null> {
     
     return auditLog
   } catch (error) {
-    console.error('Error getting audit log by ID:', error)
     throw error
   }
 }
@@ -167,7 +164,6 @@ export async function getAuditStats(): Promise<{
       recentActivity
     }
   } catch (error) {
-    console.error('Error getting audit stats:', error)
     throw error
   }
 }
@@ -245,7 +241,6 @@ export async function exportAuditLogsToCSV(
     
     return csvContent
   } catch (error) {
-    console.error('Error exporting audit logs to CSV:', error)
     throw error
   }
 }

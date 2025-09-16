@@ -40,7 +40,6 @@ export function Settings({ onSettingsChange }: SettingsProps) {
         const parsed = JSON.parse(savedSettings)
         setSettings(prev => ({ ...prev, ...parsed }))
       } catch (error) {
-        console.error('Error loading settings:', error)
       }
     }
   }, [])

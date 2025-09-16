@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 // Simple in-memory cache
 const cache = new Map()
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+
 
 export async function GET() {
   try {
@@ -22,7 +22,6 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error fetching contracts:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في قاعدة البيانات'
@@ -49,7 +48,6 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error creating item:', error)
     
     return NextResponse.json({
       success: false,
@@ -85,7 +83,6 @@ export async function PUT(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error updating item:', error)
     
     return NextResponse.json({
       success: false,
@@ -120,7 +117,6 @@ export async function DELETE(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error deleting item:', error)
     
     return NextResponse.json({
       success: false,

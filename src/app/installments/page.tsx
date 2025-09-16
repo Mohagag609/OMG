@@ -175,7 +175,6 @@ export default function Installments() {
       if (contractsData.success) setContracts(contractsData.data)
 
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -222,7 +221,6 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Pay installment error:', err)) }
       setError('خطأ في تسديد القسط')
       setSuccess(null)
       addNotification({
@@ -269,7 +267,6 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete installment error:', err)) }
       setError('خطأ في حذف القسط')
       setSuccess(null)
       addNotification({
@@ -347,7 +344,6 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Reschedule error:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في إعادة الجدولة',

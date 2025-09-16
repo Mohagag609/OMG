@@ -145,7 +145,6 @@ export default function Customers() {
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching customers:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -273,7 +272,6 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add customer error:', err)) }
       // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
       setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
       setShowAddModal(true)
@@ -396,7 +394,6 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update customer error:', err)) }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchCustomers()
       setError('خطأ في تحديث العميل')
@@ -454,7 +451,6 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete customer error:', err)) }
       // في حالة فشل الحذف، نعيد العميل للقائمة
       fetchCustomers()
       setError('خطأ في حذف العميل')

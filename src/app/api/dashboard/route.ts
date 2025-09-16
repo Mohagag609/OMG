@@ -94,8 +94,6 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error getting dashboard data:', error)
-    
     return NextResponse.json({
       success: false,
       error: 'خطأ في قاعدة البيانات'

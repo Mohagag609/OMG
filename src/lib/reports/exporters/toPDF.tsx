@@ -151,7 +151,6 @@ export async function exportToPDFReact(options: PDFExportOptions): Promise<Buffe
     return Buffer.from(result)
     
   } catch (error) {
-    console.error('React PDF generation error:', error)
     throw new Error('فشل في إنشاء ملف PDF')
   }
 }
@@ -169,7 +168,6 @@ export async function exportToPDF(options: PDFExportOptions): Promise<Buffer> {
       return await exportToPDFChromium(options)
     }
   } catch (error) {
-    console.error('Primary PDF engine failed, trying fallback:', error)
     
     // محاولة المحرك البديل
     try {
@@ -179,7 +177,6 @@ export async function exportToPDF(options: PDFExportOptions): Promise<Buffer> {
         return await exportToPDFChromium(options)
       }
     } catch (fallbackError) {
-      console.error('Both PDF engines failed:', fallbackError)
       throw new Error('فشل في إنشاء ملف PDF - جميع المحركات غير متاحة')
     }
   }

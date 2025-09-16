@@ -30,7 +30,7 @@ export default function PartnerGroups() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', notes: '' })
   const [selectedGroup, setSelectedGroup] = useState<PartnerGroup | null>(null)
-  const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
+  // const [deletingGroups, setDeletingGroups] = useState<Set<string>>(new Set())
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
 
@@ -71,7 +71,6 @@ export default function PartnerGroups() {
       setPartners(partnersData.data || [])
 
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في التحميل',
@@ -125,7 +124,6 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error adding group:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -166,7 +164,6 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error adding partner to group:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',

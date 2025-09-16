@@ -59,7 +59,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
         })
       }
     } catch (error) {
-      console.error('Error loading units:', error)
     }
   }
 
@@ -123,7 +122,6 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
         throw new Error(error.message || 'فشل في إنشاء التقرير')
       }
     } catch (error) {
-      console.error('Report generation error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ',

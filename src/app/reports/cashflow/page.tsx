@@ -121,7 +121,6 @@ export default function CashflowReportPage() {
         })
       }
     } catch (error) {
-      console.error('Error fetching cashflow data:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في الاتصال',

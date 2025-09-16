@@ -55,7 +55,6 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error in auth:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في المصادقة'

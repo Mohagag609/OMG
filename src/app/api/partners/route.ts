@@ -44,7 +44,6 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error fetching partners:', error)
     
     return NextResponse.json({
       success: false,
@@ -85,7 +84,6 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error creating partner:', error)
     
     return NextResponse.json({
       success: false,
@@ -123,7 +121,6 @@ export async function PUT(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error updating item:', error)
     
     return NextResponse.json({
       success: false,
@@ -158,7 +155,6 @@ export async function DELETE(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error deleting item:', error)
     
     return NextResponse.json({
       success: false,

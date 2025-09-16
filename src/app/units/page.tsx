@@ -202,9 +202,7 @@ export default function Units() {
         setPartners(partnersData.data)
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -370,9 +368,7 @@ export default function Units() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add unit error:', err)) }
       }
       // في حالة فشل الحفظ، نزيل الوحدة المؤقتة ونعيد النافذة
       setUnits(prev => prev.filter(unit => unit.id !== tempUnit.id))
@@ -492,9 +488,7 @@ export default function Units() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Update unit error:', err)) }
       }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchData()
@@ -553,9 +547,7 @@ export default function Units() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete unit error:', err)) }
       }
       // في حالة فشل الحذف، نعيد الوحدة للقائمة
       fetchData()

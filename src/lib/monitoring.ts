@@ -118,7 +118,6 @@ export async function getSystemMetrics(): Promise<Metrics> {
       totalRecords
     }
   } catch (error) {
-    console.error('Error getting system metrics:', error)
     throw error
   }
 }
@@ -144,7 +143,6 @@ async function getTotalRecordsCount(): Promise<number> {
     
     return customerCount + unitCount + partnerCount + contractCount + installmentCount + voucherCount
   } catch (error) {
-    console.error('Error getting total records count:', error)
     return 0
   }
 }
@@ -154,7 +152,6 @@ async function getActiveUsersCount(): Promise<number> {
   try {
     return await prisma.user.count({ where: { isActive: true } })
   } catch (error) {
-    console.error('Error getting active users count:', error)
     return 0
   }
 }
@@ -169,7 +166,6 @@ async function getLastBackupDate(): Promise<string | undefined> {
     
     return setting?.value
   } catch (error) {
-    console.error('Error getting last backup date:', error)
     return undefined
   }
 }
@@ -195,7 +191,6 @@ export async function monitorSystemHealth(): Promise<void> {
       )
     }
   } catch (error) {
-    console.error('Error monitoring system health:', error)
   }
 }
 
@@ -205,7 +200,6 @@ export async function checkDatabaseConnectivity(): Promise<boolean> {
     await prisma.$queryRaw`SELECT 1`
     return true
   } catch (error) {
-    console.error('Database connectivity check failed:', error)
     return false
   }
 }
@@ -260,7 +254,6 @@ export async function checkDataIntegrity(): Promise<{
       issues
     }
   } catch (error) {
-    console.error('Error checking data integrity:', error)
     return {
       isValid: false,
       issues: ['Error checking data integrity']
@@ -284,7 +277,6 @@ export async function monitorPerformance(): Promise<{
       memoryUsage: memUsagePercent
     }
   } catch (error) {
-    console.error('Error monitoring performance:', error)
     return {
       averageResponseTime: 0,
       slowQueries: [],

@@ -102,7 +102,6 @@ const SystemPage = () => {
       }))
 
     } catch (error) {
-      console.error('Error fetching system stats:', error)
       addNotification('error', 'خطأ في تحميل إحصائيات النظام')
     } finally {
       setLoading(false)

@@ -66,7 +66,6 @@ const ProfilePage = () => {
       })
 
     } catch (error) {
-      console.error('Error fetching profile:', error)
       addNotification('error', 'خطأ في تحميل الملف الشخصي', 'فشل في تحميل بيانات المستخدم')
     } finally {
       setLoading(false)

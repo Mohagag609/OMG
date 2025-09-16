@@ -25,7 +25,6 @@ export async function createNotification(data: NotificationData): Promise<void> 
       }
     })
   } catch (error) {
-    console.error('Error creating notification:', error)
     // Don't throw error to avoid breaking the main operation
   }
 }
@@ -83,7 +82,6 @@ export async function getNotifications(
     
     return { data, total, totalPages }
   } catch (error) {
-    console.error('Error getting notifications:', error)
     throw error
   }
 }
@@ -108,7 +106,6 @@ export async function acknowledgeNotification(
       message: 'تم تأكيد الإشعار بنجاح'
     }
   } catch (error) {
-    console.error('Error acknowledging notification:', error)
     return {
       success: false,
       message: 'خطأ في تأكيد الإشعار'
@@ -129,7 +126,6 @@ export async function getUnacknowledgedCount(): Promise<number> {
       }
     })
   } catch (error) {
-    console.error('Error getting unacknowledged notifications count:', error)
     return 0
   }
 }
@@ -143,7 +139,6 @@ export async function cleanExpiredNotifications(): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('Error cleaning expired notifications:', error)
   }
 }
 

@@ -195,9 +195,7 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Partners error:', err)) }
       }
       setError('خطأ في الاتصال')
       addNotification({
@@ -304,9 +302,7 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add partner error:', err)) }
       }
       setError('خطأ في إضافة الشريك')
       setSuccess(null)
@@ -371,9 +367,7 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Edit partner error:', err)) }
       }
       setError('خطأ في تحديث الشريك')
       setSuccess(null)
@@ -420,9 +414,7 @@ export default function Partners() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete partner error:', err)) }
       }
       setError('خطأ في حذف الشريك')
       setSuccess(null)

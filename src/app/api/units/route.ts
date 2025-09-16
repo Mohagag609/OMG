@@ -45,7 +45,6 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error fetching units:', error)
     
     return NextResponse.json({
       success: false,
@@ -93,7 +92,6 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error creating unit:', error)
     
     return NextResponse.json({
       success: false,
@@ -131,7 +129,6 @@ export async function PUT(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error updating item:', error)
     
     return NextResponse.json({
       success: false,
@@ -166,7 +163,6 @@ export async function DELETE(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error deleting item:', error)
     
     return NextResponse.json({
       success: false,

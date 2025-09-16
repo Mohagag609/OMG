@@ -102,7 +102,6 @@ export async function loadFontWithTimeout(
     
     return isLoaded
   } catch (error) {
-    console.warn(`Font ${fontFamily} failed to load within ${timeout}ms:`, error)
     return false
   }
 }
@@ -175,7 +174,6 @@ export async function loadCriticalFonts(): Promise<void> {
       criticalFonts.map(config => loadFontWithTimeout(config.family, 2000))
     )
   } catch (error) {
-    console.warn('Some critical fonts failed to load:', error)
   }
 }
 
@@ -186,7 +184,6 @@ export function monitorFontPerformance(): void {
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if (entry.name.includes('font')) {
-        console.log(`Font loaded: ${entry.name} in ${entry.duration}ms`)
       }
     }
   })
@@ -194,7 +191,6 @@ export function monitorFontPerformance(): void {
   try {
     observer.observe({ entryTypes: ['resource'] })
   } catch (error) {
-    console.warn('Font performance monitoring not supported:', error)
   }
 }
 
@@ -211,7 +207,6 @@ export function optimizeFontLoading(): void {
   // Add font loading event listeners
   if ('fonts' in document) {
     document.fonts.ready.then(() => {
-      console.log('All fonts loaded successfully')
     })
   }
 }

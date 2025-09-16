@@ -281,9 +281,7 @@ export default function Contracts() {
       if (brokersData.success) setBrokers(brokersData.data)
 
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -407,9 +405,7 @@ export default function Contracts() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add contract error:', err)) }
       }
       setError('خطأ في إضافة العقد')
       // FIXED: Removed unused setSuccess call
@@ -542,9 +538,7 @@ export default function Contracts() {
         })
       }
     } catch (err) {
-      // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete contract error:', err)) }
       }
       addNotification({
         type: 'error',

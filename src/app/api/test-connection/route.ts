@@ -23,7 +23,6 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('Database connection test failed:', error)
     return NextResponse.json({
       success: false,
       error: 'خطأ في الاتصال بقاعدة البيانات',

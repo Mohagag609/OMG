@@ -112,7 +112,6 @@ export default function ForgotPasswordPage() {
         }
       }
     } catch (error) {
-      console.error('Verify error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في التحقق',
@@ -163,7 +162,6 @@ export default function ForgotPasswordPage() {
         throw new Error(result.error || 'فشل في إعادة تعيين كلمة المرور')
       }
     } catch (error) {
-      console.error('Reset error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في إعادة التعيين',

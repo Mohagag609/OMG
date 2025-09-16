@@ -47,7 +47,6 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error fetching customers:', error)
     
     return NextResponse.json({
       success: false,
@@ -92,7 +91,6 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error creating customer:', error)
     
     return NextResponse.json({
       success: false,
@@ -147,7 +145,6 @@ export async function PUT(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error updating customer:', error)
     
     return NextResponse.json({
       success: false,
@@ -183,7 +180,6 @@ export async function DELETE(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error deleting customer:', error)
     
     return NextResponse.json({
       success: false,

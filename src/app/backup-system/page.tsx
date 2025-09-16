@@ -64,7 +64,6 @@ export default function BackupSystem() {
       // For now, we'll use a placeholder
       setDatabaseType('PostgreSQL (Neon)')
     } catch (error) {
-      console.error('Failed to fetch database info:', error)
     }
   }
 
@@ -103,7 +102,6 @@ export default function BackupSystem() {
         throw new Error(errorMessage)
       }
     } catch (error) {
-      console.error('Export error:', error)
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
       addNotification({
         type: 'error',
@@ -163,13 +161,11 @@ export default function BackupSystem() {
         })
         
         if (result.stats) {
-          console.log('Import statistics:', result.stats)
         }
       } else {
         throw new Error(result.details || 'فشل في استيراد النسخة الاحتياطية')
       }
     } catch (error) {
-      console.error('Import error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في الاستيراد',
@@ -224,7 +220,6 @@ export default function BackupSystem() {
         throw new Error(result.details || 'فشل في مسح البيانات')
       }
     } catch (error) {
-      console.error('Wipe error:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في المسح',

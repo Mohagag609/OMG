@@ -93,7 +93,7 @@ export default function Treasury() {
   const [showAddSafeModal, setShowAddSafeModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [editingSafe, setEditingSafe] = useState<Safe | null>(null)
-  const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
+  // const [deletingSafes, setDeletingSafes] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newSafe, setNewSafe] = useState({
     name: '',
@@ -187,7 +187,6 @@ export default function Treasury() {
         setTransfers(transfersData.data)
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
@@ -249,7 +248,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Add safe error:', err) }
       setError('خطأ في إضافة الخزنة')
       setSuccess(null)
       addNotification({
@@ -309,7 +307,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Update safe error:', err) }
       setError('خطأ في تحديث الخزنة')
       setSuccess(null)
       addNotification({
@@ -354,7 +351,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Delete safe error:', err) }
       setError('خطأ في حذف الخزنة')
       setSuccess(null)
       addNotification({
@@ -431,7 +427,6 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error('Transfer error:', err) }
       setError('خطأ في التحويل')
       setSuccess(null)
       addNotification({

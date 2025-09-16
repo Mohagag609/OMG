@@ -61,7 +61,6 @@ export default function DetailedReportPage() {
         setPartners(data.data)
       }
     } catch (error) {
-      console.error('Error fetching partners:', error)
     }
   }
 
@@ -73,7 +72,6 @@ export default function DetailedReportPage() {
         setUnits(data.data)
       }
     } catch (error) {
-      console.error('Error fetching units:', error)
     }
   }
 
@@ -97,7 +95,6 @@ export default function DetailedReportPage() {
         addNotification({ title: 'خطأ', message: 'خطأ في جلب التقرير', type: 'error' })
       }
     } catch (error) {
-      console.error('Error fetching report:', error)
       addNotification({ title: 'خطأ', message: 'خطأ في جلب التقرير', type: 'error' })
     } finally {
       setLoading(false)
@@ -126,7 +123,6 @@ export default function DetailedReportPage() {
       document.body.removeChild(a)
       addNotification({ title: 'نجح', message: 'تم تصدير التقرير بنجاح', type: 'success' })
     } catch (error) {
-      console.error('Error exporting report:', error)
       addNotification({ title: 'خطأ', message: 'خطأ في تصدير التقرير', type: 'error' })
     }
   }
