@@ -1,0 +1,15 @@
+{
+  "local": {
+    "status": "success",
+    "message": "قاعدة البيانات المحلية تعمل بشكل صحيح",
+    "tables": 19,
+    "connection": "active"
+  },
+  "cloud": {
+    "status": "success",
+    "message": "قاعدة البيانات السحابية (Neon) تعمل بشكل صحيح",
+    "tables": 19,
+    "connection": "active"
+  },
+  "timestamp": "2025-09-16T08:18:27.148Z"
+}
