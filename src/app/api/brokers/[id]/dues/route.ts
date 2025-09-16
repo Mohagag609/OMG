@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/brokers/[id]/dues - Get broker dues for specific broker

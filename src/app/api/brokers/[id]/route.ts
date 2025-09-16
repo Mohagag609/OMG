@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Broker } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/brokers/[id] - Get broker by ID

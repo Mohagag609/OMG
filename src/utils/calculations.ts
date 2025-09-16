@@ -1,6 +1,6 @@
 // Calculation utilities مطابقة لـ business-rules.json بالحرف
 
-import { BUSINESS_RULES } from '@/constants/business-rules'
+// import { BUSINESS_RULES } from '@/constants/business-rules' // Commented out - not used
 
 // حساب حالة القسط
 export function calculateInstallmentStatus(amount: number, paidAmount: number): string {

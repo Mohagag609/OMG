@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/auth/verify - Verify token

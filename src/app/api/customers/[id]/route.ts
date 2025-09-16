@@ -5,7 +5,7 @@ import { validateCustomer } from '@/utils/validation'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Customer } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/customers/[id] - Get customer by ID

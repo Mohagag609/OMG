@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { restoreBackup, validateBackupData } from '@/lib/backup'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // POST /api/import - Import data from JSON

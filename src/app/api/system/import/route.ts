@@ -216,7 +216,7 @@ async function runImport(archivePath: string, options: { dryRun?: boolean; mode?
   }
 }
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // Validation schema

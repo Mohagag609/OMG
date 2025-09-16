@@ -135,7 +135,7 @@ async function runWipe(options: { mode: 'soft' | 'hard'; confirm?: boolean }): P
   }
 }
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // Validation schema

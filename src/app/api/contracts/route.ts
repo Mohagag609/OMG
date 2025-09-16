@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { validateContract } from '@/utils/validation'
 import { ApiResponse, Contract, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/contracts - Get contracts with pagination

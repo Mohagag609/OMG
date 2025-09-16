@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, PartnerDebt, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/partner-debts - Get partner debts with pagination

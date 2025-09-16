@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { acknowledgeNotification } from '@/lib/notifications'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // POST /api/notifications/[id]/acknowledge - Acknowledge notification

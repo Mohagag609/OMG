@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { createBackup } from '@/lib/backup'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/export - Export all data to JSON

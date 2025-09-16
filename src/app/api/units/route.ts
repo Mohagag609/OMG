@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { validateUnit } from '@/utils/validation'
 import { ApiResponse, Unit, PaginatedResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/units - Get units with pagination

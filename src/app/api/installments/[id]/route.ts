@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Installment } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/installments/[id] - Get installment by ID

@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { getSystemMetrics, performHealthCheck } from '@/lib/monitoring'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/monitoring/dashboard - Get monitoring dashboard data

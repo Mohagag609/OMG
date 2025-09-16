@@ -5,7 +5,7 @@ import { validateContract } from '@/utils/validation'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Contract } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET /api/contracts/[id] - Get contract by ID

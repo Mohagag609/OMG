@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { restoreEntity } from '@/lib/soft-delete'
 import { ApiResponse } from '@/types'
 
-export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // POST /api/trash/restore - Restore soft deleted entity
