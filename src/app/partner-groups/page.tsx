@@ -58,14 +58,14 @@ export default function PartnerGroups() {
       
       // Fetch partner groups
       const groupsResponse = await fetch('/api/partner-groups', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       const groupsData = await groupsResponse.json()
       setPartnerGroups(groupsData.data || [])
 
       // Fetch partners
       const partnersResponse = await fetch('/api/partners', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       const partnersData = await partnersResponse.json()
       setPartners(partnersData.data || [])
@@ -99,10 +99,7 @@ export default function PartnerGroups() {
       }
       const response = await fetch('/api/partner-groups', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newGroup)
       })
 
@@ -141,10 +138,7 @@ export default function PartnerGroups() {
       }
       const response = await fetch(`/api/partner-groups/${groupId}/partners`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partnerId, percent })
       })
 

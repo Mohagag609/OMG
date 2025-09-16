@@ -96,7 +96,7 @@ export default function Vouchers() {
         return
       }
       const response = await fetch('/api/vouchers', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -121,7 +121,7 @@ export default function Vouchers() {
         return
       }
       const response = await fetch(`/api/vouchers?id=${voucherId}`, { method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

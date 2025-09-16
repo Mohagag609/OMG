@@ -170,10 +170,10 @@ export default function Units() {
       }
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/unit-partners', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partner-groups', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partners', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/units'),
+        fetch('/api/unit-partners'),
+        fetch('/api/partner-groups'),
+        fetch('/api/partners')
       ])
       
       const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([
@@ -333,8 +333,7 @@ export default function Units() {
       const response = await fetch('/api/units', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -454,8 +453,7 @@ export default function Units() {
       const response = await fetch(`/api/units?id=${editingUnit.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -522,8 +520,7 @@ export default function Units() {
         return
       }
       const response = await fetch(`/api/units?id=${unitId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE'
       })
 
       const data = await response.json()

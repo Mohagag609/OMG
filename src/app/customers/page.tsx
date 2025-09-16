@@ -133,7 +133,7 @@ export default function Customers() {
         return
       }
       const response = await fetch('/api/customers', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -241,10 +241,7 @@ export default function Customers() {
       }
       const response = await fetch('/api/customers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCustomer)
       })
 
@@ -364,10 +361,7 @@ export default function Customers() {
       }
       const response = await fetch(`/api/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCustomer)
       })
 
@@ -427,7 +421,7 @@ export default function Customers() {
       }
       const response = await fetch(`/api/customers?id=${customerId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

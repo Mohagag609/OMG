@@ -19,9 +19,7 @@ export default function TestSafes() {
         }
 
         const response = await fetch('/api/safes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: {}
         })
         
         

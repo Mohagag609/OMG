@@ -47,7 +47,7 @@ export default function PartnerDebts() {
       
       // Fetch partner debts
       const debtsResponse = await fetch('/api/partner-debts', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       const debtsData = await debtsResponse.json()
       if (debtsData.success) {
@@ -58,7 +58,7 @@ export default function PartnerDebts() {
 
       // Fetch partners
       const partnersResponse = await fetch('/api/partners', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       const partnersData = await partnersResponse.json()
       if (partnersData.success) {
@@ -82,10 +82,7 @@ export default function PartnerDebts() {
       }
       const response = await fetch('/api/partner-debts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newDebt,
           amount: parseFloat(newDebt.amount)
@@ -132,9 +129,7 @@ export default function PartnerDebts() {
       }
       const response = await fetch(`/api/partner-debts/${debtId}/pay`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       const data = await response.json()

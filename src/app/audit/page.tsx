@@ -37,9 +37,7 @@ export default function Audit() {
       })
 
       const response = await fetch(`/api/audit?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       if (!response.ok) {

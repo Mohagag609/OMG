@@ -159,9 +159,9 @@ export default function Installments() {
       }
       
       const [installmentsRes, unitsRes, contractsRes] = await Promise.all([
-        fetch('/api/installments', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/installments', { headers: {} }),
+        fetch('/api/units', { headers: {} }),
+        fetch('/api/contracts', { headers: {} })
       ])
 
       const [installmentsData, unitsData, contractsData] = await Promise.all([
@@ -194,10 +194,7 @@ export default function Installments() {
         return
       }
       const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'مدفوع' })
       })
 
@@ -244,7 +241,7 @@ export default function Installments() {
         return
       }
       const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -320,10 +317,7 @@ export default function Installments() {
         return
       }
       const response = await fetch(`/api/installments?id=${rescheduleInstallment.id}`, { method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dueDate: newDueDate })
       })
 

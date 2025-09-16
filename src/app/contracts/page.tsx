@@ -259,11 +259,11 @@ export default function Contracts() {
       }
       
       const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
-        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/brokers', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/contracts', { headers: {} }),
+        fetch('/api/units', { headers: {} }),
+        fetch('/api/customers', { headers: {} }),
+        fetch('/api/safes', { headers: {} }),
+        fetch('/api/brokers', { headers: {} })
       ])
 
       const [contractsData, unitsData, customersData, safesData, brokersData] = await Promise.all([
@@ -346,10 +346,7 @@ export default function Contracts() {
       }
       const response = await fetch('/api/contracts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newContract,
           totalPrice: totalPrice,
@@ -519,7 +516,7 @@ export default function Contracts() {
       }
       const response = await fetch(`/api/contracts?id=${contractId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

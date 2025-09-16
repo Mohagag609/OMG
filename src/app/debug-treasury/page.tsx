@@ -48,10 +48,7 @@ export default function DebugTreasury() {
     try {
       const response = await fetch('/api/safes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `خزنة اختبار ${Date.now()}`,
           description: 'خزنة اختبار',
@@ -64,9 +61,7 @@ export default function DebugTreasury() {
       if (data.success) {
         // Refresh the list
         const refreshResponse = await fetch('/api/safes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: {}
         })
         const refreshData = await refreshResponse.json()
         if (refreshData.success) {

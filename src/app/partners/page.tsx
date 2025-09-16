@@ -168,9 +168,7 @@ export default function Partners() {
         return
       }
       const response = await fetch('/api/partners', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       if (!response.ok) {
@@ -265,10 +263,7 @@ export default function Partners() {
       }
       const response = await fetch('/api/partners', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPartner)
       })
 
@@ -330,10 +325,7 @@ export default function Partners() {
       }
       const response = await fetch(`/api/partners?id=${editingPartner.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editingPartner.name,
           phone: editingPartner.phone,
@@ -391,7 +383,7 @@ export default function Partners() {
       }
       const response = await fetch(`/api/partners?id=${partnerId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()

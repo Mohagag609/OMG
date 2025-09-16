@@ -96,7 +96,7 @@ export default function Reports() {
     try {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -148,10 +148,7 @@ export default function Reports() {
         case 'excel':
           response = await fetch('/api/export/excel', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -164,10 +161,7 @@ export default function Reports() {
         case 'csv':
           response = await fetch('/api/export/csv', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -180,10 +174,7 @@ export default function Reports() {
         case 'pdf':
           response = await fetch('/api/export/pdf', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: currentReport.title,
               data: currentReport.data,
@@ -251,9 +242,7 @@ export default function Reports() {
       const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/export/excel?type=${reportType}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: {}
       })
 
       if (response.ok) {

@@ -73,10 +73,7 @@ export default function BackupSystem() {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/export', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
       })
 
@@ -140,10 +137,7 @@ export default function BackupSystem() {
 
       const response = await fetch('/api/system/import', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           base64,
           apply: !dryRun,
@@ -186,10 +180,7 @@ export default function BackupSystem() {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/wipe', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: wipeMode,
           confirm: true

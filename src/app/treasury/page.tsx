@@ -168,8 +168,8 @@ export default function Treasury() {
       }
       
       const [safesResponse, transfersResponse] = await Promise.all([
-        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/transfers', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/safes', { headers: {} }),
+        fetch('/api/transfers', { headers: {} })
       ])
       
       const [safesData, transfersData] = await Promise.all([
@@ -213,10 +213,7 @@ export default function Treasury() {
       }
       const response = await fetch('/api/safes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newSafe,
           balance: parseFloat(newSafe.balance) || 0
@@ -271,10 +268,7 @@ export default function Treasury() {
       }
       const response = await fetch(`/api/safes/${editingSafe.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newSafe,
           balance: parseFloat(newSafe.balance) || 0
@@ -328,7 +322,7 @@ export default function Treasury() {
       }
       const response = await fetch(`/api/safes/${safeId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -390,10 +384,7 @@ export default function Treasury() {
       }
       const response = await fetch('/api/transfers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newTransfer,
           amount: parseFloat(newTransfer.amount)

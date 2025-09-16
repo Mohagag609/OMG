@@ -186,7 +186,7 @@ export default function Brokers() {
         return
       }
       const response = await fetch('/api/brokers', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -221,7 +221,7 @@ export default function Brokers() {
         return
       }
       const response = await fetch('/api/broker-due', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -240,7 +240,7 @@ export default function Brokers() {
         return
       }
       const response = await fetch('/api/safes', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
       
       const data = await response.json()
@@ -297,10 +297,7 @@ export default function Brokers() {
       }
       const response = await fetch('/api/brokers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBroker)
       })
 
@@ -360,10 +357,7 @@ export default function Brokers() {
         return
       }
       const response = await fetch(`/api/brokers?id=${editingBroker.id}`, { method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editingBroker.name,
           phone: editingBroker.phone,
@@ -419,7 +413,7 @@ export default function Brokers() {
         return
       }
       const response = await fetch(`/api/brokers?id=${brokerId}`, { method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       })
 
       const data = await response.json()
@@ -513,10 +507,7 @@ export default function Brokers() {
       }
       const response = await fetch(`/api/broker-due/${selectedDue.id}/pay`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData)
       })
 
