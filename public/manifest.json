@@ -1,0 +1,142 @@
+{
+  "name": "مدير الاستثمار العقاري",
+  "short_name": "مدير العقارات",
+  "description": "تطبيق شامل لإدارة الاستثمارات العقارية مع نظام مراقبة ونسخ احتياطية",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "business",
+    "productivity",
+    "finance"
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "لوحة التحكم الرئيسية"
+    },
+    {
+      "src": "/screenshots/customers.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "صفحة إدارة العملاء"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "إضافة عميل جديد",
+      "short_name": "عميل جديد",
+      "description": "إضافة عميل جديد بسرعة",
+      "url": "/customers?action=add",
+      "icons": [
+        {
+          "src": "/icons/shortcut-customer.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "إضافة وحدة جديدة",
+      "short_name": "وحدة جديدة",
+      "description": "إضافة وحدة عقارية جديدة",
+      "url": "/units?action=add",
+      "icons": [
+        {
+          "src": "/icons/shortcut-unit.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "التقارير",
+      "short_name": "التقارير",
+      "description": "عرض التقارير المالية",
+      "url": "/reports",
+      "icons": [
+        {
+          "src": "/icons/shortcut-reports.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}
