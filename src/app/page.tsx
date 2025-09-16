@@ -87,17 +87,18 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const { notifications, addNotification, removeNotification, clearAll } = useNotifications()
   const router = useRouter()
 
   // FIXED: Check if component is mounted on client side
   useEffect(() => {
     setMounted(true)
-  }, [])
+    // Clear any existing notifications on mount
+    clearAll()
+  }, [clearAll])
 
   // FIXED: Memoized fetch function to prevent unnecessary re-renders
-  const fetchKPIs = useCallback(async () => {
+  const fetchKPIs = useCallback(async (isManualRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
@@ -124,15 +125,14 @@ export default function Dashboard() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
-        // Only show success notification on manual refresh, not initial load
-        if (!isInitialLoad) {
+        // Only show success notification on manual refresh
+        if (isManualRefresh) {
           addNotification({
             type: 'success',
             title: 'نجاح',
             message: 'تم تحديث بيانات لوحة التحكم بنجاح'
           })
         }
-        setIsInitialLoad(false)
       } else {
         throw new Error(data.message || 'حدث خطأ غير متوقع')
       }
@@ -147,14 +147,14 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }, [router, addNotification, mounted])
+  }, [router, addNotification])
 
   // FIXED: Load data only after component is mounted - separate effect
   useEffect(() => {
     if (mounted) {
       // Add timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
-        fetchKPIs()
+        fetchKPIs(false) // Initial load, no notification
       }, 100) // Small delay to ensure component is fully mounted
       
       return () => clearTimeout(timeoutId)
@@ -213,7 +213,7 @@ export default function Dashboard() {
               🗑️ مسح الإشعارات
             </ModernButton>
           )}
-          <ModernButton variant="outline" size="sm" onClick={() => fetchKPIs()}>
+          <ModernButton variant="outline" size="sm" onClick={() => fetchKPIs(true)}>
             🔄 تحديث
           </ModernButton>
         </div>
