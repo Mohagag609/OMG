@@ -20,7 +20,7 @@ export default function DebugTreasury() {
 
     const fetchSafes = async () => {
       try {
-        const response = await fetch('/api/safes', {
+        const response = await fetch('/.netlify/functions/safes', {
           headers: {
             'Authorization': `Bearer ${storedToken}`
           }
@@ -46,7 +46,7 @@ export default function DebugTreasury() {
 
   const addTestSafe = async () => {
     try {
-      const response = await fetch('/api/safes', {
+      const response = await fetch('/.netlify/functions/safes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -60,7 +60,7 @@ export default function DebugTreasury() {
       
       if (data.success) {
         // Refresh the list
-        const refreshResponse = await fetch('/api/safes', {
+        const refreshResponse = await fetch('/.netlify/functions/safes', {
           headers: {}
         })
         const refreshData = await refreshResponse.json()

@@ -166,10 +166,10 @@ export default function Units() {
       // Authentication removed - direct access
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
-        fetch('/api/units'),
-        fetch('/api/unit-partners'),
-        fetch('/api/partner-groups'),
-        fetch('/api/partners')
+        fetch('/.netlify/functions/units'),
+        fetch('/.netlify/functions/unit-partners'),
+        fetch('/.netlify/functions/partner-groups'),
+        fetch('/.netlify/functions/partners')
       ])
       
       const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([
@@ -313,7 +313,7 @@ export default function Units() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/units', {
+      const response = await fetch('/.netlify/functions/units', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -429,7 +429,7 @@ export default function Units() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch(`/api/units?id=${editingUnit.id}`, {
+      const response = await fetch(`/.netlify/functions/units?id=${editingUnit.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -494,7 +494,7 @@ export default function Units() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch(`/api/units?id=${unitId}`, {
+      const response = await fetch(`/.netlify/functions/units?id=${unitId}`, {
         method: 'DELETE'
       })
 

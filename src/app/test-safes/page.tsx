@@ -12,7 +12,7 @@ export default function TestSafes() {
       try {
         // Authentication removed - direct access
 
-        const response = await fetch('/api/safes', {
+        const response = await fetch('/.netlify/functions/safes', {
           headers: {}
         })
         

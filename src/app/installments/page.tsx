@@ -146,9 +146,9 @@ export default function Installments() {
       // Authentication removed - direct access
       
       const [installmentsRes, unitsRes, contractsRes] = await Promise.all([
-        fetch('/api/installments', { headers: {} }),
-        fetch('/api/units', { headers: {} }),
-        fetch('/api/contracts', { headers: {} })
+        fetch('/.netlify/functions/installments', { headers: {} }),
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/contracts', { headers: {} })
       ])
 
       const [installmentsData, unitsData, contractsData] = await Promise.all([

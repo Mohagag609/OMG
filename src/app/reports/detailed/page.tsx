@@ -55,7 +55,7 @@ export default function DetailedReportPage() {
 
   const fetchPartners = async () => {
     try {
-      const response = await fetch('/api/partners')
+      const response = await fetch('/.netlify/functions/partners')
       const data = await response.json()
       if (data.success) {
         setPartners(data.data)
@@ -66,7 +66,7 @@ export default function DetailedReportPage() {
 
   const fetchUnits = async () => {
     try {
-      const response = await fetch('/api/units')
+      const response = await fetch('/.netlify/functions/units')
       const data = await response.json()
       if (data.success) {
         setUnits(data.data)

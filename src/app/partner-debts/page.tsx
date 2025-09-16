@@ -33,7 +33,7 @@ export default function PartnerDebts() {
       // Authentication removed - direct access
       
       // Fetch partner debts
-      const debtsResponse = await fetch('/api/partner-debts', {
+      const debtsResponse = await fetch('/.netlify/functions/partner-debts', {
         headers: {}
       })
       const debtsData = await debtsResponse.json()
@@ -44,7 +44,7 @@ export default function PartnerDebts() {
       }
 
       // Fetch partners
-      const partnersResponse = await fetch('/api/partners', {
+      const partnersResponse = await fetch('/.netlify/functions/partners', {
         headers: {}
       })
       const partnersData = await partnersResponse.json()
@@ -63,7 +63,7 @@ export default function PartnerDebts() {
     e.preventDefault()
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/partner-debts', {
+      const response = await fetch('/.netlify/functions/partner-debts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

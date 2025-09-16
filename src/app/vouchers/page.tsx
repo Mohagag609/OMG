@@ -82,7 +82,7 @@ export default function Vouchers() {
   const fetchVouchers = async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/vouchers', {
+      const response = await fetch('/.netlify/functions/vouchers', {
         headers: {}
       })
       

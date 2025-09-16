@@ -21,7 +21,7 @@ export default function ConnectionStatus() {
   const checkConnection = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/health')
+      const response = await fetch('/.netlify/functions/health')
       const data = await response.json()
       setHealthStatus(data)
       setLastChecked(new Date())

@@ -128,7 +128,7 @@ export default function Customers() {
   const fetchCustomers = useCallback(async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/customers', {
+      const response = await fetch('/.netlify/functions/customers', {
         headers: {}
       })
       
@@ -222,7 +222,7 @@ export default function Customers() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/customers', {
+      const response = await fetch('/.netlify/functions/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCustomer)

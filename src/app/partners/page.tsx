@@ -163,7 +163,7 @@ export default function Partners() {
   const fetchPartners = useCallback(async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/partners', {
+      const response = await fetch('/.netlify/functions/partners', {
         headers: {}
       })
 
@@ -244,7 +244,7 @@ export default function Partners() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/partners', {
+      const response = await fetch('/.netlify/functions/partners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPartner)

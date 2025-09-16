@@ -109,7 +109,7 @@ export default function Dashboard() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
 
-      const response = await fetch('/api/dashboard', {
+      const response = await fetch('/.netlify/functions/dashboard', {
         headers: {
           'Content-Type': 'application/json'
         },

@@ -36,7 +36,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
 
   const loadUnits = async () => {
     try {
-      const response = await fetch('/api/units', {
+      const response = await fetch('/.netlify/functions/units', {
         headers: {}
       })
       

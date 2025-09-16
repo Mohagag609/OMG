@@ -44,14 +44,14 @@ export default function PartnerGroups() {
       // Authentication removed - direct access
       
       // Fetch partner groups
-      const groupsResponse = await fetch('/api/partner-groups', {
+      const groupsResponse = await fetch('/.netlify/functions/partner-groups', {
         headers: {}
       })
       const groupsData = await groupsResponse.json()
       setPartnerGroups(groupsData.data || [])
 
       // Fetch partners
-      const partnersResponse = await fetch('/api/partners', {
+      const partnersResponse = await fetch('/.netlify/functions/partners', {
         headers: {}
       })
       const partnersData = await partnersResponse.json()
@@ -80,7 +80,7 @@ export default function PartnerGroups() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/partner-groups', {
+      const response = await fetch('/.netlify/functions/partner-groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newGroup)

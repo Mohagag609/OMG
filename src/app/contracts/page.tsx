@@ -251,11 +251,11 @@ export default function Contracts() {
       // Authentication removed - direct access
       
       const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
-        fetch('/api/contracts', { headers: {} }),
-        fetch('/api/units', { headers: {} }),
-        fetch('/api/customers', { headers: {} }),
-        fetch('/api/safes', { headers: {} }),
-        fetch('/api/brokers', { headers: {} })
+        fetch('/.netlify/functions/contracts', { headers: {} }),
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/customers', { headers: {} }),
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/brokers', { headers: {} })
       ])
 
       const [contractsData, unitsData, customersData, safesData, brokersData] = await Promise.all([
@@ -323,7 +323,7 @@ export default function Contracts() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/contracts', {
+      const response = await fetch('/.netlify/functions/contracts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

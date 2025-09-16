@@ -172,7 +172,7 @@ export default function Brokers() {
   const fetchBrokers = async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/brokers', {
+      const response = await fetch('/.netlify/functions/brokers', {
         headers: {}
       })
       
@@ -203,7 +203,7 @@ export default function Brokers() {
   const fetchBrokerDues = async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/broker-due', {
+      const response = await fetch('/.netlify/functions/broker-due', {
         headers: {}
       })
       
@@ -218,7 +218,7 @@ export default function Brokers() {
   const fetchSafes = async () => {
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/safes', {
+      const response = await fetch('/.netlify/functions/safes', {
         headers: {}
       })
       
@@ -270,7 +270,7 @@ export default function Brokers() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/brokers', {
+      const response = await fetch('/.netlify/functions/brokers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBroker)

@@ -155,8 +155,8 @@ export default function Treasury() {
       // Authentication removed - direct access
       
       const [safesResponse, transfersResponse] = await Promise.all([
-        fetch('/api/safes', { headers: {} }),
-        fetch('/api/transfers', { headers: {} })
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/transfers', { headers: {} })
       ])
       
       const [safesData, transfersData] = await Promise.all([
@@ -194,7 +194,7 @@ export default function Treasury() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/safes', {
+      const response = await fetch('/.netlify/functions/safes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -353,7 +353,7 @@ export default function Treasury() {
 
     try {
       // Authentication removed - direct access
-      const response = await fetch('/api/transfers', {
+      const response = await fetch('/.netlify/functions/transfers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

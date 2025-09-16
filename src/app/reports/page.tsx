@@ -89,7 +89,7 @@ export default function Reports() {
 
   const fetchKPIs = async () => {
     try {
-      const response = await fetch('/api/dashboard', {
+      const response = await fetch('/.netlify/functions/dashboard', {
         headers: {}
       })
       

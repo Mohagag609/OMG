@@ -67,11 +67,11 @@ const SystemPage = () => {
 
       // Fetch basic stats
       const [unitsRes, contractsRes, partnersRes, safesRes, vouchersRes] = await Promise.all([
-        fetch('/api/units', { headers: {} }),
-        fetch('/api/contracts', { headers: {} }),
-        fetch('/api/partners', { headers: {} }),
-        fetch('/api/safes', { headers: {} }),
-        fetch('/api/vouchers', { headers: {} })
+        fetch('/.netlify/functions/units', { headers: {} }),
+        fetch('/.netlify/functions/contracts', { headers: {} }),
+        fetch('/.netlify/functions/partners', { headers: {} }),
+        fetch('/.netlify/functions/safes', { headers: {} }),
+        fetch('/.netlify/functions/vouchers', { headers: {} })
       ])
 
       const [units, contracts, partners, safes, vouchers] = await Promise.all([
