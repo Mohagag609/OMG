@@ -48,10 +48,7 @@ export default function BackupSystem() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login')
-      return
-    }
+    // Authentication removed - direct access
     
     // Get database type from environment or API
     fetchDatabaseInfo()

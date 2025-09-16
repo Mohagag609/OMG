@@ -75,24 +75,13 @@ export default function Vouchers() {
   }, [])
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchVouchers()
   }, [])
 
   const fetchVouchers = async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/vouchers', {
         headers: {}
       })
@@ -113,10 +102,7 @@ export default function Vouchers() {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/vouchers?id=${voucherId}`, { method: 'DELETE',
         headers: {}
       })
