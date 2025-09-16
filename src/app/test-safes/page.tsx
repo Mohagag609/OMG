@@ -10,11 +10,7 @@ export default function TestSafes() {
   useEffect(() => {
     const fetchSafes = async () => {
       try {
-        if (!token) {
-          setError('No token found in localStorage')
-          setLoading(false)
-          return
-        }
+        // Authentication removed - direct access
 
         const response = await fetch('/api/safes', {
           headers: {}

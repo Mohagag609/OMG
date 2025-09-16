@@ -137,24 +137,13 @@ export default function Installments() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchInstallments()
   }, [])
 
   const fetchInstallments = async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       
       const [installmentsRes, unitsRes, contractsRes] = await Promise.all([
         fetch('/api/installments', { headers: {} }),
@@ -186,10 +175,7 @@ export default function Installments() {
     if (!confirm('هل أنت متأكد من تسديد هذا القسط؟')) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'مدفوع' })
@@ -232,10 +218,7 @@ export default function Installments() {
     if (!confirm('هل أنت متأكد من حذف هذا القسط؟')) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'DELETE',
         headers: {}
       })
@@ -307,10 +290,7 @@ export default function Installments() {
     if (!rescheduleInstallment || !newDueDate) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/installments?id=${rescheduleInstallment.id}`, { method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dueDate: newDueDate })

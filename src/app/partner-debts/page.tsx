@@ -24,24 +24,13 @@ export default function PartnerDebts() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
   const fetchData = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       
       // Fetch partner debts
       const debtsResponse = await fetch('/api/partner-debts', {
@@ -73,10 +62,7 @@ export default function PartnerDebts() {
   const handleAddDebt = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/partner-debts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,10 +105,7 @@ export default function PartnerDebts() {
 
   const handlePayDebt = useCallback(async (debtId: string) => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/partner-debts/${debtId}/pay`, {
         method: 'POST',
         headers: {}

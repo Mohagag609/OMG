@@ -83,11 +83,7 @@ export default function Reports() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchKPIs()
   }, [])
 

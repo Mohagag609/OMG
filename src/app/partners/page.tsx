@@ -162,10 +162,7 @@ export default function Partners() {
   // FIXED: Memoized fetchPartners function to prevent unnecessary re-renders
   const fetchPartners = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/partners', {
         headers: {}
       })
@@ -206,15 +203,7 @@ export default function Partners() {
   }, [router, addNotification]) // FIXED: Added proper dependencies
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchPartners()
   }, [fetchPartners, router]) // FIXED: Added proper dependencies
 
@@ -254,10 +243,7 @@ export default function Partners() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/partners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -315,10 +301,7 @@ export default function Partners() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/partners?id=${editingPartner.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -372,10 +355,7 @@ export default function Partners() {
 
     try {
       setDeletingPartners(prev => new Set(prev).add(partnerId))
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/partners?id=${partnerId}`, {
         method: 'DELETE',
         headers: {}

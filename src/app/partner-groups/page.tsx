@@ -35,24 +35,13 @@ export default function PartnerGroups() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
   const fetchData = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       
       // Fetch partner groups
       const groupsResponse = await fetch('/api/partner-groups', {
@@ -90,10 +79,7 @@ export default function PartnerGroups() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/partner-groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,10 +114,7 @@ export default function PartnerGroups() {
 
   const handleAddPartnerToGroup = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/partner-groups/${groupId}/partners`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

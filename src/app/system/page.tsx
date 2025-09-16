@@ -63,18 +63,15 @@ const SystemPage = () => {
   const fetchSystemStats = async () => {
     try {
       setLoading(true)
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
 
       // Fetch basic stats
       const [unitsRes, contractsRes, partnersRes, safesRes, vouchersRes] = await Promise.all([
-        fetch('/api/units', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/contracts', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/partners', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/safes', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/vouchers', { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/api/units', { headers: {} }),
+        fetch('/api/contracts', { headers: {} }),
+        fetch('/api/partners', { headers: {} }),
+        fetch('/api/safes', { headers: {} }),
+        fetch('/api/vouchers', { headers: {} })
       ])
 
       const [units, contracts, partners, safes, vouchers] = await Promise.all([

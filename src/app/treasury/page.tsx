@@ -146,24 +146,13 @@ export default function Treasury() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [])
 
   const fetchData = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       
       const [safesResponse, transfersResponse] = await Promise.all([
         fetch('/api/safes', { headers: {} }),
@@ -204,10 +193,7 @@ export default function Treasury() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/safes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -258,10 +244,7 @@ export default function Treasury() {
     if (!editingSafe) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/safes/${editingSafe.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -311,10 +294,7 @@ export default function Treasury() {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/safes/${safeId}`, {
         method: 'DELETE',
         headers: {}
@@ -372,10 +352,7 @@ export default function Treasury() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/transfers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

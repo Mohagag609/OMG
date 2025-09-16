@@ -48,10 +48,7 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
 
       // Mock profile data for now
       setProfile({
