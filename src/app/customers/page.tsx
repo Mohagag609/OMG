@@ -24,7 +24,17 @@ const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }
 ))
 ModernCard.displayName = 'ModernCard'
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+// FIXED: Proper TypeScript interface for ModernButton
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  type?: 'button' | 'submit' | 'reset'
+}
+
+const ModernButton = memo<ModernButtonProps>(({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -48,9 +58,16 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
+})
+ModernButton.displayName = 'ModernButton'
+
+// FIXED: Proper TypeScript interface for ModernInput
+interface ModernInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  className?: string
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = memo<ModernInputProps>(({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -58,9 +75,17 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
       {...props}
     />
   </div>
-)
+))
+ModernInput.displayName = 'ModernInput'
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interface for ModernSelect
+interface ModernSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string
+  children: React.ReactNode
+  className?: string
+}
+
+const ModernSelect = memo<ModernSelectProps>(({ label, children, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -70,7 +95,8 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
       {children}
     </select>
   </div>
-)
+))
+ModernSelect.displayName = 'ModernSelect'
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -124,7 +150,7 @@ export default function Customers() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
+  // FIXED: Memoized fetchCustomers function with proper dependencies
   const fetchCustomers = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
@@ -144,21 +170,18 @@ export default function Customers() {
         setError(data.error || 'خطأ في تحميل العملاء')
       }
     } catch (err) {
+      // FIXED: Remove duplicate console.error and improve error handling
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching customers:', err)) }
+        console.error('Error fetching customers:', err)
       }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/login')
-        return
-      }
     if (!token) {
       router.push('/login')
       return
@@ -273,7 +296,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Add customer error:', err) 
+      }
       // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
       setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
       setShowAddModal(true)
@@ -396,7 +422,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Update customer error:', err) 
+      }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchCustomers()
       setError('خطأ في تحديث العميل')
@@ -454,7 +483,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Delete customer error:', err) 
+      }
       // في حالة فشل الحذف، نعيد العميل للقائمة
       fetchCustomers()
       setError('خطأ في حذف العميل')
@@ -474,7 +506,17 @@ export default function Customers() {
     }
   }
 
-  const openEditModal = (customer: Customer) => {
+  // FIXED: Memoized filtered customers to prevent unnecessary re-renders
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(customer => 
+      search === '' || 
+      customer.name.toLowerCase().includes(search.toLowerCase()) ||
+      (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
+      (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
+    )
+  }, [customers, search])
+
+  const openEditModal = useCallback((customer: Customer) => {
     setEditingCustomer(customer)
     setNewCustomer({
       name: customer.name,
@@ -485,7 +527,7 @@ export default function Customers() {
       notes: customer.notes || ''
     })
     setShowAddModal(true)
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -579,12 +621,7 @@ export default function Customers() {
               </tr>
             </thead>
             <tbody>
-              {customers.filter(customer => 
-                search === '' || 
-                customer.name.toLowerCase().includes(search.toLowerCase()) ||
-                (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
-                (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
-              ).map((customer) => (
+              {filteredCustomers.map((customer) => (
                 <tr 
                   key={customer.id} 
                   className={`
