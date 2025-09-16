@@ -123,11 +123,14 @@ export default function Dashboard() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
-        addNotification({
-          type: 'success',
-          title: 'نجاح',
-          message: 'تم تحميل بيانات لوحة التحكم بنجاح'
-        })
+        // Only show success notification on manual refresh, not initial load
+        if (mounted) {
+          addNotification({
+            type: 'success',
+            title: 'نجاح',
+            message: 'تم تحميل بيانات لوحة التحكم بنجاح'
+          })
+        }
       } else {
         throw new Error(data.message || 'حدث خطأ غير متوقع')
       }
@@ -142,14 +145,19 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }, [router, addNotification])
+  }, [router, addNotification, mounted])
 
-  // FIXED: Load data only after component is mounted
+  // FIXED: Load data only after component is mounted - separate effect
   useEffect(() => {
     if (mounted) {
-      fetchKPIs()
+      // Add timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        fetchKPIs()
+      }, 100) // Small delay to ensure component is fully mounted
+      
+      return () => clearTimeout(timeoutId)
     }
-  }, [mounted, fetchKPIs])
+  }, [mounted, fetchKPIs]) // Include fetchKPIs to fix ESLint warning
 
   // FIXED: Memoized navigation items to prevent unnecessary re-renders
   const navigationItems = useMemo(() => [
@@ -166,12 +174,25 @@ export default function Dashboard() {
   ], [router])
 
   // Show loading while mounting or fetching data
-  if (!mounted || loading) {
+  if (!mounted) {
     return (
       <div className="dashboard-container flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground">جاري التحميل...</h2>
+          <p className="text-muted-foreground mt-2">يرجى الانتظار قليلاً</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state only if we're actually loading and don't have data yet
+  if (loading && !kpis) {
+    return (
+      <div className="dashboard-container flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground">جاري تحميل البيانات...</h2>
           <p className="text-muted-foreground mt-2">يرجى الانتظار قليلاً</p>
         </div>
       </div>
@@ -207,46 +228,94 @@ export default function Dashboard() {
       )}
 
       {/* KPI Cards */}
-      {kpis && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <KPICard
-            title="إجمالي المبيعات"
-            value={formatCurrency(kpis.totalSales)}
-            icon="💰"
-            color="bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30"
-          />
-          <KPICard
-            title="إجمالي المقبوضات"
-            value={formatCurrency(kpis.totalReceipts)}
-            icon="📈"
-            color="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30"
-          />
-          <KPICard
-            title="إجمالي المصروفات"
-            value={formatCurrency(kpis.totalExpenses)}
-            icon="📉"
-            color="bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30"
-          />
-          <KPICard
-            title="صافي الربح"
-            value={formatCurrency(kpis.netProfit)}
-            icon="🎯"
-            color="bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30"
-          />
-          <KPICard
-            title="نسبة التحصيل"
-            value={`${kpis.collectionPercentage}%`}
-            icon="📊"
-            color="bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30"
-          />
-          <KPICard
-            title="إجمالي الديون"
-            value={formatCurrency(kpis.totalDebt)}
-            icon="⚠️"
-            color="bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30"
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {kpis ? (
+          <>
+            <KPICard
+              title="إجمالي المبيعات"
+              value={formatCurrency(kpis.totalSales)}
+              icon="💰"
+              color="bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30"
+            />
+            <KPICard
+              title="إجمالي المقبوضات"
+              value={formatCurrency(kpis.totalReceipts)}
+              icon="📈"
+              color="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30"
+            />
+            <KPICard
+              title="إجمالي المصروفات"
+              value={formatCurrency(kpis.totalExpenses)}
+              icon="📉"
+              color="bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30"
+            />
+            <KPICard
+              title="صافي الربح"
+              value={formatCurrency(kpis.netProfit)}
+              icon="🎯"
+              color="bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30"
+            />
+            <KPICard
+              title="نسبة التحصيل"
+              value={`${kpis.collectionPercentage}%`}
+              icon="📊"
+              color="bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30"
+            />
+            <KPICard
+              title="إجمالي الديون"
+              value={formatCurrency(kpis.totalDebt)}
+              icon="⚠️"
+              color="bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30"
+            />
+          </>
+        ) : (
+          // Show skeleton loading cards when no data
+          <>
+            <KPICard
+              title="إجمالي المبيعات"
+              value="---"
+              icon="💰"
+              color="bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30"
+              loading={true}
+            />
+            <KPICard
+              title="إجمالي المقبوضات"
+              value="---"
+              icon="📈"
+              color="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30"
+              loading={true}
+            />
+            <KPICard
+              title="إجمالي المصروفات"
+              value="---"
+              icon="📉"
+              color="bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30"
+              loading={true}
+            />
+            <KPICard
+              title="صافي الربح"
+              value="---"
+              icon="🎯"
+              color="bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30"
+              loading={true}
+            />
+            <KPICard
+              title="نسبة التحصيل"
+              value="---"
+              icon="📊"
+              color="bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30"
+              loading={true}
+            />
+            <KPICard
+              title="إجمالي الديون"
+              value="---"
+              icon="⚠️"
+              color="bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30"
+              loading={true}
+            />
+          </>
+        )}
+      </div>
 
       {/* Navigation Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
