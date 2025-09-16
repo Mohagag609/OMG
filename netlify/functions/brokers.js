@@ -28,9 +28,13 @@ exports.handler = async (event, context) => {
 
     const method = event.httpMethod
     const { id } = event.pathParameters || {}
+    const queryParams = event.queryStringParameters || {}
     const body = event.body ? JSON.parse(event.body) : {}
+    
+    // Get ID from query parameters if not in path
+    const brokersId = id || queryParams.id
 
-    if (method === 'GET' && !id) {
+    if (method === 'GET' && !brokersId) {
       const cacheKey = 'brokers-list'
       const cached = cache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -42,9 +46,9 @@ exports.handler = async (event, context) => {
 
     switch (method) {
       case 'GET':
-        if (id) {
+        if (brokersId) {
           result = await prisma.broker.findUnique({
-            where: { id, deletedAt: null }
+            where: { id: brokersId, deletedAt: null }
           })
         } else {
           result = await prisma.broker.findMany({
@@ -68,7 +72,7 @@ exports.handler = async (event, context) => {
 
       case 'PUT':
         result = await prisma.broker.update({
-          where: { id },
+          where: { id: brokersId },
           data: {
             name: body.name,
             phone: body.phone,
@@ -80,7 +84,7 @@ exports.handler = async (event, context) => {
 
       case 'DELETE':
         result = await prisma.broker.update({
-          where: { id },
+          where: { id: brokersId },
           data: { deletedAt: new Date() }
         })
         cache.delete('brokers-list')

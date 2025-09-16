@@ -28,9 +28,13 @@ exports.handler = async (event, context) => {
 
     const method = event.httpMethod
     const { id } = event.pathParameters || {}
+    const queryParams = event.queryStringParameters || {}
     const body = event.body ? JSON.parse(event.body) : {}
+    
+    // Get ID from query parameters if not in path
+    const safesId = id || queryParams.id
 
-    if (method === 'GET' && !id) {
+    if (method === 'GET' && !safesId) {
       const cacheKey = 'safes-list'
       const cached = cache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -42,9 +46,9 @@ exports.handler = async (event, context) => {
 
     switch (method) {
       case 'GET':
-        if (id) {
+        if (safesId) {
           result = await prisma.safe.findUnique({
-            where: { id, deletedAt: null }
+            where: { id: safesId, deletedAt: null }
           })
         } else {
           result = await prisma.safe.findMany({
@@ -67,7 +71,7 @@ exports.handler = async (event, context) => {
 
       case 'PUT':
         result = await prisma.safe.update({
-          where: { id },
+          where: { id: safesId },
           data: {
             name: body.name,
             balance: parseFloat(body.balance) || 0
@@ -78,7 +82,7 @@ exports.handler = async (event, context) => {
 
       case 'DELETE':
         result = await prisma.safe.update({
-          where: { id },
+          where: { id: safesId },
           data: { deletedAt: new Date() }
         })
         cache.delete('safes-list')

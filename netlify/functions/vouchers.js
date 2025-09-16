@@ -23,7 +23,11 @@ exports.handler = async (event, context) => {
   try {
     const method = event.httpMethod
     const { id } = event.pathParameters || {}
+    const queryParams = event.queryStringParameters || {}
     const body = event.body ? JSON.parse(event.body) : {}
+    
+    // Get ID from query parameters if not in path
+    const vouchersId = id || queryParams.id
 
     let result
 
@@ -59,7 +63,7 @@ exports.handler = async (event, context) => {
 
       case 'PUT':
         result = await prisma.voucher.update({
-          where: { id },
+          where: { id: vouchersId },
           data: {
             type: body.type,
             amount: body.amount,
@@ -77,7 +81,7 @@ exports.handler = async (event, context) => {
 
       case 'DELETE':
         result = await prisma.voucher.update({
-          where: { id },
+          where: { id: vouchersId },
           data: { deletedAt: new Date() }
         })
         break

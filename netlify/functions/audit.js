@@ -23,7 +23,11 @@ exports.handler = async (event, context) => {
   try {
     const method = event.httpMethod
     const { id } = event.pathParameters || {}
+    const queryParams = event.queryStringParameters || {}
     const body = event.body ? JSON.parse(event.body) : {}
+    
+    // Get ID from query parameters if not in path
+    const auditId = id || queryParams.id
 
     let result
 
@@ -72,9 +76,9 @@ exports.handler = async (event, context) => {
         break
 
       case 'DELETE':
-        if (id) {
+        if (auditId) {
           result = await prisma.auditLog.update({
-            where: { id },
+            where: { id: auditId },
             data: { deletedAt: new Date() }
           })
         } else {

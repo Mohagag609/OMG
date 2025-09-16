@@ -44,10 +44,14 @@ exports.handler = async (event, context) => {
 
     const method = event.httpMethod
     const { id } = event.pathParameters || {}
+    const queryParams = event.queryStringParameters || {}
     const body = event.body ? JSON.parse(event.body) : {}
+    
+    // Get ID from query parameters if not in path
+    const partnersId = id || queryParams.id
 
     // FIXED: Check cache for GET requests
-    if (method === 'GET' && !id) {
+    if (method === 'GET' && !partnersId) {
       const cacheKey = 'partners-list'
       const cached = cache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -63,9 +67,9 @@ exports.handler = async (event, context) => {
 
     switch (method) {
       case 'GET':
-        if (id) {
+        if (partnersId) {
           result = await prisma.partner.findUnique({
-            where: { id, deletedAt: null },
+            where: { id: partnersId, deletedAt: null },
             include: {
               unitPartners: {
                 include: {
@@ -123,7 +127,7 @@ exports.handler = async (event, context) => {
 
       case 'PUT':
         result = await prisma.partner.update({
-          where: { id },
+          where: { id: partnersId },
           data: {
             name: body.name,
             phone: body.phone,
@@ -146,7 +150,7 @@ exports.handler = async (event, context) => {
 
       case 'DELETE':
         result = await prisma.partner.update({
-          where: { id },
+          where: { id: partnersId },
           data: { deletedAt: new Date() }
         })
         
