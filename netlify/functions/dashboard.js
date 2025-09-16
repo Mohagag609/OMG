@@ -84,7 +84,7 @@ exports.handler = async (event, context) => {
       }),
       prisma.unit.findMany({ 
         where: { deletedAt: null },
-        select: { isSold: true, createdAt: true }
+        select: { status: true, createdAt: true }
       }),
       prisma.customer.findMany({ 
         where: { deletedAt: null },
@@ -111,7 +111,7 @@ exports.handler = async (event, context) => {
       totalDebt: totalSales - totalReceipts,
       unitCounts: {
         total: units.length,
-        available: units.filter(u => !u.isSold).length
+        available: units.filter(u => u.status === 'متاحة').length
       },
       investorCount: customers.length
     }
