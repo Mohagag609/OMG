@@ -84,6 +84,7 @@ const nextConfig = {
   // إعدادات Netlify
   output: 'export',
   distDir: 'out',
+  trailingSlash: true,
 }
 
 module.exports = nextConfig
