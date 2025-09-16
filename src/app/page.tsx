@@ -6,7 +6,7 @@ import { DashboardKPIs } from '@/types'
 import { formatCurrency } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import Layout from '@/components/Layout'
 
 // FIXED: Proper TypeScript interfaces for components
@@ -86,8 +86,14 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { addNotification } = useNotifications()
+  const [mounted, setMounted] = useState(false)
+  const { notifications, addNotification, removeNotification } = useNotifications()
   const router = useRouter()
+
+  // FIXED: Check if component is mounted on client side
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // FIXED: Memoized fetch function to prevent unnecessary re-renders
   const fetchKPIs = useCallback(async () => {
@@ -95,15 +101,17 @@ export default function Dashboard() {
       setLoading(true)
       setError(null)
       
-      const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/login')
-        return
+      // Only check token on client side
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('authToken')
+        if (!token) {
+          router.push('/login')
+          return
+        }
       }
 
       const response = await fetch('/api/dashboard', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
@@ -115,6 +123,11 @@ export default function Dashboard() {
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
+        addNotification({
+          type: 'success',
+          title: 'نجاح',
+          message: 'تم تحميل بيانات لوحة التحكم بنجاح'
+        })
       } else {
         throw new Error(data.message || 'حدث خطأ غير متوقع')
       }
@@ -131,10 +144,12 @@ export default function Dashboard() {
     }
   }, [router, addNotification])
 
-  // FIXED: Load data on component mount
+  // FIXED: Load data only after component is mounted
   useEffect(() => {
-    fetchKPIs()
-  }, [fetchKPIs])
+    if (mounted) {
+      fetchKPIs()
+    }
+  }, [mounted, fetchKPIs])
 
   // FIXED: Memoized navigation items to prevent unnecessary re-renders
   const navigationItems = useMemo(() => [
@@ -150,9 +165,10 @@ export default function Dashboard() {
     { title: 'النسخ', icon: '💾', color: 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800/30 dark:to-gray-700/30', onClick: () => router.push('/backup') }
   ], [router])
 
-  if (loading) {
+  // Show loading while mounting or fetching data
+  if (!mounted || loading) {
     return (
-      <div className="dashboard-container flex items-center justify-center">
+      <div className="dashboard-container flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground">جاري التحميل...</h2>
@@ -251,6 +267,7 @@ export default function Dashboard() {
           </ModernCard>
         ))}
       </div>
+      <NotificationSystem notifications={notifications} onRemove={removeNotification} />
     </Layout>
   )
 }
