@@ -95,7 +95,7 @@ export default function Dashboard() {
     setMounted(true)
     // Clear any existing notifications on mount
     clearAll()
-  }, [clearAll])
+  }, []) // Remove clearAll from dependencies to prevent infinite loop
 
   // FIXED: Memoized fetch function to prevent unnecessary re-renders
   const fetchKPIs = useCallback(async (isManualRefresh = false) => {
@@ -112,11 +112,18 @@ export default function Dashboard() {
         }
       }
 
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
+
       const response = await fetch('/api/dashboard', {
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         throw new Error('فشل في تحميل البيانات')
@@ -159,7 +166,7 @@ export default function Dashboard() {
       
       return () => clearTimeout(timeoutId)
     }
-  }, [mounted, fetchKPIs]) // Include fetchKPIs to fix ESLint warning
+  }, [mounted]) // Remove fetchKPIs to prevent infinite loop
 
   // FIXED: Memoized navigation items to prevent unnecessary re-renders
   const navigationItems = useMemo(() => [
