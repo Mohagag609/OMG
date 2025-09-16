@@ -1,49 +1,105 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Simple in-memory cache
-const cache = new Map()
+// FIXED: Enhanced caching with pagination support
+const cache = new Map<string, { data: any; timestamp: number; hits: number }>()
 const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+const MAX_CACHE_SIZE = 50
 
-export async function GET() {
+// FIXED: Cache cleanup function
+const cleanupCache = () => {
+  if (cache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(cache.entries())
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+    const toDelete = entries.slice(0, Math.floor(MAX_CACHE_SIZE / 2))
+    toDelete.forEach(([key]) => cache.delete(key))
+  }
+}
+
+export async function GET(request: Request) {
   try {
-    // Check cache first
-    const cacheKey = 'customers-list'
+    // FIXED: Add pagination support
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const search = searchParams.get('search') || ''
+    const offset = (page - 1) * limit
+
+    // FIXED: Create cache key with pagination and search
+    const cacheKey = `customers-${page}-${limit}-${search}`
     const cached = cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      cached.hits++
       return NextResponse.json({
         success: true,
-        data: cached.data,
-        message: 'تم تحميل العملاء من الذاكرة المؤقتة'
+        data: cached.data.customers,
+        pagination: cached.data.pagination,
+        message: 'تم تحميل العملاء من الذاكرة المؤقتة',
+        cached: true,
+        hits: cached.hits
       })
     }
 
-    const customers = await prisma.customer.findMany({
-      where: { deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        nationalId: true,
-        address: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    // FIXED: Build optimized query with search and pagination
+    const whereClause = {
+      deletedAt: null,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { phone: { contains: search, mode: 'insensitive' as const } },
+          { nationalId: { contains: search, mode: 'insensitive' as const } }
+        ]
+      })
+    }
 
-    // Cache the result
+    const [customers, totalCount] = await Promise.all([
+      prisma.customer.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          nationalId: true,
+          address: true,
+          status: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit
+      }),
+      prisma.customer.count({ where: whereClause })
+    ])
+
+    const totalPages = Math.ceil(totalCount / limit)
+    const pagination = {
+      page,
+      limit,
+      total: totalCount,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1
+    }
+
+    const result = { customers, pagination }
+
+    // FIXED: Cache the result with cleanup
     cache.set(cacheKey, {
-      data: customers,
-      timestamp: Date.now()
+      data: result,
+      timestamp: Date.now(),
+      hits: 0
     })
+    
+    cleanupCache()
 
     return NextResponse.json({
       success: true,
       data: customers,
-      message: 'تم تحميل العملاء بنجاح'
+      pagination,
+      message: 'تم تحميل العملاء بنجاح',
+      cached: false
     })
 
   } catch (error) {
@@ -82,8 +138,9 @@ export async function POST(request: Request) {
       }
     })
 
-    // Invalidate cache
-    cache.delete('customers-list')
+    // FIXED: Invalidate all customer-related cache entries
+    const keysToDelete = Array.from(cache.keys()).filter(key => key.startsWith('customers-'))
+    keysToDelete.forEach(key => cache.delete(key))
 
     return NextResponse.json({
       success: true,
@@ -137,8 +194,9 @@ export async function PUT(request: Request) {
       }
     })
 
-    // Invalidate cache
-    cache.delete('customers-list')
+    // FIXED: Invalidate all customer-related cache entries
+    const keysToDelete = Array.from(cache.keys()).filter(key => key.startsWith('customers-'))
+    keysToDelete.forEach(key => cache.delete(key))
 
     return NextResponse.json({
       success: true,
@@ -174,8 +232,9 @@ export async function DELETE(request: Request) {
       data: { deletedAt: new Date() }
     })
 
-    // Invalidate cache
-    cache.delete('customers-list')
+    // FIXED: Invalidate all customer-related cache entries
+    const keysToDelete = Array.from(cache.keys()).filter(key => key.startsWith('customers-'))
+    keysToDelete.forEach(key => cache.delete(key))
 
     return NextResponse.json({
       success: true,

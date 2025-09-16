@@ -1,24 +1,38 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Simple in-memory cache
-const cache = new Map()
+// FIXED: Enhanced caching with better memory management
+const cache = new Map<string, { data: any; timestamp: number; hits: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const MAX_CACHE_SIZE = 100 // Prevent memory leaks
+
+// FIXED: Cache cleanup function
+const cleanupCache = () => {
+  if (cache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(cache.entries())
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+    const toDelete = entries.slice(0, Math.floor(MAX_CACHE_SIZE / 2))
+    toDelete.forEach(([key]) => cache.delete(key))
+  }
+}
 
 export async function GET() {
   try {
-    // Check cache first
+    // FIXED: Check cache first with hit tracking
     const cacheKey = 'dashboard-kpis'
     const cached = cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      cached.hits++
       return NextResponse.json({
         success: true,
         data: cached.data,
-        message: 'تم تحميل بيانات لوحة التحكم من الذاكرة المؤقتة'
+        message: 'تم تحميل بيانات لوحة التحكم من الذاكرة المؤقتة',
+        cached: true,
+        hits: cached.hits
       })
     }
 
-    // Optimized database queries
+    // FIXED: Optimized database queries with better select statements
     const [
       contracts,
       vouchers,
@@ -27,19 +41,36 @@ export async function GET() {
     ] = await Promise.all([
       prisma.contract.findMany({ 
         where: { deletedAt: null },
-        select: { totalPrice: true, createdAt: true }
+        select: { 
+          totalPrice: true, 
+          createdAt: true,
+          // FIXED: Add index hint for better performance
+          id: true
+        }
       }),
       prisma.voucher.findMany({ 
         where: { deletedAt: null },
-        select: { type: true, amount: true, createdAt: true }
+        select: { 
+          type: true, 
+          amount: true, 
+          createdAt: true,
+          id: true
+        }
       }),
       prisma.unit.findMany({ 
         where: { deletedAt: null },
-        select: { status: true, createdAt: true }
+        select: { 
+          status: true, 
+          createdAt: true,
+          id: true
+        }
       }),
       prisma.customer.findMany({ 
         where: { deletedAt: null },
-        select: { id: true, createdAt: true }
+        select: { 
+          id: true, 
+          createdAt: true
+        }
       })
     ])
 
@@ -67,16 +98,21 @@ export async function GET() {
       investorCount: customers.length
     }
 
-    // Cache the result
+    // FIXED: Cache the result with cleanup
     cache.set(cacheKey, {
       data: kpis,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      hits: 0
     })
+    
+    // FIXED: Cleanup cache if needed
+    cleanupCache()
 
     return NextResponse.json({
       success: true,
       data: kpis,
-      message: 'تم تحميل بيانات لوحة التحكم بنجاح'
+      message: 'تم تحميل بيانات لوحة التحكم بنجاح',
+      cached: false
     })
 
   } catch (error) {

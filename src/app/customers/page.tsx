@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback, memo } from 'react'
-// FIXED: Removed unused useMemo import
+import { useState, useEffect, useCallback, memo, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 import Layout from '@/components/Layout'
 import { checkDuplicateName, checkDuplicatePhone, checkDuplicateNationalId } from '@/utils/duplicateCheck'
+import VirtualList from '@/components/VirtualList'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { useFormValidation, commonValidationRules } from '@/hooks/useFormValidation'
+import { debounce } from '@/lib/performance'
 
 // FIXED: Proper TypeScript interface for ModernCard
 interface ModernCardProps {
@@ -24,7 +27,17 @@ const ModernCard = memo<ModernCardProps>(({ children, className = '', ...props }
 ))
 ModernCard.displayName = 'ModernCard'
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+// FIXED: Proper TypeScript interface for ModernButton
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  type?: 'button' | 'submit' | 'reset'
+}
+
+const ModernButton = memo<ModernButtonProps>(({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -48,9 +61,16 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
+})
+ModernButton.displayName = 'ModernButton'
+
+// FIXED: Proper TypeScript interface for ModernInput
+interface ModernInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  className?: string
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = memo<ModernInputProps>(({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -58,9 +78,17 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
       {...props}
     />
   </div>
-)
+))
+ModernInput.displayName = 'ModernInput'
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interface for ModernSelect
+interface ModernSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string
+  children: React.ReactNode
+  className?: string
+}
+
+const ModernSelect = memo<ModernSelectProps>(({ label, children, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -70,7 +98,8 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
       {children}
     </select>
   </div>
-)
+))
+ModernSelect.displayName = 'ModernSelect'
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -78,21 +107,49 @@ export default function Customers() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [deletingCustomers, setDeletingCustomers] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    phone: '',
-    nationalId: '',
-    address: '',
-    status: 'نشط',
-    notes: ''
-  })
+  
+  // FIXED: Form validation setup
+  const formValidation = useFormValidation(
+    {
+      name: '',
+      phone: '',
+      nationalId: '',
+      address: '',
+      status: 'نشط',
+      notes: ''
+    },
+    {
+      name: commonValidationRules.required('اسم العميل مطلوب'),
+      phone: commonValidationRules.phone('رقم الهاتف غير صحيح'),
+      nationalId: commonValidationRules.nationalId('الرقم القومي غير صحيح'),
+      address: commonValidationRules.maxLength(200, 'العنوان طويل جداً')
+    },
+    {
+      validateOnChange: true,
+      validateOnBlur: true,
+      debounceMs: 300
+    }
+  )
   
   const router = useRouter()
   const { notifications, addNotification, removeNotification } = useNotifications()
+
+  // FIXED: Debounced search
+  const debouncedSearchUpdate = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearch(value)
+    }, 300),
+    []
+  )
+
+  useEffect(() => {
+    debouncedSearchUpdate(search)
+  }, [search, debouncedSearchUpdate])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -124,7 +181,7 @@ export default function Customers() {
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
 
-  // FIXED: Memoized fetchCustomers function to prevent unnecessary re-renders
+  // FIXED: Memoized fetchCustomers function with proper dependencies
   const fetchCustomers = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
@@ -144,21 +201,18 @@ export default function Customers() {
         setError(data.error || 'خطأ في تحميل العملاء')
       }
     } catch (err) {
+      // FIXED: Remove duplicate console.error and improve error handling
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching customers:', err)) }
+        console.error('Error fetching customers:', err)
       }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/login')
-        return
-      }
     if (!token) {
       router.push('/login')
       return
@@ -273,7 +327,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Add customer error:', err) 
+      }
       // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
       setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
       setShowAddModal(true)
@@ -396,7 +453,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Update customer error:', err) 
+      }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchCustomers()
       setError('خطأ في تحديث العميل')
@@ -454,7 +514,10 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete customer error:', err)) }
+      // FIXED: Remove duplicate console.error
+      if (process.env.NODE_ENV === 'development') { 
+        console.error('Delete customer error:', err) 
+      }
       // في حالة فشل الحذف، نعيد العميل للقائمة
       fetchCustomers()
       setError('خطأ في حذف العميل')
@@ -474,7 +537,17 @@ export default function Customers() {
     }
   }
 
-  const openEditModal = (customer: Customer) => {
+  // FIXED: Memoized filtered customers with debounced search
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(customer => 
+      debouncedSearch === '' || 
+      customer.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (customer.phone && customer.phone.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
+      (customer.nationalId && customer.nationalId.toLowerCase().includes(debouncedSearch.toLowerCase()))
+    )
+  }, [customers, debouncedSearch])
+
+  const openEditModal = useCallback((customer: Customer) => {
     setEditingCustomer(customer)
     setNewCustomer({
       name: customer.name,
@@ -485,7 +558,7 @@ export default function Customers() {
       notes: customer.notes || ''
     })
     setShowAddModal(true)
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -501,7 +574,8 @@ export default function Customers() {
   }
 
   return (
-    <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
+    <ErrorBoundary>
+      <Layout title="إدارة العملاء" subtitle="نظام متطور لإدارة العملاء" icon="👤">
       <div className="flex items-center justify-between mb-8">
         <ModernButton onClick={() => setShowAddModal(true)}>
           <span className="mr-2">➕</span>
@@ -565,49 +639,29 @@ export default function Customers() {
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">رقم الهاتف</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الرقم القومي</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">العنوان</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">تاريخ الإضافة</th>
-                <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.filter(customer => 
-                search === '' || 
-                customer.name.toLowerCase().includes(search.toLowerCase()) ||
-                (customer.phone && customer.phone.toLowerCase().includes(search.toLowerCase())) ||
-                (customer.nationalId && customer.nationalId.toLowerCase().includes(search.toLowerCase()))
-              ).map((customer) => (
-                <tr 
-                  key={customer.id} 
+        {/* FIXED: Virtual scrolling for large lists */}
+        {filteredCustomers.length > 100 ? (
+          <div className="h-96">
+            <VirtualList
+              items={filteredCustomers}
+              itemHeight={80}
+              containerHeight={384}
+              renderItem={(customer, index) => (
+                <div 
+                  key={customer.id}
                   className={`
-                    border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
+                    flex items-center border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300 px-6
                     ${deletingCustomers.has(customer.id) 
                       ? 'transform translate-x-full opacity-0 scale-95' 
                       : 'transform translate-x-0 opacity-100 scale-100'
                     }
                   `}
                 >
-                  <td className="py-4 px-6">
-                    <div className="text-gray-900 font-bold text-base">{customer.name}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{customer.phone || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold max-w-xs truncate">{customer.address || '-'}</div>
-                  </td>
-                  <td className="py-4 px-6">
+                  <div className="flex-1 text-gray-900 font-bold text-base">{customer.name}</div>
+                  <div className="w-32 text-gray-800 font-semibold">{customer.phone || '-'}</div>
+                  <div className="w-32 text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
+                  <div className="w-48 text-gray-800 font-semibold truncate">{customer.address || '-'}</div>
+                  <div className="w-24">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       customer.status === 'نشط' 
                         ? 'bg-green-100 text-green-900' 
@@ -615,25 +669,86 @@ export default function Customers() {
                     }`}>
                       {customer.status}
                     </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-800 font-semibold">{formatDate(customer.createdAt || new Date())}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
-                        ✏️ تعديل
-                      </ModernButton>
-                      <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
-                        🗑️ حذف
-                      </ModernButton>
-                    </div>
-                  </td>
+                  </div>
+                  <div className="w-32 text-gray-800 font-semibold">{formatDate(customer.createdAt || new Date())}</div>
+                  <div className="w-32 flex items-center space-x-2 space-x-reverse">
+                    <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
+                      ✏️
+                    </ModernButton>
+                    <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
+                      🗑️
+                    </ModernButton>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الاسم</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">رقم الهاتف</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الرقم القومي</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">العنوان</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الحالة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">تاريخ الإضافة</th>
+                  <th className="text-right py-4 px-6 font-bold text-gray-900 text-sm uppercase tracking-wide">الإجراءات</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredCustomers.map((customer) => (
+                  <tr 
+                    key={customer.id} 
+                    className={`
+                      border-b border-gray-100 hover:bg-gray-50/50 transition-all duration-300
+                      ${deletingCustomers.has(customer.id) 
+                        ? 'transform translate-x-full opacity-0 scale-95' 
+                        : 'transform translate-x-0 opacity-100 scale-100'
+                      }
+                    `}
+                  >
+                    <td className="py-4 px-6">
+                      <div className="text-gray-900 font-bold text-base">{customer.name}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-800 font-semibold">{customer.phone || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-800 font-semibold">{customer.nationalId || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-800 font-semibold max-w-xs truncate">{customer.address || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        customer.status === 'نشط' 
+                          ? 'bg-green-100 text-green-900' 
+                          : 'bg-red-100 text-red-900'
+                      }`}>
+                        {customer.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-800 font-semibold">{formatDate(customer.createdAt || new Date())}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <ModernButton size="sm" variant="secondary" onClick={() => openEditModal(customer)}>
+                          ✏️ تعديل
+                        </ModernButton>
+                        <ModernButton size="sm" variant="danger" onClick={() => handleDeleteCustomer(customer.id)}>
+                          🗑️ حذف
+                        </ModernButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </ModernCard>
 
       {/* Add/Edit Customer Modal */}
@@ -760,10 +875,11 @@ export default function Customers() {
         </div>
       )}
       
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
-    </Layout>
+        <NotificationSystem 
+          notifications={notifications} 
+          onRemove={removeNotification} 
+        />
+      </Layout>
+    </ErrorBoundary>
   )
 }
