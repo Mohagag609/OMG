@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "تطبيق Next.js لإدارة الاستثمارات العقارية مع نظام شامل للمراقبة والنسخ الاحتياطية",
   "private": true,
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:local": "DB_MODE=local next dev",
@@ -22,6 +25,9 @@
     "db:reset": "prisma db push --force-reset",
     "db:reset:local": "DB_MODE=local prisma db push --force-reset",
     "db:reset:cloud": "DB_MODE=cloud prisma db push --force-reset",
+    "db:seed": "node prisma/seed.js",
+    "db:reset:full": "prisma db push --force-reset && npm run db:seed",
+    "db:reset:quick": "node scripts/quick-reset.js",
     "db:setup:local": "node scripts/setup-local-postgres.sh",
     "db:setup:windows": "scripts\\setup-local-postgres.bat",
     "env:setup": "node scripts/setup-environment.js",
