@@ -66,17 +66,14 @@ export default function PartnerDebts() {
       }
 
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
-  // FIXED: Memoized function
-
-
-  const handleAddDebt = async (e: React.FormEvent) => {
+  const handleAddDebt = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const token = localStorage.getItem('authToken')
@@ -119,23 +116,16 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding debt:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error adding debt:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
         message: 'فشل في إضافة دين الشريك'
       })
     }
-  }
+  }, [])
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handlePayDebt = async (debtId: string) => {
+  const handle$1 = useCallback(async (debtId: string) => {
     try {
       const token = localStorage.getItem('authToken')
       if (!token) {
@@ -165,7 +155,7 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error paying debt:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error paying debt:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في السداد',

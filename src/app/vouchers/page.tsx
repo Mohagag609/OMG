@@ -11,7 +11,7 @@ const ModernCard = memo(({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
 
 const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
   const variants: { [key: string]: string } = {
@@ -53,8 +53,6 @@ export default function Vouchers() {
 
   // Keyboard shortcuts
   useEffect(() => {
-    // FIXED: Memoized function
-
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
@@ -107,17 +105,13 @@ export default function Vouchers() {
         setError(data.error || 'خطأ في تحميل السندات')
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching vouchers:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error fetching vouchers:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
-
-  // FIXED: Memoized function
-
-
-  const handleDeleteVoucher = async (voucherId: string) => {
+  const handle$1 = useCallback(async (voucherId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
@@ -150,7 +144,7 @@ export default function Vouchers() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete voucher error:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Delete voucher error:', err) }
       setError('خطأ في حذف السند')
       setSuccess(null)
       addNotification({

@@ -31,7 +31,7 @@ const ModernCard = memo(({ children, className = '', ...props }: ModernCardProps
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
 
 const ModernButton = memo(({ children, variant = 'primary', size = 'md', className = '', ...props }: ModernButtonProps) => {
   const variants: { [key: string]: string } = {
@@ -111,8 +111,6 @@ export default function Treasury() {
 
   // Keyboard shortcuts
   useEffect(() => {
-    // FIXED: Memoized function
-
     const handleKeyPress = (e: KeyboardEvent) => {
       // Only handle shortcuts when not in input fields
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
@@ -189,21 +187,14 @@ export default function Treasury() {
         setTransfers(transfersData.data)
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handleAddSafe = async (e: React.FormEvent) => {
+  const handle$1 = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newSafe.name) {
@@ -258,7 +249,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add safe error:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Add safe error:', err) }
       setError('خطأ في إضافة الخزنة')
       setSuccess(null)
       addNotification({
@@ -269,14 +260,7 @@ export default function Treasury() {
     }
   }
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handleEditSafe = async (e: React.FormEvent) => {
+  const handle$1 = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!editingSafe) return
@@ -325,7 +309,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update safe error:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Update safe error:', err) }
       setError('خطأ في تحديث الخزنة')
       setSuccess(null)
       addNotification({
@@ -336,14 +320,7 @@ export default function Treasury() {
     }
   }
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handleDeleteSafe = async (safeId: string) => {
+  const handle$1 = useCallback(async (safeId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
@@ -377,7 +354,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete safe error:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Delete safe error:', err) }
       setError('خطأ في حذف الخزنة')
       setSuccess(null)
       addNotification({
@@ -388,14 +365,7 @@ export default function Treasury() {
     }
   }
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handleTransfer = async (e: React.FormEvent) => {
+  const handle$1 = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!newTransfer.fromSafeId || !newTransfer.toSafeId || !newTransfer.amount) {
@@ -461,7 +431,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Transfer error:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Transfer error:', err) }
       setError('خطأ في التحويل')
       setSuccess(null)
       addNotification({

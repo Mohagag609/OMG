@@ -71,7 +71,7 @@ export default function PartnerGroups() {
       setPartners(partnersData.data || [])
 
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error fetching data:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في التحميل',
@@ -82,10 +82,7 @@ export default function PartnerGroups() {
     }
   }
 
-  // FIXED: Memoized function
-
-
-  const handleAddGroup = async () => {
+  const handle$1 = useCallback(async () => {
     if (!newGroup.name.trim()) {
       addNotification({
         type: 'error',
@@ -128,7 +125,7 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding group:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error adding group:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -137,14 +134,7 @@ export default function PartnerGroups() {
     }
   }
 
-  // FIXED: Memoized function
-
-
-  // FIXED: Memoized function
-
-
-
-  const handleAddPartnerToGroup = async (groupId: string, partnerId: string, percent: number) => {
+  const handle$1 = useCallback(async (groupId: string, partnerId: string, percent: number) => {
     try {
       const token = localStorage.getItem('authToken')
       if (!token) {
@@ -176,7 +166,7 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding partner to group:', err)) }
+      if (process.env.NODE_ENV === 'development') { console.error('Error adding partner to group:', err) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -389,11 +379,7 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
 }) {
   const [selectedPartner, setSelectedPartner] = useState('')
   const [percent, setPercent] = useState('')
-
-  // FIXED: Memoized function
-
-
-  const handleSubmit = () => {
+  const handle$1 = useCallback(() => {
     const percentNum = parseFloat(percent)
     if (!selectedPartner || !percentNum || percentNum <= 0) {
       alert('الرجاء اختيار شريك وإدخال نسبة صحيحة')
