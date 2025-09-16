@@ -59,7 +59,7 @@ export class PerformanceMonitor {
   static getAllStats(): Record<string, { average: number; min: number; max: number; count: number }> {
     const stats: Record<string, { average: number; min: number; max: number; count: number }> = {}
     
-    for (const [label] of this.measurements) {
+    for (const [label] of Array.from(this.measurements.entries())) {
       stats[label] = this.getStats(label)
     }
 
@@ -176,7 +176,7 @@ export function withPerformanceMonitoring<P extends object>(
   })
   
   WrappedComponent.displayName = `withPerformanceMonitoring(${componentName})`
-  return WrappedComponent
+  return WrappedComponent as any
 }
 
 // FIXED: Bundle size monitoring
@@ -217,9 +217,9 @@ export class CacheMonitor {
 
   static getAllHitRates(): Record<string, number> {
     const rates: Record<string, number> = {}
-    const allKeys = new Set([...this.hits.keys(), ...this.misses.keys()])
+    const allKeys = new Set([...Array.from(this.hits.keys()), ...Array.from(this.misses.keys())])
     
-    for (const key of allKeys) {
+    for (const key of Array.from(allKeys)) {
       rates[key] = this.getHitRate(key)
     }
     

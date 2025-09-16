@@ -79,7 +79,8 @@ export async function GET() {
     // Cache the result
     cache.set(cacheKey, {
       data: kpis,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      hits: 0
     })
 
     return NextResponse.json({

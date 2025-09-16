@@ -200,7 +200,7 @@ export function withLazyLoading<P extends object>(
       skeletonType={options?.skeletonType}
       skeletonLines={options?.skeletonLines}
     >
-      <LazyComponent {...props} />
+      <LazyComponent {...(props as any)} />
     </SuspenseWrapper>
   )
   

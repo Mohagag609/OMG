@@ -122,7 +122,7 @@ export class ApiClient {
   // FIXED: Cache management methods
   static invalidate(pattern: string): void {
     const regex = new RegExp(pattern)
-    for (const [key] of this.cache) {
+    for (const [key] of Array.from(this.cache.entries())) {
       if (regex.test(key)) {
         this.cache.delete(key)
       }
