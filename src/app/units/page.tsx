@@ -163,10 +163,7 @@ export default function Units() {
   // FIXED: Memoized fetchData function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
         fetch('/api/units'),
@@ -210,15 +207,7 @@ export default function Units() {
   }, []) // FIXED: Empty dependency array since no external dependencies
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchData()
   }, [fetchData, router]) // FIXED: Added proper dependencies
 
@@ -323,10 +312,7 @@ export default function Units() {
     })
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/units', {
         method: 'POST',
         headers: {
@@ -442,10 +428,7 @@ export default function Units() {
     })
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/units?id=${editingUnit.id}`, {
         method: 'PUT',
         headers: {
@@ -510,10 +493,7 @@ export default function Units() {
     setUnits(prev => prev.filter(unit => unit.id !== unitId))
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/units?id=${unitId}`, {
         method: 'DELETE'
       })

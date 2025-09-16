@@ -18,12 +18,7 @@ export default function Audit() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchAuditLogs()
   }, [pagination.page])
 
