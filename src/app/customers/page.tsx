@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
+// FIXED: Removed unused useMemo import
 import { useRouter } from 'next/navigation'
 import { Customer } from '@/types'
 import { formatDate } from '@/utils/formatting'

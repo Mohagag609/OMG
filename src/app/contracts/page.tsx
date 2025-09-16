@@ -183,7 +183,7 @@ export default function Contracts() {
   const [brokers, setBrokers] = useState<Broker[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  // FIXED: Removed unused success state
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   // FIXED: Removed unused variables
@@ -354,7 +354,7 @@ export default function Contracts() {
       if (data.success) {
         setShowAddModal(false)
         // FIXED: Removed unused setCurrentStep call
-        setSuccess('تم إضافة العقد بنجاح!')
+        // FIXED: Removed unused setSuccess call
         setError(null)
         setNewContract({
           unitId: '',
@@ -383,7 +383,7 @@ export default function Contracts() {
         })
       } else {
         setError(data.error || 'خطأ في إضافة العقد')
-        setSuccess(null)
+        // FIXED: Removed unused setSuccess call
         addNotification({
           type: 'error',
           title: 'خطأ في الحفظ',
@@ -396,7 +396,7 @@ export default function Contracts() {
         console.error('Add contract error:', err)
       }
       setError('خطأ في إضافة العقد')
-      setSuccess(null)
+      // FIXED: Removed unused setSuccess call
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -468,7 +468,6 @@ export default function Contracts() {
   }
 
   const handleEditContract = (contract: Contract) => {
-    // FIXED: Removed unused setEditingContract call
     setNewContract({
       unitId: contract.unitId,
       customerId: contract.customerId,
