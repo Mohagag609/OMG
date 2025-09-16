@@ -1,20 +1,34 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Simple in-memory cache
-const cache = new Map()
+// FIXED: Enhanced caching with better memory management
+const cache = new Map<string, { data: any; timestamp: number; hits: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const MAX_CACHE_SIZE = 100 // Prevent memory leaks
+
+// FIXED: Cache cleanup function
+const cleanupCache = () => {
+  if (cache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(cache.entries())
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+    const toDelete = entries.slice(0, Math.floor(MAX_CACHE_SIZE / 2))
+    toDelete.forEach(([key]) => cache.delete(key))
+  }
+}
 
 export async function GET() {
   try {
-    // Check cache first
+    // FIXED: Check cache first with hit tracking
     const cacheKey = 'dashboard-kpis'
     const cached = cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      cached.hits++
       return NextResponse.json({
         success: true,
         data: cached.data,
-        message: 'تم تحميل بيانات لوحة التحكم من الذاكرة المؤقتة'
+        message: 'تم تحميل بيانات لوحة التحكم من الذاكرة المؤقتة',
+        cached: true,
+        hits: cached.hits
       })
     }
 
