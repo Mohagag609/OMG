@@ -95,3 +95,74 @@ export async function POST(request: Request) {
     await prisma.$disconnect()
   }
 }
+export async function PUT(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const body = await request.json()
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'معرف العنصر مطلوب'
+      }, { status: 400 })
+    }
+
+    const item = await prisma.partners.update({
+      where: { id },
+      data: body
+    })
+
+    // Invalidate cache
+    cache.delete('partners-list')
+
+    return NextResponse.json({
+      success: true,
+      data: item,
+      message: 'تم التحديث بنجاح'
+    })
+
+  } catch (error) {
+    console.error('Error updating item:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: 'خطأ في التحديث'
+    }, { status: 500 })
+  }
+}
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'معرف العنصر مطلوب'
+      }, { status: 400 })
+    }
+
+    // Soft delete
+    await prisma.partners.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    })
+
+    // Invalidate cache
+    cache.delete('partners-list')
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم الحذف بنجاح'
+    })
+
+  } catch (error) {
+    console.error('Error deleting item:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: 'خطأ في الحذف'
+    }, { status: 500 })
+  }
+}

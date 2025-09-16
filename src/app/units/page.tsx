@@ -439,8 +439,8 @@ export default function Units() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/units/${editingUnit.id}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/units?id=${editingUnit.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -507,7 +507,7 @@ export default function Units() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/units/${unitId}`, {
+      const response = await fetch(`/api/units?id=${unitId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })

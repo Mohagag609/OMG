@@ -100,3 +100,94 @@ export async function POST(request: Request) {
     }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const body = await request.json()
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'معرف العميل مطلوب'
+      }, { status: 400 })
+    }
+
+    const customer = await prisma.customer.update({
+      where: { id },
+      data: {
+        name: body.name,
+        phone: body.phone,
+        nationalId: body.nationalId,
+        address: body.address,
+        status: body.status,
+        notes: body.notes
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        nationalId: true,
+        address: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    // Invalidate cache
+    cache.delete('customers-list')
+
+    return NextResponse.json({
+      success: true,
+      data: customer,
+      message: 'تم تحديث العميل بنجاح'
+    })
+
+  } catch (error) {
+    console.error('Error updating customer:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: 'خطأ في تحديث العميل'
+    }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'معرف العميل مطلوب'
+      }, { status: 400 })
+    }
+
+    // Soft delete
+    await prisma.customer.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    })
+
+    // Invalidate cache
+    cache.delete('customers-list')
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم حذف العميل بنجاح'
+    })
+
+  } catch (error) {
+    console.error('Error deleting customer:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: 'خطأ في حذف العميل'
+    }, { status: 500 })
+  }
+}

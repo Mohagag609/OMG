@@ -316,7 +316,7 @@ export default function Partners() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/partners/${editingPartner.id}`, {
+      const response = await fetch(`/api/partners?id=${editingPartner.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -375,7 +375,7 @@ export default function Partners() {
     try {
       setDeletingPartners(prev => new Set(prev).add(partnerId))
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/partners/${partnerId}`, {
+      const response = await fetch(`/api/partners?id=${partnerId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })

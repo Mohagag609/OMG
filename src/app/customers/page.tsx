@@ -348,7 +348,7 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/customers/${editingCustomer.id}`, {
+      const response = await fetch(`/api/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -408,7 +408,7 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/customers/${customerId}`, {
+      const response = await fetch(`/api/customers?id=${customerId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
