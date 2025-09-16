@@ -163,6 +163,10 @@ export default function Partners() {
   const fetchPartners = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/partners', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -193,7 +197,7 @@ export default function Partners() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Partners error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Partners error:', err)) }
       }
       setError('خطأ في الاتصال')
       addNotification({
@@ -208,6 +212,10 @@ export default function Partners() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -253,6 +261,10 @@ export default function Partners() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/partners', {
         method: 'POST',
         headers: {
@@ -294,7 +306,7 @@ export default function Partners() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Add partner error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add partner error:', err)) }
       }
       setError('خطأ في إضافة الشريك')
       setSuccess(null)
@@ -316,6 +328,10 @@ export default function Partners() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/partners?id=${editingPartner.id}`, {
         method: 'PUT',
         headers: {
@@ -357,7 +373,7 @@ export default function Partners() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Edit partner error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Edit partner error:', err)) }
       }
       setError('خطأ في تحديث الشريك')
       setSuccess(null)
@@ -375,6 +391,10 @@ export default function Partners() {
     try {
       setDeletingPartners(prev => new Set(prev).add(partnerId))
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/partners?id=${partnerId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -402,7 +422,7 @@ export default function Partners() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Delete partner error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete partner error:', err)) }
       }
       setError('خطأ في حذف الشريك')
       setSuccess(null)

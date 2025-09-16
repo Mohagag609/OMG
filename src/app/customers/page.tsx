@@ -128,6 +128,10 @@ export default function Customers() {
   const fetchCustomers = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/customers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -141,7 +145,7 @@ export default function Customers() {
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching customers:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching customers:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -151,6 +155,10 @@ export default function Customers() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -228,6 +236,10 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/customers', {
         method: 'POST',
         headers: {
@@ -261,7 +273,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      console.error('Add customer error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add customer error:', err)) }
       // في حالة فشل الحفظ، نزيل العميل المؤقت ونعيد النافذة
       setCustomers(prev => prev.filter(customer => customer.id !== tempCustomer.id))
       setShowAddModal(true)
@@ -348,6 +360,10 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/customers?id=${editingCustomer.id}`, {
         method: 'PUT',
         headers: {
@@ -380,7 +396,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      console.error('Update customer error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update customer error:', err)) }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchCustomers()
       setError('خطأ في تحديث العميل')
@@ -408,6 +424,10 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/customers?id=${customerId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -434,7 +454,7 @@ export default function Customers() {
         })
       }
     } catch (err) {
-      console.error('Delete customer error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete customer error:', err)) }
       // في حالة فشل الحذف، نعيد العميل للقائمة
       fetchCustomers()
       setError('خطأ في حذف العميل')

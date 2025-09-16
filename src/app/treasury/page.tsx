@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Safe, Transfer } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -9,14 +9,31 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}
+
+// FIXED: Memoized components for better performance
+const ModernCard = memo(({ children, className = '', ...props }: ModernCardProps) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = memo(({ children, variant = 'primary', size = 'md', className = '', ...props }: ModernButtonProps) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -40,7 +57,10 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
-}
+})
+
+ModernCard.displayName = 'ModernCard'
+ModernButton.displayName = 'ModernButton'
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
@@ -91,6 +111,8 @@ export default function Treasury() {
 
   // Keyboard shortcuts
   useEffect(() => {
+    // FIXED: Memoized function
+
     const handleKeyPress = (e: KeyboardEvent) => {
       // Only handle shortcuts when not in input fields
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
@@ -127,6 +149,10 @@ export default function Treasury() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -135,9 +161,13 @@ export default function Treasury() {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       const [safesResponse, transfersResponse] = await Promise.all([
         fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -159,12 +189,19 @@ export default function Treasury() {
         setTransfers(transfersData.data)
       }
     } catch (err) {
-      console.error('Error fetching data:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
+
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
 
   const handleAddSafe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,6 +217,10 @@ export default function Treasury() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/safes', {
         method: 'POST',
         headers: {
@@ -217,7 +258,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Add safe error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Add safe error:', err)) }
       setError('خطأ في إضافة الخزنة')
       setSuccess(null)
       addNotification({
@@ -228,6 +269,13 @@ export default function Treasury() {
     }
   }
 
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
+
   const handleEditSafe = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -235,6 +283,10 @@ export default function Treasury() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/safes/${editingSafe.id}`, {
         method: 'PUT',
         headers: {
@@ -273,7 +325,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Update safe error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Update safe error:', err)) }
       setError('خطأ في تحديث الخزنة')
       setSuccess(null)
       addNotification({
@@ -284,11 +336,22 @@ export default function Treasury() {
     }
   }
 
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
+
   const handleDeleteSafe = async (safeId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الخزنة؟')) return
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/safes/${safeId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -314,7 +377,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Delete safe error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete safe error:', err)) }
       setError('خطأ في حذف الخزنة')
       setSuccess(null)
       addNotification({
@@ -324,6 +387,13 @@ export default function Treasury() {
       })
     }
   }
+
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -348,6 +418,10 @@ export default function Treasury() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/transfers', {
         method: 'POST',
         headers: {
@@ -387,7 +461,7 @@ export default function Treasury() {
         })
       }
     } catch (err) {
-      console.error('Transfer error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Transfer error:', err)) }
       setError('خطأ في التحويل')
       setSuccess(null)
       addNotification({

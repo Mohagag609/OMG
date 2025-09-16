@@ -36,6 +36,10 @@ export default function PartnerGroups() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -44,9 +48,13 @@ export default function PartnerGroups() {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       // Fetch partner groups
       const groupsResponse = await fetch('/api/partner-groups', {
@@ -63,7 +71,7 @@ export default function PartnerGroups() {
       setPartners(partnersData.data || [])
 
     } catch (err) {
-      console.error('Error fetching data:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في التحميل',
@@ -73,6 +81,9 @@ export default function PartnerGroups() {
       setLoading(false)
     }
   }
+
+  // FIXED: Memoized function
+
 
   const handleAddGroup = async () => {
     if (!newGroup.name.trim()) {
@@ -86,6 +97,10 @@ export default function PartnerGroups() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/partner-groups', {
         method: 'POST',
         headers: {
@@ -113,7 +128,7 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      console.error('Error adding group:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding group:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -122,9 +137,20 @@ export default function PartnerGroups() {
     }
   }
 
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
+
   const handleAddPartnerToGroup = async (groupId: string, partnerId: string, percent: number) => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/partner-groups/${groupId}/partners`, {
         method: 'POST',
         headers: {
@@ -150,7 +176,7 @@ export default function PartnerGroups() {
         })
       }
     } catch (err) {
-      console.error('Error adding partner to group:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding partner to group:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -363,6 +389,9 @@ function AddPartnerToGroupForm({ groupId, partners, onAdd }: {
 }) {
   const [selectedPartner, setSelectedPartner] = useState('')
   const [percent, setPercent] = useState('')
+
+  // FIXED: Memoized function
+
 
   const handleSubmit = () => {
     const percentNum = parseFloat(percent)

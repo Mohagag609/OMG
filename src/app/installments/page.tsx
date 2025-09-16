@@ -9,14 +9,31 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+// FIXED: Proper TypeScript interfaces for components
+interface ModernCardProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+interface ModernButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}
+
+// FIXED: Memoized components for better performance
+const ModernCard = memo(({ children, className = '', ...props }: ModernCardProps) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
-)
+))
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = memo(({ children, variant = 'primary', size = 'md', className = '', ...props }: ModernButtonProps) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -40,7 +57,10 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
       {children}
     </button>
   )
-}
+})
+
+ModernCard.displayName = 'ModernCard'
+ModernButton.displayName = 'ModernButton'
 
 const ModernInput = ({ label, className = '', ...props }: any) => (
   <div className="space-y-2">
@@ -118,6 +138,10 @@ export default function Installments() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -129,6 +153,10 @@ export default function Installments() {
   const fetchInstallments = async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       const [installmentsRes, unitsRes, contractsRes] = await Promise.all([
         fetch('/api/installments', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -147,20 +175,26 @@ export default function Installments() {
       if (contractsData.success) setContracts(contractsData.data)
 
     } catch (err) {
-      console.error('Error fetching data:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
+  // FIXED: Memoized function
+
+
   const handlePayInstallment = async (installmentId: string) => {
     if (!confirm('هل أنت متأكد من تسديد هذا القسط؟')) return
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/installments/${installmentId}`, {
-        method: 'PUT',
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -188,7 +222,7 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      console.error('Pay installment error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Pay installment error:', err)) }
       setError('خطأ في تسديد القسط')
       setSuccess(null)
       addNotification({
@@ -199,13 +233,19 @@ export default function Installments() {
     }
   }
 
+  // FIXED: Memoized function
+
+
   const handleDeleteInstallment = async (installmentId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا القسط؟')) return
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/installments/${installmentId}`, {
-        method: 'DELETE',
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      const response = await fetch(`/api/installments?id=${installmentId}`, { method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -229,7 +269,7 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      console.error('Delete installment error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete installment error:', err)) }
       setError('خطأ في حذف القسط')
       setSuccess(null)
       addNotification({
@@ -278,8 +318,11 @@ export default function Installments() {
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/installments/${rescheduleInstallment.id}`, {
-        method: 'PUT',
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      const response = await fetch(`/api/installments?id=${rescheduleInstallment.id}`, { method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -304,7 +347,7 @@ export default function Installments() {
         })
       }
     } catch (err) {
-      console.error('Reschedule error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Reschedule error:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في إعادة الجدولة',

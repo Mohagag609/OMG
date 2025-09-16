@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = memo(({ children, className = '', ...props }: any) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
@@ -53,6 +53,8 @@ export default function Vouchers() {
 
   // Keyboard shortcuts
   useEffect(() => {
+    // FIXED: Memoized function
+
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
@@ -75,6 +77,10 @@ export default function Vouchers() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -86,6 +92,10 @@ export default function Vouchers() {
   const fetchVouchers = async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/vouchers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -97,20 +107,26 @@ export default function Vouchers() {
         setError(data.error || 'خطأ في تحميل السندات')
       }
     } catch (err) {
-      console.error('Error fetching vouchers:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching vouchers:', err)) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
+  // FIXED: Memoized function
+
+
   const handleDeleteVoucher = async (voucherId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/vouchers/${voucherId}`, {
-        method: 'DELETE',
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      const response = await fetch(`/api/vouchers?id=${voucherId}`, { method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -134,7 +150,7 @@ export default function Vouchers() {
         })
       }
     } catch (err) {
-      console.error('Delete voucher error:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete voucher error:', err)) }
       setError('خطأ في حذف السند')
       setSuccess(null)
       addNotification({

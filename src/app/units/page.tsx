@@ -164,6 +164,10 @@ export default function Units() {
   const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
         fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -200,7 +204,7 @@ export default function Units() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching data:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -210,6 +214,10 @@ export default function Units() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -320,6 +328,10 @@ export default function Units() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/units', {
         method: 'POST',
         headers: {
@@ -360,7 +372,7 @@ export default function Units() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Add unit error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add unit error:', err)) }
       }
       // في حالة فشل الحفظ، نزيل الوحدة المؤقتة ونعيد النافذة
       setUnits(prev => prev.filter(unit => unit.id !== tempUnit.id))
@@ -439,6 +451,10 @@ export default function Units() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/units?id=${editingUnit.id}`, {
         method: 'PUT',
         headers: {
@@ -478,7 +494,7 @@ export default function Units() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Update unit error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Update unit error:', err)) }
       }
       // في حالة فشل التحديث، نعيد البيانات الأصلية
       fetchData()
@@ -507,6 +523,10 @@ export default function Units() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/units?id=${unitId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -535,7 +555,7 @@ export default function Units() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Delete unit error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete unit error:', err)) }
       }
       // في حالة فشل الحذف، نعيد الوحدة للقائمة
       fetchData()

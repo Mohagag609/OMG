@@ -108,7 +108,7 @@ export async function PUT(request: Request) {
       }, { status: 400 })
     }
 
-    const item = await prisma.partners.update({
+    const item = await prisma.partner.update({
       where: { id },
       data: body
     })
@@ -144,7 +144,7 @@ export async function DELETE(request: Request) {
     }
 
     // Soft delete
-    await prisma.partners.update({
+    await prisma.partner.update({
       where: { id },
       data: { deletedAt: new Date() }
     })

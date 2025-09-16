@@ -249,6 +249,14 @@ export default function Contracts() {
   const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
         fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -275,7 +283,7 @@ export default function Contracts() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching data:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       }
       setError('خطأ في الاتصال')
     } finally {
@@ -285,6 +293,10 @@ export default function Contracts() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -330,6 +342,10 @@ export default function Contracts() {
 
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/contracts', {
         method: 'POST',
         headers: {
@@ -393,7 +409,7 @@ export default function Contracts() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Add contract error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Add contract error:', err)) }
       }
       setError('خطأ في إضافة العقد')
       // FIXED: Removed unused setSuccess call
@@ -501,7 +517,11 @@ export default function Contracts() {
     
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/contracts/${contractId}`, {
+      if (!token) {
+        router.push('/login')
+        return
+      }
+      const response = await fetch(`/api/contracts?id=${contractId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -524,7 +544,7 @@ export default function Contracts() {
     } catch (err) {
       // FIXED: Remove console.error in production
       if (process.env.NODE_ENV === 'development') {
-        console.error('Delete contract error:', err)
+        if (process.env.NODE_ENV === 'development') { console.error(console.error('Delete contract error:', err)) }
       }
       addNotification({
         type: 'error',

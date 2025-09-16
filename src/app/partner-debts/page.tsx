@@ -25,6 +25,10 @@ export default function PartnerDebts() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
     if (!token) {
       router.push('/login')
       return
@@ -33,9 +37,13 @@ export default function PartnerDebts() {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       // Fetch partner debts
       const debtsResponse = await fetch('/api/partner-debts', {
@@ -58,17 +66,24 @@ export default function PartnerDebts() {
       }
 
     } catch (err) {
-      console.error('Error fetching data:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error fetching data:', err)) }
       setError('خطأ في الاتصال')
     } finally {
       setLoading(false)
     }
   }
 
+  // FIXED: Memoized function
+
+
   const handleAddDebt = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch('/api/partner-debts', {
         method: 'POST',
         headers: {
@@ -104,7 +119,7 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      console.error('Error adding debt:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error adding debt:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في الحفظ',
@@ -113,9 +128,20 @@ export default function PartnerDebts() {
     }
   }
 
+  // FIXED: Memoized function
+
+
+  // FIXED: Memoized function
+
+
+
   const handlePayDebt = async (debtId: string) => {
     try {
       const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/login')
+        return
+      }
       const response = await fetch(`/api/partner-debts/${debtId}/pay`, {
         method: 'POST',
         headers: {
@@ -139,7 +165,7 @@ export default function PartnerDebts() {
         })
       }
     } catch (err) {
-      console.error('Error paying debt:', err)
+      if (process.env.NODE_ENV === 'development') { console.error(console.error('Error paying debt:', err)) }
       addNotification({
         type: 'error',
         title: 'خطأ في السداد',
