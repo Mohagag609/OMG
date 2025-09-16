@@ -7,7 +7,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken'],
     // FIXED: Enable modern bundling optimizations
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu']
   },
   // FIXED: Enhanced compiler options for better performance
