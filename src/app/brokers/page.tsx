@@ -28,7 +28,7 @@ interface ModernButtonProps {
 }
 
 // FIXED: Memoized components for better performance
-const ModernCard = memo(({ children, className = '', ...props }) => (
+const ModernCard = memo(({ children, className = '', ...props }: { children: React.ReactNode, className?: string, [key: string]: any }) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>

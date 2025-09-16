@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Voucher } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
@@ -12,6 +12,7 @@ const ModernCard = memo(({ children, className = '', ...props }: any) => (
     {children}
   </div>
 ))
+ModernCard.displayName = 'ModernCard'
 
 const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
   const variants: { [key: string]: string } = {

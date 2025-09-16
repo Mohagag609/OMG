@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Installment, Unit, Contract } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'

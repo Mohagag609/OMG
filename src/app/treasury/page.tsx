@@ -742,7 +742,7 @@ export default function Treasury() {
               </div>
             </div>
 
-            <form onSubmit={handleTransfer} className="p-6">
+            <form onSubmit={handleAddTransfer} className="p-6">
               <div className="space-y-6">
                 <ModernSelect
                   label="من الخزنة *"
