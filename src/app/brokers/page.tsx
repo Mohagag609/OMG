@@ -163,15 +163,7 @@ export default function Brokers() {
   }, [sidebarOpen])
 
   useEffect(() => {
-    if (!token) {
-        router.push('/login')
-        return
-      }
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
+    // Authentication removed - direct access
     fetchBrokers()
     fetchBrokerDues()
     fetchSafes()
@@ -179,10 +171,7 @@ export default function Brokers() {
 
   const fetchBrokers = async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/brokers', {
         headers: {}
       })
@@ -213,10 +202,7 @@ export default function Brokers() {
 
   const fetchBrokerDues = async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/broker-due', {
         headers: {}
       })
@@ -231,10 +217,7 @@ export default function Brokers() {
 
   const fetchSafes = async () => {
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/safes', {
         headers: {}
       })
@@ -286,10 +269,7 @@ export default function Brokers() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch('/api/brokers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -346,10 +326,7 @@ export default function Brokers() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/brokers?id=${editingBroker.id}`, { method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -401,10 +378,7 @@ export default function Brokers() {
 
     try {
       setDeletingBrokers(prev => new Set(prev).add(brokerId))
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/brokers?id=${brokerId}`, { method: 'DELETE',
         headers: {}
       })
@@ -493,10 +467,7 @@ export default function Brokers() {
     }
 
     try {
-      if (!token) {
-        router.push('/login')
-        return
-      }
+      // Authentication removed - direct access
       const response = await fetch(`/api/broker-due/${selectedDue.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
