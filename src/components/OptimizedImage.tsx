@@ -79,9 +79,11 @@ const OptimizedImage = memo<OptimizedImageProps>(({
           animate={{ opacity: isLoaded ? 0 : 1 }}
           transition={{ duration: 0.3 }}
         >
-          <img
+          <Image
             src={placeholder}
             alt="Loading..."
+            width={width}
+            height={height}
             className="w-full h-full object-cover"
           />
         </motion.div>

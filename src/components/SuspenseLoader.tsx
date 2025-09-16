@@ -194,7 +194,7 @@ export function withLazyLoading<P extends object>(
     Promise.resolve({ default: Component })
   )
 
-  return (props: P) => (
+  const WrappedComponent = (props: P) => (
     <SuspenseWrapper
       loadingText={options?.loadingText}
       skeletonType={options?.skeletonType}
@@ -203,6 +203,9 @@ export function withLazyLoading<P extends object>(
       <LazyComponent {...props} />
     </SuspenseWrapper>
   )
+  
+  WrappedComponent.displayName = `withLazyLoading(${Component.displayName || Component.name})`
+  return WrappedComponent
 }
 
 export { LoadingSpinner, Skeleton, SuspenseWrapper }

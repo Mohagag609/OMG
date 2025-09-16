@@ -92,5 +92,4 @@ const VirtualList = memo(<T,>({
 })
 
 VirtualList.displayName = 'VirtualList'
-
 export default VirtualList

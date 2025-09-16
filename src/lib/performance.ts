@@ -162,7 +162,7 @@ export function withPerformanceMonitoring<P extends object>(
   Component: React.ComponentType<P>,
   componentName: string
 ): React.ComponentType<P> {
-  return React.memo((props: P) => {
+  const WrappedComponent = React.memo((props: P) => {
     PerformanceMonitor.startTimer(`render-${componentName}`)
     
     const result = React.createElement(Component, props)
@@ -177,6 +177,9 @@ export function withPerformanceMonitoring<P extends object>(
     
     return result
   })
+  
+  WrappedComponent.displayName = `withPerformanceMonitoring(${componentName})`
+  return WrappedComponent
 }
 
 // FIXED: Bundle size monitoring
